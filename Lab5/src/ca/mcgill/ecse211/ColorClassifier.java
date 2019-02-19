@@ -43,7 +43,7 @@ public class ColorClassifier extends Thread{
   
   public static CanColor classifyColor(float[] c) {
     float r = c[0], g = c[1], b = c[2];
-    if (Math.max(Math.max(r, g), b) < DETECTION_THRESH) {
+    if (Math.min(Math.min(r, g), b) < DETECTION_THRESH) {
       return CanColor.UNKOWN;
     }
     return CanColor.RED;
