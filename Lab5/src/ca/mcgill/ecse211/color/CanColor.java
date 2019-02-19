@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211;
+package ca.mcgill.ecse211.color;
 
 public enum CanColor {
   RED("Red",new byte[] {44, 5, 11}), 
