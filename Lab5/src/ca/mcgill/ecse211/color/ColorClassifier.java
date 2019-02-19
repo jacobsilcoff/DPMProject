@@ -5,46 +5,104 @@ import lejos.hardware.lcd.LCD;
 
 public class ColorClassifier extends Thread{
   
+  public static final int MAX_TACHO = 210;
   public static final int SLEEP_TIME = 20;
   public static final int DETECTION_THRESH = 15;
+  private static boolean calibrated = false;
   private CanColor colorLabel;
-  private AveragedColor avgCol;
-  
-  //Variables used for calculating averages
-  static int samples = 0;
-  static long red = 0;
-  static long grn = 0;
-  static long blu = 0;
+
   
   public ColorClassifier() {
     colorLabel = CanColor.UNKOWN;
-    avgCol = new AveragedColor();
   }
   
   public void run() {
-    while (true) {
-      
-      //gets a color reading
+    if (!calibrated) {
+      calibrate();
+      calibrated = true;
+    }
+    
+    Lab5.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
+    
+    double[] totalReadings = new double[3];
+    int numReadings = 0;
+    
+    while (Lab5.SENSOR_MOTOR.isMoving()) {
       float[] sample = new float[Lab5.COLOR_SENSOR.sampleSize()];
       Lab5.COLOR_SENSOR.fetchSample(sample, 0);
-      
-      byte[] c = toByte(sample);
-      printReading(c);
-      
-      avgCol.add(sample);
-      
-      colorLabel = classifyColor(toByte(avgCol.getAvg()));
-      LCD.drawString(colorLabel.toString() + "           ", 0, 2);
-      String avg = avgCol.toString();
-      LCD.drawString("avg: " + avg.substring(0,avg.indexOf(',')) + "           ", 0, 3);
-      LCD.drawString("   " + avg.substring(avg.indexOf(',')) + "           ", 0, 4);
-      
-      
-      try {
-        sleep(SLEEP_TIME);
-      } catch (InterruptedException ie) {
-        ie.printStackTrace();
+      if (!isWhite(sample))
+      {
+        for (int i = 0; i < sample.length; i++) {
+          totalReadings[i] += sample[i];
+        }
+        printReading(toByte(sample));
+        numReadings++;
       }
+      sleep();
+    }
+    
+    LCD.drawString("pass 1 done", 0, 0);
+    
+    Lab5.SENSOR_MOTOR.rotateTo(0, true);
+    
+    while (Lab5.SENSOR_MOTOR.isMoving()) {
+      float[] sample = new float[Lab5.COLOR_SENSOR.sampleSize()];
+      Lab5.COLOR_SENSOR.fetchSample(sample, 0);
+      if (!isWhite(sample))
+      {
+        for (int i = 0; i < sample.length; i++) {
+          totalReadings[i] += sample[i];
+        }
+        printReading(toByte(sample));
+        numReadings++;
+      }
+      sleep();
+    }
+    
+    float[] avgReading = new float[totalReadings.length];
+    for (int i = 0; i < avgReading.length; i++) {
+      avgReading[i] = (float)(totalReadings[i] / numReadings);
+    }
+    for (int i = 0; i < 3; i++) {
+      LCD.drawString(avgReading[i]*1000 + "", 0, 5+i);
+    }
+    colorLabel = CanColor.getClosestColor(new byte[] {
+        (byte)(avgReading[0] * 1000), 
+        (byte)(avgReading[1] * 1000),
+        (byte)(avgReading[2] * 1000)});
+    LCD.drawString(colorLabel.toString(), 0, 4);
+  }
+  
+  public static boolean isWhite(float[] color) {
+    float min = color[0];
+    float max = color[0];
+    for (float f : color) {
+      min = min > f ? f : min;
+      max = max < f ? f : max;
+    }
+    return (max - min < .015);
+  }
+  
+  /**
+   * Ensures that the tachometer is zeroed properly
+   */
+  public void calibrate() {
+    Lab5.SENSOR_MOTOR.setSpeed(50);
+    Lab5.SENSOR_MOTOR.backward();
+    try {
+      sleep(4500);
+    } catch (InterruptedException ie) {
+      ie.printStackTrace();
+    }
+    Lab5.SENSOR_MOTOR.stop();
+    Lab5.SENSOR_MOTOR.resetTachoCount();
+  }
+
+  public void sleep() {
+    try {
+      sleep(SLEEP_TIME);
+    } catch (InterruptedException ie) {
+      ie.printStackTrace();
     }
   }
   
@@ -78,12 +136,8 @@ public class ColorClassifier extends Thread{
   public static CanColor classifyColor(byte[] c) {
     
     byte r = c[0], g = c[1], b = c[2];
-    red += r;
-    grn += g;
-    blu += b;
-    samples ++;
+
     if (Math.max(Math.max(r, g), b) < DETECTION_THRESH) {
-      red = grn = blu = samples = 0;
       return CanColor.UNKOWN;
     }
     return CanColor.getClosestColor(c);

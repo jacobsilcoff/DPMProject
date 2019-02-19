@@ -1,10 +1,10 @@
 package ca.mcgill.ecse211.color;
 
 public enum CanColor {
-  RED("Red",new byte[] {44, 5, 11}), 
-  GREEN("Green", new byte[] {14, 42, 25}),
-  BLUE("Blue", new byte[] {7, 12, 48}), 
-  YELLOW("Yellow", new byte[] {45, 35, 14}), 
+  RED("Red",new byte[] {47, 18, 16}), 
+  GREEN("Green", new byte[] {18, 46, 20}), 
+  BLUE("Blue", new byte[] {24, 43, 57}), 
+  YELLOW("Yellow", new byte[] {61, 43, 31}), 
   UNKOWN;
   
   private String name;
