@@ -27,7 +27,7 @@ public class Lab5 {
 
   public static void main(String[] args) {
     ColorClassifier cc = new ColorClassifier();
-    cc.run();
+    cc.start();
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
   }
