@@ -35,6 +35,8 @@ public class OdometryCorrection implements Runnable {
   private boolean on;
 
 
+  // TODO: UPDATE FOR SENSOR PLACEMENT
+
   /**
    * This is the default class constructor. An existing instance of the odometer is used to ensure
    * thread safety.
@@ -109,7 +111,7 @@ public class OdometryCorrection implements Runnable {
         }
       }
 
-    }// end loop
+    } // end loop
   }// end run method
 
   /**
