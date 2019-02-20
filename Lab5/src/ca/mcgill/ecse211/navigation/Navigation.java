@@ -62,6 +62,7 @@ public class Navigation extends Thread {
   private double destY;
   private double destT;
   private OdometryCorrection correction;
+  private boolean on;
 
   /**
    * Default constructor for navigation (called in Lab3.java)
@@ -74,6 +75,7 @@ public class Navigation extends Thread {
     isNavigating = false;
     destX = destY = destT = 0;
     this.correction = correction;
+    on = true;
   }
 
   /**
@@ -91,6 +93,13 @@ public class Navigation extends Thread {
 
   }
 
+    /**
+     * Kills the thread
+     */
+   public void end() {
+     correction.setOn(true);
+     on = false;
+   }
   /**
    * Returns the odometer corresponding to this navigation thread. Although this method is
    * technically redundant due to the fact that Odometer is represented as a singleton, it is useful
@@ -172,7 +181,7 @@ public class Navigation extends Thread {
   @Override
   public void run() {
     State state = State.INIT;
-    while (true) {
+    while (on) {
       double[] lastPos = {0, 0};
       switch (state) {
         case INIT:

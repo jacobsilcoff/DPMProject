@@ -18,7 +18,7 @@ public class OdometryCorrection implements Runnable {
   /**
    * This represents the distance between lines on the grid, in cm
    */
-  private static final float LINE_SPACING = 30.48f;
+  public static final float LINE_SPACING = 30.48f;
   /**
    * This represents the minimum distance for the robot to travel before reading another line
    */
