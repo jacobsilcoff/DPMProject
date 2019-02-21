@@ -52,8 +52,20 @@ public class Lab5 {
    * Represents half the distance between the wheels, in cm Will need updating
    */
   public static final double TRACK = 13.6;
-  public static final double LINE_OFFSET_Y = -10.5;
+  /**
+   * The offset between the robot turning center and the line sensor in
+   * the Y direction, in cm. Note: magnitude only.
+   */
+  public static final double LINE_OFFSET_Y = 10.5;
+  /**
+   * The offset between the robot turning center and the line sensor in
+   * the X direction, in cm. Note: magnitude only.
+   */
   public static final double LINE_OFFSET_X = TRACK/2;
+  /**
+   * The offset between the robot turning center and the
+   * center of where the can should be for measurment
+   */
   public static final double CAN_DIST = 7;
 
   static {

@@ -83,13 +83,17 @@ public class OdometryCorrection implements Runnable {
          * Concept is to figure out which x/y is closest to desired target, and round that one. We
          * ignore the first line because it is the sensor moving about starting point
          */
+        
+        double[] sensor = toSensor(pos);
         if (lineCount != 1) {
-          if (pos[0] % LINE_SPACING < pos[1] % LINE_SPACING) {
+          if (sensor[0] % LINE_SPACING < sensor[1] % LINE_SPACING) {
             // here we round the x position
-            odometer.setX(Math.round(pos[0] / LINE_SPACING) * LINE_SPACING);
+            sensor[0] = Math.round(sensor[0] / LINE_SPACING);
+            odometer.setX(toRobot(sensor)[0] * LINE_SPACING);
           } else {
             // here we round the y position
-            odometer.setY(Math.round(pos[1] / LINE_SPACING) * LINE_SPACING);
+            sensor[1] = Math.round(sensor[1] / LINE_SPACING);
+            odometer.setY(toRobot(sensor)[1] * LINE_SPACING);
           }
 
           // update last pos of line detected
@@ -148,6 +152,16 @@ public class OdometryCorrection implements Runnable {
    */
   public static double[] toRobot(double[] sensor) {
     double[] result = new double[3];
+    if (sensor.length == 3) {
+      double t = sensor[2];
+      result[0] = sensor[0] 
+          - Lab5.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          + Lab5.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+      result[1] = sensor[1] 
+          + Lab5.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          + Lab5.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+      result[2] = t;
+    }
     return result;
   }
   
@@ -160,6 +174,16 @@ public class OdometryCorrection implements Runnable {
    */
   public static double[] toSensor(double[] robot) {
     double[] result = new double[3];
+    if (robot.length == 3) {
+      double t = robot[2];
+      result[0] = robot[0] 
+          + Lab5.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          - Lab5.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+      result[1] = robot[1] 
+          - Lab5.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          - Lab5.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+      result[2] = t;
+    }
     return result;
   }
 }
