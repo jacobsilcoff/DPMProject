@@ -51,7 +51,10 @@ public class Lab5 {
   /**
    * Represents half the distance between the wheels, in cm Will need updating
    */
-  public static final double TRACK = 15.14;
+  public static final double TRACK = 13.6;
+  public static final double LINE_OFFSET_Y = -10.5;
+  public static final double LINE_OFFSET_X = TRACK/2;
+  public static final double CAN_DIST = 7;
 
   static {
     @SuppressWarnings("resource")

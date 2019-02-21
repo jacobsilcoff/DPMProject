@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.odometer;
 
+import ca.mcgill.ecse211.lab5.AveragedBuffer;
 import ca.mcgill.ecse211.lab5.Lab5;
 
 /**
@@ -30,7 +31,7 @@ public class OdometryCorrection implements Runnable {
 
   private Odometer odometer;
   private float[] sample;
-  private CircularArray samples;
+  private AveragedBuffer<Float> samples;
   private double[] lastPos;
   private boolean on;
 
@@ -46,7 +47,7 @@ public class OdometryCorrection implements Runnable {
   public OdometryCorrection() throws OdometerExceptions {
     this.odometer = Odometer.getOdometer();
     sample = new float[Lab5.LINE_SENSOR.sampleSize()];
-    samples = new CircularArray();
+    samples = new AveragedBuffer<Float>();
     on = true;
   }
 
@@ -72,7 +73,7 @@ public class OdometryCorrection implements Runnable {
        * To avoid a single line triggering this many times, verify that either we haven't seen a
        * line yet at all (lastPos == null) or we're sufficiently far from the last line.
        */
-      if (on && sample[0] < samples.avg - LIGHT_THRESHOLD
+      if (on && sample[0] < samples.getAvg() - LIGHT_THRESHOLD
           && (lastPos == null || dist(pos, lastPos) > DIST_THRESHOLD)) {
         // Indicate detection of a line
         lineCount++;
@@ -137,39 +138,28 @@ public class OdometryCorrection implements Runnable {
     }
     return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)); // fixed distance formula
   }
-
+  
   /**
-   * Stores a circular array of light values. Buffered to keep a rolling average.
-   * 
-   * We assume N is small enough that populating the buffer with data takes a trivial amount of
-   * time, although making the average work for less than N samples would be trivial with a
-   * conditional and a for loop.
+   * Calculates the center of the robot from the position of the
+   * line sensor, denoted as an array
+   * @param sensor An array of the form {x,y,t} representing the
+   * position of the sensor
+   * @return
    */
-  private class CircularArray {
-    private static final int N = 5;
-    private float[] samples;
-    private int sampleIndex;
-    private float avg;
-
-    /**
-     * Creates a circular array of a constant length N
-     */
-    public CircularArray() {
-      samples = new float[N];
-      sampleIndex = 0;
-      avg = 0;
-    }
-
-    /**
-     * Adds a measurement to the buffer and updates the average
-     * 
-     * @param x The data sample to add to the buffer
-     */
-    public void add(float x) {
-      avg = avg + 1f / N * (x - samples[sampleIndex]);
-      samples[sampleIndex] = x;
-      sampleIndex = (sampleIndex + 1) % N;
-    }
+  public static double[] toRobot(double[] sensor) {
+    double[] result = new double[3];
+    return result;
   }
-
+  
+  /**
+   * Calculates the center of the sensor from the position of the
+   * robot, denoted as an array
+   * @param robot An array of the form {x,y,t} representing the
+   * position of the sensor
+   * @return
+   */
+  public static double[] toSensor(double[] robot) {
+    double[] result = new double[3];
+    return result;
+  }
 }

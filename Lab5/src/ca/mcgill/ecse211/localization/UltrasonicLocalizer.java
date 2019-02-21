@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.localization;
 import lejos.hardware.Sound;
+import ca.mcgill.ecse211.lab5.AveragedBuffer;
 import ca.mcgill.ecse211.lab5.Lab5;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
@@ -46,7 +47,7 @@ public class UltrasonicLocalizer extends Thread {
 
   private Odometer odo;
   private Navigation nav;
-  private AveragedBuffer samples;
+  private AveragedBuffer<Float> samples;
   private Mode mode;
 
 
@@ -223,7 +224,7 @@ public class UltrasonicLocalizer extends Thread {
   public float readUS(boolean buffered) {
     if (buffered) {
       readUS();
-      return samples.getAvg();
+      return (float) samples.getAvg();
     } else {
       return readUS();
     }

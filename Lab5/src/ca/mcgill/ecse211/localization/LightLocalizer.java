@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.localization;
 
 import lejos.hardware.Sound;
+import ca.mcgill.ecse211.lab5.AveragedBuffer;
 import ca.mcgill.ecse211.lab5.Lab5;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;

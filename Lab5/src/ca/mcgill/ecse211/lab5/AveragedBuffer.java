@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.localization;
+package ca.mcgill.ecse211.lab5;
 
 
 /**
@@ -7,24 +7,26 @@ package ca.mcgill.ecse211.localization;
  * 
  * @author jacob
  */
-public class AveragedBuffer {
+public class AveragedBuffer<T extends Number> {
   /**
    * This value stores the default number of samples that are stored in the buffer
    */
   private static final int DEFAULT_N = 10;
   private int n;
-  private float[] samples;
+  private T[] samples;
   private int sampleIndex;
-  private float avg;
+  private double avg;
+  private int size;
 
   /**
    * Creates a buffer that will store a default number of samples, as specified by DEFAULT_N
    */
   public AveragedBuffer() {
     n = DEFAULT_N;
-    samples = new float[n];
+    samples = (T[]) new Number[n];
     sampleIndex = 0;
     avg = 0;
+    size = 0;
   }
 
   /**
@@ -33,7 +35,7 @@ public class AveragedBuffer {
    * @param n The number of samples stored in the buffer
    */
   public AveragedBuffer(int n) {
-    samples = new float[n];
+    samples = (T[]) new Number[n];
     this.n = n;
     sampleIndex = 0;
     avg = 0;
@@ -44,8 +46,13 @@ public class AveragedBuffer {
    * 
    * @param x The data sample to add to the buffer
    */
-  public void add(float x) {
-    avg = avg + 1f / n * (x - samples[sampleIndex]);
+  public void add(T x) {
+    if (size < n) {
+      avg = (avg * size + x.doubleValue())/(size + 1);
+      size++;
+    } else {
+      avg = avg + 1.0 / n * (x.doubleValue() - samples[sampleIndex].doubleValue());
+    }
     samples[sampleIndex] = x;
     sampleIndex = (sampleIndex + 1) % n;
   }
@@ -55,7 +62,7 @@ public class AveragedBuffer {
    * 
    * @return The average of the buffer
    */
-  public float getAvg() {
+  public double getAvg() {
     return avg;
   }
   
