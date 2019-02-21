@@ -97,4 +97,48 @@ public class Lab5 {
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
   }
+  
+  /**
+   * Calculates the center of the robot from the position of the
+   * line sensor, denoted as an array
+   * @param sensor An array of the form {x,y,t} representing the
+   * position of the sensor
+   * @return
+   */
+  public static double[] toRobot(double[] sensor) {
+    double[] result = new double[3];
+    if (sensor.length == 3) {
+      double t = sensor[2];
+      result[0] = sensor[0] 
+          - Lab5.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          + Lab5.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+      result[1] = sensor[1] 
+          + Lab5.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          + Lab5.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+      result[2] = t;
+    }
+    return result;
+  }
+  
+  /**
+   * Calculates the center of the sensor from the position of the
+   * robot, denoted as an array
+   * @param robot An array of the form {x,y,t} representing the
+   * position of the sensor
+   * @return
+   */
+  public static double[] toSensor(double[] robot) {
+    double[] result = new double[3];
+    if (robot.length == 3) {
+      double t = robot[2];
+      result[0] = robot[0] 
+          + Lab5.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          - Lab5.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+      result[1] = robot[1] 
+          - Lab5.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          - Lab5.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+      result[2] = t;
+    }
+    return result;
+  }
 }

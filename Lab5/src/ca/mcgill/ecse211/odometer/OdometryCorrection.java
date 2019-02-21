@@ -84,16 +84,16 @@ public class OdometryCorrection implements Runnable {
          * ignore the first line because it is the sensor moving about starting point
          */
         
-        double[] sensor = toSensor(pos);
+        double[] sensor = Lab5.toSensor(pos);
         if (lineCount != 1) {
           if (sensor[0] % LINE_SPACING < sensor[1] % LINE_SPACING) {
             // here we round the x position
             sensor[0] = Math.round(sensor[0] / LINE_SPACING);
-            odometer.setX(toRobot(sensor)[0] * LINE_SPACING);
+            odometer.setX(Lab5.toRobot(sensor)[0] * LINE_SPACING);
           } else {
             // here we round the y position
             sensor[1] = Math.round(sensor[1] / LINE_SPACING);
-            odometer.setY(toRobot(sensor)[1] * LINE_SPACING);
+            odometer.setY(Lab5.toRobot(sensor)[1] * LINE_SPACING);
           }
 
           // update last pos of line detected
@@ -141,49 +141,5 @@ public class OdometryCorrection implements Runnable {
       return -1;
     }
     return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)); // fixed distance formula
-  }
-  
-  /**
-   * Calculates the center of the robot from the position of the
-   * line sensor, denoted as an array
-   * @param sensor An array of the form {x,y,t} representing the
-   * position of the sensor
-   * @return
-   */
-  public static double[] toRobot(double[] sensor) {
-    double[] result = new double[3];
-    if (sensor.length == 3) {
-      double t = sensor[2];
-      result[0] = sensor[0] 
-          - Lab5.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
-          + Lab5.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
-      result[1] = sensor[1] 
-          + Lab5.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
-          + Lab5.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
-      result[2] = t;
-    }
-    return result;
-  }
-  
-  /**
-   * Calculates the center of the sensor from the position of the
-   * robot, denoted as an array
-   * @param robot An array of the form {x,y,t} representing the
-   * position of the sensor
-   * @return
-   */
-  public static double[] toSensor(double[] robot) {
-    double[] result = new double[3];
-    if (robot.length == 3) {
-      double t = robot[2];
-      result[0] = robot[0] 
-          + Lab5.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
-          - Lab5.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
-      result[1] = robot[1] 
-          - Lab5.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
-          - Lab5.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
-      result[2] = t;
-    }
-    return result;
   }
 }

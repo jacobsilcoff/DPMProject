@@ -40,7 +40,7 @@ public class LightLocalizer extends Thread {
    * The time between polling the sensor, in ms
    */
   public static final int POLL_DELAY = 7;
-  
+
   /**
    * The time (ms) waited before checking that the navigation is done
    */
@@ -53,7 +53,7 @@ public class LightLocalizer extends Thread {
 
   private Odometer odo;
   private Navigation nav;
-  private AveragedBuffer samples;
+  private AveragedBuffer<Float> samples;
   private int x;
   private int y;
 
@@ -92,19 +92,22 @@ public class LightLocalizer extends Thread {
     moveToLine(false); //move backwards to a line (should be x=0 gridline)
     odo.setX(SENSOR_OFFSET_Y + (x+1) * OdometryCorrection.LINE_SPACING);
     odo.setY((y + 0.5) * OdometryCorrection.LINE_SPACING);
-    
+
     nav.travelTo(-DOWN_DIST,odo.getXYT()[1]); //move down to center of current block
     while (nav.isNavigating()) {
       sleep();
     }
     nav.setSpeeds(0, 0);
-    
+
+
+    //TODO: implement angle correction!
+
     // find x-axis
     nav.turnTo(0);
     moveToLine(false); //move backwards to a line (should be y=0 gridline)
     odo.setY(SENSOR_OFFSET_Y + (y+1) * OdometryCorrection.LINE_SPACING);
-    
-    //TODO: implement angle correction!
+
+
   }
 
   /**
@@ -115,6 +118,29 @@ public class LightLocalizer extends Thread {
   public void moveToLine(boolean forwards) {
     int dir = forwards ? 1 : -1;
     nav.setSpeeds(dir * MOTOR_SPEED, dir * MOTOR_SPEED);
+    waitUntilLine();
+    Sound.beep(); //found a line
+    nav.setSpeeds(0, 0);
+  }
+
+  /**
+   * Rotates the robot clockwise(cw) or counterclockwise (ccw)
+   * until a line is detected
+   * 
+   * @param cw True to move cw, false for ccw
+   */
+  public void rotateToLine(boolean cw) {
+    int dir = cw ? 1 : -1;
+    nav.setSpeeds(dir * MOTOR_SPEED, -dir * MOTOR_SPEED);
+    waitUntilLine();
+    Sound.beep(); //found a line
+    nav.setSpeeds(0, 0);
+  }
+  
+  /**
+   * Blocks until a line is detetected by the robot
+   */
+  private void waitUntilLine() {
     float[] sample = new float[Lab5.LINE_SENSOR.sampleSize()];
     do {
       Lab5.LINE_SENSOR.fetchSample(sample, 0);
@@ -122,9 +148,6 @@ public class LightLocalizer extends Thread {
       Lab5.LCD.drawString(sample[0] + ", " + samples.getAvg(),0,4);
       sleep();
     } while (sample[0] > samples.getAvg() - LIGHT_THRESHOLD);
-    
-    Sound.beep(); //found a line
-    nav.setSpeeds(0, 0);
   }
 
   /**
@@ -137,7 +160,7 @@ public class LightLocalizer extends Thread {
       e.printStackTrace();
     }
   }
-  
+
   /**
    * Moves the robot forward (straight) a certain distance, using the odometer.
    * 
@@ -156,5 +179,5 @@ public class LightLocalizer extends Thread {
     }
     nav.setSpeeds(0, 0);
   }
- 
+
 }
