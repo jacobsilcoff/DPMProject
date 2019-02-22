@@ -1,246 +1,254 @@
 package ca.mcgill.ecse211.localization;
-
+import lejos.hardware.Sound;
+import ca.mcgill.ecse211.lab5.AveragedBuffer;
 import ca.mcgill.ecse211.lab5.Lab5;
 import ca.mcgill.ecse211.navigation.Navigation;
-import ca.mcgill.ecse211.odometer.*;
-import lejos.hardware.Sound;
-import lejos.robotics.SampleProvider;
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import ca.mcgill.ecse211.odometer.OdometryCorrection;
 
 /**
- * This class provides methods to perform ultrasonic localization. 
- * 2 versions of the localization are available: Rising and Falling Edge
+ * This class represents a routine used by the robot
+ * to calibrate the theta value of the odometer, using
+ * the ultrasonic sensor.
  * 
- * @author Mohamed Youssef Bouaouina
- * @author Yuhang Zhang
+ * This will only use falling edge detection
+ * 
+ * 
+ * @author jacob silcoff & helen lin
+ *
  */
-public class UltrasonicLocalizer {
+public class UltrasonicLocalizer extends Thread {
 
-  //private constants
-  public enum LocalizationVersion { FALLING_EDGE, RISING_EDGE };
-  public static final int ROTATION_SPEED = 50;
+  /**
+   * The time (ms) between polling the sensor
+   */
+  public static final int SLEEP_TIME = 15;
+  /**
+   * The distance (cm) below which the robot assumes it is looking at the wall
+   */
+  public static final double DETECTION_DISTANCE = 30;
+  /**
+   * The motor speed (deg/s) used by the robot when turning
+   */
+  private static final int ROTATE_SPEED = 80;
+  /**
+   * The motor speed (deg/s) used by the robot when minimizing distance
+   */
+  private static final int MIN_SPEED = 30;
+  /**
+   * The error threshold (cm) for finding falling or rising edge angles
+   */
+  private static final double ERROR_THRESH = 2;
+  /**
+   * The number of readings in a row to be considered valid
+   */
+  private static final int POLL_COUNT = 20;
+
+
   private Odometer odo;
-  private SampleProvider usSensor;
-  private Navigation navigation;
-  private float[] usData;
-  private LocalizationVersion locVersion;
-  private static final double DISTANCE_THRESHOLD = 25;
+  private Navigation nav;
+  private AveragedBuffer<Float> samples;
+
+
 
   /**
-   * Class constructor that creates an UltrasonicLocalizer object
+   * Creates an ultrasonic sensor localizer instance for rising or falling edge localization
    * 
-   * @param odo : Odometer object used for determining coordinates of the robot
-   * @param usSensor : SampleProvider of the ultrasonic sensor
-   * @param locVersion : LocalizationVersion chosen by user
-   * @param navigation : Navigation object that provides navigation methods
+   * @param oc The odometry correction thread to be turned off during this process
    */
-  public UltrasonicLocalizer(Odometer odo,  SampleProvider usSensor, LocalizationVersion locVersion, Navigation navigation) {
-    this.odo = odo;
-    this.usSensor = usSensor;
-    this.usData = new float[usSensor.sampleSize()];
-    this.locVersion = locVersion;
-    this.navigation = navigation;
+  public UltrasonicLocalizer(OdometryCorrection oc) {
+    samples = new AveragedBuffer<Float>(5);
+    try {
+      odo = Odometer.getOdometer();
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
+
+    // start a new navigation thread
+    try {
+      this.nav = new Navigation(oc);
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
+    nav.start();
   }
+
   /**
-   * Method that performs the ultrasonic localization. 
-   * The routine to be performed (Falling or Rising) is determined by the locVersion instance variable
-   * of the UltrasonicLocalization object this method is called on 
+   * Creates an ultrasonic sensor localizer instance for rising or falling edge localization
    */
-  public void doLocalization() {
-    double angleA, angleB, angleAvg;
+  public UltrasonicLocalizer() {
+    samples = new AveragedBuffer<Float>(5);
+    try {
+      odo = Odometer.getOdometer();
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
 
-    Lab5.LEFT_MOTOR.setSpeed(ROTATION_SPEED);
-    Lab5.RIGHT_MOTOR.setSpeed(ROTATION_SPEED);
+    // start a new navigation thread
+    try {
+      this.nav = new Navigation(null);
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
+    nav.start();
+  }
 
-    //for falling edge localization
-    if (locVersion == LocalizationVersion.FALLING_EDGE) {
 
-      /* if the robot starts facing a wall, turn it away from the wall
-       * then the falling edge procedure starts properly
-       */
-      if (getFilteredData() <= DISTANCE_THRESHOLD) {
-        Lab5.LEFT_MOTOR.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 180), true);
-        Lab5.RIGHT_MOTOR.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 180), false);
-
+  /**
+   * Turns the robot clockwise or counterclockwise
+   * until a falling or rising edge is detected, as 
+   * measured by the ultrasonic sensor, and then returns
+   * the angle of that edge.
+   * @param rising True to find the rising edge, false for falling
+   * @param cw True to turn clockwise, false for counter clockwise
+   * @return The angle of the edge found
+   */
+  public double getEdge(boolean cw) {
+    int dir = cw? 1 : -1;
+    nav.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED); //set clockwise or counterclockwise turn
+    Lab5.LCD.drawString("STAGE 1", 0, 4);
+    double reading = readUS();
+    //loops to not be thrown off by 1 bad reading
+    boolean seesWall = false;
+    for (int i = 0; i < 20; i++) {
+      while ((reading < DETECTION_DISTANCE) || reading == -1) {
+        seesWall = true;
+        sleep(); 
+        reading = readUS(); //keep turning + updating readings
       }
+      sleep(); 
+    }
+    //ensures you are well past the rising edge
+    if (seesWall) {
+      nav.turnTo((odo.getXYT()[2] + dir * 45 + 360)%360);
+      nav.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED);
+    }
 
-      //start falling edge procedure by turning robot
-      Lab5.LEFT_MOTOR.forward();
-      Lab5.RIGHT_MOTOR.backward();
 
-      /* continuously check for a wall while turning, if one is found, 
-       * beep, then stop the robot and record the angle it is at in 
-       * angleA, the first angle used for angular positioning, then 
-       * continue the procedure
-       */
-      while (true) {
-        if (getFilteredData() <= DISTANCE_THRESHOLD){
-          Sound.beep();
-          Lab5.LEFT_MOTOR.stop();
-          Lab5.RIGHT_MOTOR.stop();
-          angleA = odo.getXYT()[2];
-          break;
-        }
+    Lab5.LCD.drawString("STAGE 2", 0, 4);
+    while ((reading > DETECTION_DISTANCE) || reading == -1) {
+      sleep();
+      reading = readUS(); //final readings
+    }
+    nav.setSpeeds(0, 0);// stop
+
+    Lab5.LCD.drawString("Edge detected", 0, 4);
+    Sound.beep(); //audio notification
+
+    /*
+    double lastReading = readUS();
+
+
+    //if rising edge, turn other direction
+    //tries to minimize value (ie, face perpendicular to wall)
+    dir = rising? -dir:dir;
+    int count = 0;
+    nav.setSpeeds(dir * MIN_SPEED, - dir * MIN_SPEED);
+    while (count < POLL_COUNT) {
+      if (lastReading >= (reading=readUS())) {
+        count++;
+      } else {
+        count = 0;
       }
+      lastReading = reading;
+      sleep();
+    }*/
 
+    nav.setSpeeds(0, 0); //stop robot
+    return odo.getXYT()[2];
+  }
 
-      /* stop checking for distance from wall while the robot turns 90 degrees 
-       * to ensure that the sensor does not stop rotation too early
-       */
-      Lab5.LEFT_MOTOR.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 90), true);
-      Lab5.RIGHT_MOTOR.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 90), false);
+  /**
+   * Calculates north heading according to the edges found
+   * 
+   * @param theta1 first angle detected from localization
+   * @param theta2 2nd angle detected from localization
+   */
+  private double localizeNorth(double theta1, double theta2) {
+    double avgAngle = (theta1 + theta2) / 2;
 
-      //start normal turning clockwise
-      Lab5.RIGHT_MOTOR.forward();
-      Lab5.LEFT_MOTOR.backward();
+    if (minAngle(avgAngle, theta1) > 90) {
+      avgAngle = (avgAngle + 180) % 360;
+    }
 
-      /* continuously check for a wall while turning, if one is found, beep,
-       * then stop the robot and record the angle it is at in angleB,
-       * the second angle used for angular positioning
-       */
-      while (true){
-        if (getFilteredData() <= DISTANCE_THRESHOLD){
-          Sound.beep();
-          Lab5.LEFT_MOTOR.stop();
-          Lab5.RIGHT_MOTOR.stop();
-          angleB = odo.getXYT()[2];
-          break;
-        }
-      }
+    return (avgAngle + 135 + 360) % 360;
+  }
 
-      //calculations for average angle based on formulas given in slides
-      if (angleA > angleB){
-        angleAvg = 45 - (angleA + angleB)/2;
-      }
-      else{
-        angleAvg =  225 - (angleA + angleB)/2;
-      }
+  /**
+   * Returns the min angle between two angles
+   * @param t1 the first angle
+   * @param t2 the second angle
+   */
+  private static double minAngle(double t1, double t2) {
+    double ang = (t1 - t2 + 360) % 360;
+    if (ang > 180) {
+      return 360 - ang;
+    } else {
+      return ang;
+    }
+  }
 
-      odo.update(0, 0, angleAvg);
+  public void run() {
 
-      double turnAngle = 0 - odo.getXYT()[2];
+    //Find first edge
+    double theta1 = getEdge(false);
+    // switch directions and turn until another edge is detected
+    double theta2 = getEdge(true);
 
-      navigation.turnTo(turnAngle);    
+    // correct current theta
+    double realAngle = (odo.getXYT()[2] - localizeNorth(theta1, theta2) + 360) % 360;
+    odo.setXYT(0, 0, realAngle); 
 
+    // turn to localized North
+    nav.turnTo(0);
+    if (readUS() < DETECTION_DISTANCE) {
+      odo.setTheta(180);
+    }
+    nav.turnTo(0);
+    nav.end();
+  }
 
-    } 
-
-    //Rising Edge Localization
-    else if (locVersion == LocalizationVersion.RISING_EDGE){
-
-      /*
-       * The robot should turn until it sees the wall, then look for the
-       * "rising edges:" the points where it no longer sees the wall.
-       * This is very similar to the FALLING_EDGE routine, but the robot
-       * will face toward the wall for most of it.
-       */
-
-      Lab5.RIGHT_MOTOR.setSpeed(ROTATION_SPEED);
-      Lab5.LEFT_MOTOR.setSpeed(ROTATION_SPEED);
-
-
-      if(getFilteredData() >= DISTANCE_THRESHOLD){
-        //turn the robot clockwise
-        Lab5.LEFT_MOTOR.forward();
-        Lab5.RIGHT_MOTOR.backward();
-
-        while (true){
-          if(getFilteredData() <= DISTANCE_THRESHOLD){
-            Lab5.LEFT_MOTOR.stop();
-            Lab5.RIGHT_MOTOR.stop();
-            break;
-          }
-        }
-      }
-
-      /* stop checking for distance from wall while the robot turns 45 degrees 
-       * to ensure that the sensor does not stop rotation too early by wrongly detecting another falling edge
-       */
-      Lab5.LEFT_MOTOR.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 45), true);
-      Lab5.RIGHT_MOTOR.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 45), false);
-
-      //start normal turning clockwise
-      Lab5.LEFT_MOTOR.forward();
-      Lab5.RIGHT_MOTOR.backward();
-
-      /* continuously check for a distance farther than the threshold
-       * while turning, if one is found, beep, then stop the robot
-       * and record the angle it is at in angleA, the first angle used for
-       * angular positioning
-       */
-      while (true){
-        if(getFilteredData() > DISTANCE_THRESHOLD){
-          Sound.beep();
-          Lab5.LEFT_MOTOR.stop();
-          Lab5.RIGHT_MOTOR.stop();
-          angleA = odo.getXYT()[2];
-          break;
-        }
-      }
-
-      /* Turn toward the wall a bit to ensure the sensor detects the wall
-       * properly and does not accidentally detect it is farther than the
-       * threshold
-       */
-      Lab5.LEFT_MOTOR.rotate(-convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 45), true);
-      Lab5.RIGHT_MOTOR.rotate(convertAngle(Lab5.WHEEL_RAD, Lab5.TRACK, 45), false);
-
-      //start normal turning counterclockwise
-      Lab5.LEFT_MOTOR.backward();
-      Lab5.RIGHT_MOTOR.forward();
-
-      /* continuously check for a distance farther than the threshold 
-       * while turning, if one is found, beep, then stop the robot
-       * and record the angle it is at in angleB, the second angle used for
-       * angular positioning
-       */         
-      while (true){
-        if(getFilteredData() > DISTANCE_THRESHOLD){
-          Sound.beep();
-          Lab5.RIGHT_MOTOR.stop();
-          Lab5.LEFT_MOTOR.stop();
-          angleB = odo.getXYT()[2];
-          break;
-        }
-      }
-
-      //calculations for average angle based on formulas given in slides
-      if(angleA > angleB){
-        angleAvg = 225 - (angleA + angleB)/2;
-      }
-      else{
-        angleAvg =  45 - (angleA + angleB)/2;
-      }
-
-      odo.update(0, 0, angleAvg);
-
-      double turnAngle = 0 - odo.getXYT()[2];
-
-      navigation.turnTo(turnAngle);    
-
+  /**
+   * Sleeps for the default amount of time
+   */
+  private void sleep() {
+    try {
+      sleep(SLEEP_TIME);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
   }
 
   /**
-   * Helper method that returns the distance of the closest object to the Ultrasonic sensor
+   * Polls the ultrasonic sensor and returns the result
    * 
-   * @return float representing the distance of the closest object to the Ultrasonic sensor
+   * @return The US reading in cm
    */
-  public float getFilteredData() {
-
-    usSensor.fetchSample(usData, 0);
-    float distance = 100*usData[0];
-
-    return distance;
+  public float readUS() {
+    float[] usData = new float[Lab5.US_FRONT.sampleSize()];
+    Lab5.US_FRONT.fetchSample(usData, 0);
+    Lab5.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 7);
+    samples.add((usData[0] * 100f));
+    if (usData[0] == 255) {
+      return -1;
+    }
+    return usData[0] * 100f;
   }
 
-  //helper methods taken from provided SquareDriver class in Lab2
-  private static int convertAngle(double radius, double width, double angle) {
-    return convertDistance(radius, Math.PI * width * angle / 360.0);
-  }
-  private static int convertDistance(double radius, double distance) {
-    return (int) ((180.0 * distance) / (Math.PI * radius));
+  /**
+   * Polls the ultrasonic sensor and returns the result,
+   * which can use the averaged filter if desired
+   * @param buffered True to use rolling average filter, false to get simple reading
+   * @return The US reading (cm)
+   */
+  public float readUS(boolean buffered) {
+    if (buffered) {
+      readUS();
+      return (float) samples.getAvg();
+    } else {
+      return readUS();
+    }
   }
 
 }
-
-
