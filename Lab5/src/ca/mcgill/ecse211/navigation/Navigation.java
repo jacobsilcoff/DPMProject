@@ -304,8 +304,23 @@ public class Navigation extends Thread {
    * @param r The desired speed of the right motor
    */
   public void setSpeeds(float l, float r) {
-    Lab5.LEFT_MOTOR.setSpeed(l);
-    Lab5.RIGHT_MOTOR.setSpeed(r);
+    Lab5.LEFT_MOTOR.setSpeed(Math.abs(l));
+    Lab5.RIGHT_MOTOR.setSpeed(Math.abs(r));
+    if (l > 0) {
+      Lab5.LEFT_MOTOR.forward();
+    } else if (l < 0) {
+      Lab5.LEFT_MOTOR.backward();
+    } else {
+      Lab5.LEFT_MOTOR.stop();
+    }
+    
+    if (r > 0) {
+      Lab5.RIGHT_MOTOR.forward();
+    } else if (r < 0) {
+      Lab5.RIGHT_MOTOR.backward();
+    } else {
+      Lab5.RIGHT_MOTOR.stop();
+    }
   }
 
   /**
@@ -315,8 +330,7 @@ public class Navigation extends Thread {
    * @param r The desired speed of the right motor
    */
   private void setSpeeds(int l, int r) {
-    Lab5.LEFT_MOTOR.setSpeed(l);
-    Lab5.RIGHT_MOTOR.setSpeed(r);
+    setSpeeds((float) l, (float) r);
   }
 
 
