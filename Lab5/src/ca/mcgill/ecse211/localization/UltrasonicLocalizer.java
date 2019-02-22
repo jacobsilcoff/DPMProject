@@ -74,6 +74,29 @@ public class UltrasonicLocalizer extends Thread {
     }
     nav.start();
   }
+  
+  /**
+   * Creates an ultrasonic sensor localizer instance for rising or falling edge localization
+   * 
+   * @param mode The localization mode chosen by use (RISING_EDGE or FALLING_EDGE)
+   */
+  public UltrasonicLocalizer() {
+    this.mode = Mode.FALLING_EDGE;
+    samples = new AveragedBuffer(5);
+    try {
+      odo = Odometer.getOdometer();
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
+
+    // start a new navigation thread
+    try {
+      this.nav = new Navigation(null);
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
+    nav.start();
+  }
 
 
   /**

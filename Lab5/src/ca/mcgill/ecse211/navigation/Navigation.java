@@ -175,7 +175,7 @@ public class Navigation extends Thread {
    * @author jacob silcoff
    */
   enum State {
-    INIT, TURNING, TRAVELING, EMERGENCY
+    INIT, TURNING, TRAVELING
   }
 
   /**

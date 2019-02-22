@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.localization;
 
 import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
 import ca.mcgill.ecse211.lab5.AveragedBuffer;
 import ca.mcgill.ecse211.lab5.Lab5;
 import ca.mcgill.ecse211.navigation.Navigation;
@@ -49,7 +50,7 @@ public class LightLocalizer extends Thread {
    * This represents the minimum difference from the mean for a light sensor reading to be
    * considered significant
    */
-  private static final float LIGHT_THRESHOLD = 0.10f;
+  private static final float LIGHT_THRESHOLD = 0.05f;
   /**
    * The correct value of t when the light sensor is perpendicular to the y axis
    */
@@ -76,9 +77,9 @@ public class LightLocalizer extends Thread {
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
-    this.nav = new Navigation(oc); // start a new nav thread
+    this.nav = new Navigation(null); // start a new nav thread
     nav.start();
-    samples = new AveragedBuffer();
+    samples = new AveragedBuffer<Float>(100);
     this.x = x;
     this.y = y;
   }
@@ -102,7 +103,7 @@ public class LightLocalizer extends Thread {
    
     
     //line up robot mid-point at with y-axis
-    nav.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - (Lab5.LINE_OFFSET_Y / 2), odo.getXYT()[y]);
+    nav.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - (2 * Lab5.LINE_OFFSET_Y / 3), odo.getXYT()[y]);
     while (nav.isNavigating()) {
       sleep();
     }
@@ -173,9 +174,11 @@ public class LightLocalizer extends Thread {
     do {
       Lab5.LINE_SENSOR.fetchSample(sample, 0);
       samples.add(sample[0]);
-      Lab5.LCD.drawString(sample[0] + ", " + samples.getAvg(),0,4);
+      Lab5.LCD.clear();
+      Lab5.LCD.drawString(sample[0] + ", " + samples.getAvg() + "      ",0,4);
       sleep();
     } while (sample[0] > samples.getAvg() - LIGHT_THRESHOLD);
+    Sound.beep();
   }
 
   /**
