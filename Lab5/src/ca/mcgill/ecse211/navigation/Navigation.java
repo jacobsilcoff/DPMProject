@@ -85,8 +85,8 @@ public class Navigation extends Thread {
    * @param y The desired y in cm
    */
   public void travelTo(double x, double y) {
-    destX = x * TILE_SIZE; // convert tile point to destination X coord (cm)
-    destY = y * TILE_SIZE; // convert Y tile pt
+    destX = x ; 
+    destY = y; // convert Y tile pt
     updateT();
     isNavigating = true;
     Lab5.LCD.drawString("Dest:" + (int) destX + "," + (int) destY + "," + (int) destT, 0, 4);

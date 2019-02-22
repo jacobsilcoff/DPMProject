@@ -3,9 +3,11 @@ package ca.mcgill.ecse211.lab5;
 import ca.mcgill.ecse211.color.ColorClassifier;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
+import ca.mcgill.ecse211.localization.UltrasonicLocalizer.LocalizationVersion;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
+import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
@@ -97,26 +99,22 @@ public class Lab5 {
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
 
   public static void main(String[] args) throws OdometerExceptions {
-    
-   // Button.waitForAnyPress();
-    
-    //LightLocalizer ll = new LightLocalizer(null, 0,0);
-    //ll.start();
     (new Thread(Odometer.getOdometer())).start();
     Navigation nav = new Navigation(null);
     nav.start();
-    double[][] pts = {{0,2},{2,2},{2,0},{0,0}};
-    for (double[] p : pts) {
-      nav.travelTo(p[0], p[1]);
-      while (nav.isNavigating()) {
-        try {
-          Thread.sleep(100);
-        } catch (InterruptedException e) {
-          // TODO Auto-generated catch block
-          e.printStackTrace();
-        }
-      }
-    }
+    final UltrasonicLocalizer ul =
+        new UltrasonicLocalizer(Odometer.getOdometer(), US_FRONT,
+        LocalizationVersion.FALLING_EDGE, nav);
+    (new Thread() {public void run(){
+      ul.doLocalization();
+    }}).start();
+    Button.waitForAnyPress();
+    LightLocalizer ll = new LightLocalizer(null, 0,0);
+    ll.start();
+   
+    
+    nav.travelTo(OdometryCorrection.LINE_SPACING, OdometryCorrection.LINE_SPACING);
+    nav.turnTo(0);
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
