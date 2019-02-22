@@ -97,7 +97,9 @@ public class Navigation extends Thread {
      * Kills the thread
      */
    public void end() {
-     correction.setOn(true);
+     if (correction != null) {
+       correction.setOn(true);
+     }
      on = false;
    }
   /**
@@ -132,7 +134,9 @@ public class Navigation extends Thread {
    * @param speed The turning speed
    */
   public void turnTo(double theta, int speed) {
-    correction.setOn(false);
+    if (correction != null) {
+      correction.setOn(false); 
+    }
     double presTheta = odo.getXYT()[2]; // get current heading
     double ang = (theta - presTheta + 360) % 360; // gets absolute angle required to turn
     Lab5.LEFT_MOTOR.setSpeed(speed);
@@ -189,7 +193,9 @@ public class Navigation extends Thread {
           if (isNavigating) {
             state = State.TURNING;
           }
-          correction.setOn(false);
+          if (correction != null) {
+            correction.setOn(false);
+          }
           break;
         case TURNING:
           Lab5.LCD.drawString("State: TURN", 0, 6);
@@ -207,7 +213,9 @@ public class Navigation extends Thread {
             // re-check heading and finish turning
             state = State.TURNING;
           } else if (!checkIfDone()) {
-            correction.setOn(true);
+            if (correction!=null) {
+              correction.setOn(true);
+            }
             updateTravel();
           } else { // Arrived
             setSpeeds(0, 0); // stop
