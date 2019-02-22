@@ -50,6 +50,11 @@ public class LightLocalizer extends Thread {
    * considered significant
    */
   private static final float LIGHT_THRESHOLD = 0.10f;
+  /**
+   * The correct value of t when the light sensor is perpendicular to the y axis
+   */
+  private static final double CORRECT_T_AVG =
+      (Math.toDegrees(Math.atan(Lab5.LINE_OFFSET_X/Lab5.LINE_OFFSET_Y)) + 270) % 360;
 
   private Odometer odo;
   private Navigation nav;
@@ -89,25 +94,48 @@ public class LightLocalizer extends Thread {
   public void run() {
     // find y-axis
     nav.turnTo(90);
-    moveToLine(false); //move backwards to a line (should be x=0 gridline)
+    moveToLine(true); //move forwards to a line (should be x=0 gridline)
     odo.setX(SENSOR_OFFSET_Y + (x+1) * OdometryCorrection.LINE_SPACING);
+    //this line is used to make future steps more predictable
     odo.setY((y + 0.5) * OdometryCorrection.LINE_SPACING);
-
-    nav.travelTo(-DOWN_DIST,odo.getXYT()[1]); //move down to center of current block
+    
+   
+    
+    //line up robot mid-point at with y-axis
+    nav.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - (Lab5.LINE_OFFSET_Y / 2), odo.getXYT()[y]);
     while (nav.isNavigating()) {
       sleep();
     }
-    nav.setSpeeds(0, 0);
-
-
-    //TODO: implement angle correction!
-
+    //TODO: Add verification that the robot is hitting the same line!
+    //TODO: Verify that this works!
+    rotateToLine(true);
+    double t1 = odo.getXYT()[2];
+    rotateToLine(false);
+    double t2 = odo.getXYT()[2];
+    correctAngle(t1,t2);
+    nav.travelTo(OdometryCorrection.LINE_SPACING * (x+0.5), 
+        OdometryCorrection.LINE_SPACING * (y+0.5));
+    while (nav.isNavigating()) {
+      sleep();
+    }
+    
     // find x-axis
     nav.turnTo(0);
-    moveToLine(false); //move backwards to a line (should be y=0 gridline)
+    moveToLine(true); //move forwards to a line (should be y=0 gridline)
     odo.setY(SENSOR_OFFSET_Y + (y+1) * OdometryCorrection.LINE_SPACING);
+  }
 
-
+  /**
+   * Given two angles that represent where the robot's light sensor
+   * interesected a straight line during a rotation, sets the
+   * odometer theta to be correct
+   * @param t1
+   * @param t2
+   */
+  private void correctAngle(double t1, double t2) {
+    double odoAvg = ((t1 + t2)/2 % 360);
+    double err = CORRECT_T_AVG - odoAvg;
+    odo.setTheta(odo.getXYT()[2] + err);
   }
 
   /**
