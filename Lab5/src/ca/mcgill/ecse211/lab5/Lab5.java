@@ -3,13 +3,11 @@ package ca.mcgill.ecse211.lab5;
 import ca.mcgill.ecse211.color.ColorClassifier;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
-import ca.mcgill.ecse211.localization.UltrasonicLocalizer.LocalizationVersion;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import lejos.hardware.Button;
-import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -85,11 +83,11 @@ public class Lab5 {
     LINE_SENSOR = lightSensorMode2.getMode("Red");
 
     @SuppressWarnings("resource")
-    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
+    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
     US_FRONT = usSensor.getMode("Distance");
 
     @SuppressWarnings("resource")
-    SensorModes usSensor2 = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
+    SensorModes usSensor2 = new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
     US_RIGHT = usSensor2.getMode("Distance");
 
   }
@@ -98,26 +96,35 @@ public class Lab5 {
    */
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
 
-  public static void main(String[] args) throws OdometerExceptions {
+  public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     (new Thread(Odometer.getOdometer())).start();
-    Navigation nav = new Navigation(null);
+    OdometryCorrection oc = new OdometryCorrection();
+    Navigation nav = new Navigation(oc);
     nav.start();
-    final UltrasonicLocalizer ul =
-        new UltrasonicLocalizer(Odometer.getOdometer(), US_FRONT,
-        LocalizationVersion.FALLING_EDGE, nav);
-    (new Thread() {public void run(){
-      ul.doLocalization();
-    }}).start();
-    Button.waitForAnyPress();
-    LightLocalizer ll = new LightLocalizer(null, 0,0);
-    ll.start();
-   
     
-    nav.travelTo(OdometryCorrection.LINE_SPACING, OdometryCorrection.LINE_SPACING);
-    nav.turnTo(0);
+    /*
+    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
+    LightLocalizer ll = new LightLocalizer(oc, 0,0);
+    ul.start();
+    ul.join();    
+    ll.start();
+    ll.join();
+    
+    */
+    //For testing, we assume that we are properly localized to begin:
+    Odometer.getOdometer().setXYT(30.48, 30.48, 0);
+    (new Thread(oc)).start();
+    //try square:
+    double[][] pts = {{0,61},{61,61},{61,0},{0,0}};
+    for (double[] p : pts) {
+      nav.travelTo(p[0] + 30.48, p[1] + 30.48);
+      while (nav.isNavigating())
+        Thread.sleep(100);
+    }
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
+    
   }
   
   /**

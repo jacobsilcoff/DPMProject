@@ -126,6 +126,7 @@ public class LightLocalizer extends Thread {
     moveToLine(true); //move forwards to a line (should be y=0 gridline)
     odo.setY(Lab5.LINE_OFFSET_Y + (y+1) * OdometryCorrection.LINE_SPACING);
     
+    nav.end();
   }
 
   /**

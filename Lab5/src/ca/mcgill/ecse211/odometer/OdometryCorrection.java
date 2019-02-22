@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.odometer;
 
 import ca.mcgill.ecse211.lab5.AveragedBuffer;
 import ca.mcgill.ecse211.lab5.Lab5;
+import lejos.hardware.Sound;
 
 /**
  * Represents a thread that uses a light sensor to update the values of a robots odometer to reduce
@@ -15,7 +16,7 @@ public class OdometryCorrection implements Runnable {
    * This represents the minimum difference from the mean for a light sensor reading to be
    * considered significant
    */
-  private static final float LIGHT_THRESHOLD = 0.18f;
+  private static final float LIGHT_THRESHOLD = 0.05f;
   /**
    * This represents the distance between lines on the grid, in cm
    */
@@ -47,7 +48,7 @@ public class OdometryCorrection implements Runnable {
   public OdometryCorrection() throws OdometerExceptions {
     this.odometer = Odometer.getOdometer();
     sample = new float[Lab5.LINE_SENSOR.sampleSize()];
-    samples = new AveragedBuffer<Float>();
+    samples = new AveragedBuffer<Float>(100);
     on = true;
   }
 
@@ -76,8 +77,8 @@ public class OdometryCorrection implements Runnable {
       if (on && sample[0] < samples.getAvg() - LIGHT_THRESHOLD
           && (lastPos == null || dist(pos, lastPos) > DIST_THRESHOLD)) {
         // Indicate detection of a line
+        Sound.beep();
         lineCount++;
-        Lab5.LCD.drawString(lineCount + " line(s) detected.", 0, 8);
 
         /*
          * Concept is to figure out which x/y is closest to desired target, and round that one. We
@@ -88,12 +89,12 @@ public class OdometryCorrection implements Runnable {
         if (lineCount != 1) {
           if (sensor[0] % LINE_SPACING < sensor[1] % LINE_SPACING) {
             // here we round the x position
-            sensor[0] = Math.round(sensor[0] / LINE_SPACING);
-            odometer.setX(Lab5.toRobot(sensor)[0] * LINE_SPACING);
+            sensor[0] = Math.round(sensor[0] / LINE_SPACING) * LINE_SPACING;
+            odometer.setX(Lab5.toRobot(sensor)[0]);
           } else {
             // here we round the y position
-            sensor[1] = Math.round(sensor[1] / LINE_SPACING);
-            odometer.setY(Lab5.toRobot(sensor)[1] * LINE_SPACING);
+            sensor[1] = Math.round(sensor[1] / LINE_SPACING) * LINE_SPACING;
+            odometer.setY(Lab5.toRobot(sensor)[1]);
           }
 
           // update last pos of line detected
