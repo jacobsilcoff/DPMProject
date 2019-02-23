@@ -73,6 +73,18 @@ public class CanFinder extends Thread {
    */
   public void handleCan() {
     //TODO: Implement this!
+    /*
+     * Implementation concept:
+     * first, center the can by turning left and right to find the
+     * 'edge' of the can with the ultrasonic sensor. The angle bisector
+     * of the angles the robot was at when each edge was detected is the angle
+     * pointing straight towards the can. Move until the can is the right 
+     * distance away, as measured by the US sensor. Use the color identification
+     * program in the color package to read the color. Then, use the navigation to
+     * back up, turn 90deg ccw, move forward a certain distance to give clearance for the can,
+     * turn 90deg cw, move forward a bit, turn 90deg cw, move forward, set navigation
+     * destination towards the end of the path and return. 
+     */ 
   }
   
   private void sleep() {
