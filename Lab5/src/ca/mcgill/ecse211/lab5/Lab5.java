@@ -8,6 +8,7 @@ import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import lejos.hardware.Button;
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
@@ -17,6 +18,18 @@ import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
 public class Lab5 {
+  /**
+   * Demo variables:
+   */
+  public static final int LLx = 0;
+  public static final int LLy = 0;
+  public static final int URx = 0;
+  public static final int URy = 0;
+  public static final int TR = 0;
+  
+  
+  
+  
   /**
    * The robot's left motor
    */
@@ -102,7 +115,7 @@ public class Lab5 {
     Navigation nav = new Navigation(oc);
     nav.start();
     
-    /*
+    //Localizes robot
     UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
     LightLocalizer ll = new LightLocalizer(oc, 0,0);
     ul.start();
@@ -110,17 +123,13 @@ public class Lab5 {
     ll.start();
     ll.join();
     
-    */
-    //For testing, we assume that we are properly localized to begin:
-    Odometer.getOdometer().setXYT(30.48, 30.48, 0);
-    (new Thread(oc)).start();
-    //try square:
-    double[][] pts = {{0,61},{61,61},{61,0},{0,0}};
-    for (double[] p : pts) {
-      nav.travelTo(p[0] + 30.48, p[1] + 30.48);
-      while (nav.isNavigating())
-        Thread.sleep(100);
-    }
+    
+    nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
+    Sound.beep();
+    
+    CanFinder finder = new CanFinder(nav);
+    finder.start();
+    finder.join();
     
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);

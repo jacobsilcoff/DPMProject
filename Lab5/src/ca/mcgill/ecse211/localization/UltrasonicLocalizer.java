@@ -225,7 +225,7 @@ public class UltrasonicLocalizer extends Thread {
    * 
    * @return The US reading in cm
    */
-  public float readUS() {
+  private float readUS() {
     float[] usData = new float[Lab5.US_FRONT.sampleSize()];
     Lab5.US_FRONT.fetchSample(usData, 0);
     Lab5.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 7);
