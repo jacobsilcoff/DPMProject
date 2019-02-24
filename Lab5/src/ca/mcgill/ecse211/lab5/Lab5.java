@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.lab5;
 
+import ca.mcgill.ecse211.color.CanColor;
 import ca.mcgill.ecse211.color.ColorClassifier;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
@@ -127,7 +128,8 @@ public class Lab5 {
     nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
     Sound.beep();
     
-    CanFinder finder = new CanFinder(nav);
+    //TODO: Specify color correctly
+    CanFinder finder = new CanFinder(nav, CanColor.RED);
     finder.start();
     finder.join();
     

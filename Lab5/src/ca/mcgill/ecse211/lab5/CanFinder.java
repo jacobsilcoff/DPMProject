@@ -1,9 +1,12 @@
 package ca.mcgill.ecse211.lab5;
 
+import ca.mcgill.ecse211.color.CanColor;
+import ca.mcgill.ecse211.color.ColorClassifier;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
+import lejos.hardware.Sound;
 
 /**
  * This is a thread that takes a robot, which we assume is
@@ -26,16 +29,27 @@ public class CanFinder extends Thread {
    * The distance at which point a can is detected
    */
   public static final int DETECTION_DIST = 25;
+  /**
+   * The distance at which point a can is clearly not detected
+   */
+  public static final int NO_CAN = 50;
+  /**
+   * Speed used to scan a can
+   */
+  public static final int SCAN_SPD = 40;
+  
   public static final float GRID_WIDTH = OdometryCorrection.LINE_SPACING;
   
   private int passNum;
   private Navigation nav;
   private Odometer odo;
+  private CanColor target;
   
   
   
   
-  public CanFinder(Navigation nav) {
+  public CanFinder(Navigation nav, CanColor target) {
+    this.target = target;
     this.nav = nav;
     //pass num is the number of passes back & forth made by the robot
     passNum = 0;
@@ -88,6 +102,61 @@ public class CanFinder extends Thread {
      * back up, turn 90deg ccw, move forward a certain distance to give clearance for the can,
      * turn 90deg cw, move forward a bit, turn 90deg cw, move forward.
      */ 
+    
+    alignWithCan();
+    ColorClassifier c = new ColorClassifier();
+    c.start();
+    while (c.getColor() != CanColor.UNKOWN) {
+      sleep();
+    }
+    if (c.getColor() == target) {
+      Sound.twoBeeps();
+    } else {
+      Sound.beep();
+    }
+    //TODO: Add code to get around can.
+    
+  }
+  
+  /**
+   * Lines the robot up with the can to be scanned.
+   */
+  private void alignWithCan() {
+    double t1 = findEdge(true);
+    double t2 = findEdge(false);
+    double angBisector = ((t1 + t2) / 2) % 360;
+    
+    double minAngle = ((angBisector - t1 + 360) % 360);
+    if (minAngle > 180) {
+      minAngle = 360 - minAngle;
+    }
+    
+    if (minAngle < 90) {
+      angBisector = (angBisector + 180)  % 360;
+    }
+    nav.turnTo(minAngle);
+    nav.setSpeeds(SCAN_SPD, SCAN_SPD);
+    while (readUS() > Lab5.CAN_DIST) {
+      sleep();
+    }
+    nav.setSpeeds(0,0);
+  }
+  
+  /**
+   * Finds an edge of the can in a certain direction 
+   * @param cw true for clockwise, false for ccw
+   * @return The angle of the robot when the edge is detected
+   */
+  private double findEdge(boolean cw) {
+    int dir = cw ? 1 : -1;
+    nav.setSpeeds(dir*SCAN_SPD, -dir*SCAN_SPD);
+    while (readUS() < NO_CAN) {
+      sleep();
+    }
+    nav.setSpeeds(0, 0);
+    double retVal = odo.getXYT()[2];
+    nav.turnTo(180 * (passNum % 2 == 0 ? 0 : 1));
+    return retVal;
   }
   
   private void sleep() {
