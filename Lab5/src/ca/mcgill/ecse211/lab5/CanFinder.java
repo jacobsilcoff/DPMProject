@@ -114,8 +114,28 @@ public class CanFinder extends Thread {
     } else {
       Sound.beep();
     }
-    //TODO: Add code to get around can.
-    
+    //TODO: Replace constants with variables and verify they work
+    //Code to get around can:
+    moveBack(10);
+    nav.travelTo(odo.getXYT()[0] - 20, odo.getXYT()[1]);
+    while(nav.isNavigating()) sleep();
+    nav.travelTo(odo.getXYT()[0], odo.getXYT()[1] + 20 * (passNum % 2 == 0?1:-1));
+    while (nav.isNavigating()) sleep();
+    nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH, odo.getXYT()[1]);
+    while (nav.isNavigating()) sleep();
+  }
+  
+  /**
+   * Moves backwards a certain distance
+   * @param dist The distance to move, in cm
+   */
+  private void moveBack(float dist) {
+    double[] start = odo.getXYT();
+    nav.setSpeeds(-SCAN_SPD, -SCAN_SPD);
+    while (Navigation.dist(start, odo.getXYT()) < dist) {
+      sleep();
+    }
+    nav.setSpeeds(0, 0);
   }
   
   /**
