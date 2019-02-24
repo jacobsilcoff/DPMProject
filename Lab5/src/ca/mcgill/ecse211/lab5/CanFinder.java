@@ -26,6 +26,7 @@ public class CanFinder extends Thread {
    * The distance at which point a can is detected
    */
   public static final int DETECTION_DIST = 25;
+  public static final float GRID_WIDTH = OdometryCorrection.LINE_SPACING;
   
   private int passNum;
   private Navigation nav;
@@ -46,14 +47,17 @@ public class CanFinder extends Thread {
   }
   
   public void run() {
-    while (passNum * PASS_WIDTH < Lab5.URx) {
+    while (passNum * PASS_WIDTH < Lab5.URx * GRID_WIDTH) {
       
-      nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx, 
-          (passNum % 2 == 0 ? Lab5.URy : Lab5.LLy) * OdometryCorrection.LINE_SPACING);
+      nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH, 
+          (passNum % 2 == 0 ? Lab5.URy : Lab5.LLy) * GRID_WIDTH);
       
       while (nav.isNavigating()) {
         if (readUS() < DETECTION_DIST) { //initiate can handling sequence
+          nav.setSpeeds(0, 0);
           handleCan();
+          nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH, 
+              (passNum % 2 == 0 ? Lab5.URy : Lab5.LLy) * GRID_WIDTH);
         }
         sleep();
       }
@@ -82,8 +86,7 @@ public class CanFinder extends Thread {
      * distance away, as measured by the US sensor. Use the color identification
      * program in the color package to read the color. Then, use the navigation to
      * back up, turn 90deg ccw, move forward a certain distance to give clearance for the can,
-     * turn 90deg cw, move forward a bit, turn 90deg cw, move forward, set navigation
-     * destination towards the end of the path and return. 
+     * turn 90deg cw, move forward a bit, turn 90deg cw, move forward.
      */ 
   }
   
