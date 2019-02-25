@@ -87,13 +87,15 @@ public class OdometryCorrection implements Runnable {
         
         double[] sensor = Lab5.toSensor(pos);
         if (lineCount != 1) {
-          if (sensor[0] % LINE_SPACING < sensor[1] % LINE_SPACING) {
+          double roundedX = Math.round(sensor[0] / LINE_SPACING) * LINE_SPACING;
+          double roundedY = Math.round(sensor[1] / LINE_SPACING) * LINE_SPACING;
+          if (Math.abs(sensor[0] - roundedX)< Math.abs(sensor[1] - roundedY)) {
             // here we round the x position
-            sensor[0] = Math.round(sensor[0] / LINE_SPACING) * LINE_SPACING;
+            sensor[0] = roundedX;
             odometer.setX(Lab5.toRobot(sensor)[0]);
           } else {
             // here we round the y position
-            sensor[1] = Math.round(sensor[1] / LINE_SPACING) * LINE_SPACING;
+            sensor[1] = roundedY;
             odometer.setY(Lab5.toRobot(sensor)[1]);
           }
 
