@@ -20,7 +20,7 @@ public class CanFinder extends Thread {
   /**
    * The amount the robot moves over, in cm, for each pass it completes
    */
-  public static final double PASS_WIDTH = 10;
+  public static final double PASS_WIDTH = OdometryCorrection.LINE_SPACING;
   /**
    * The amount of time the system sleeps between ticks
    */

@@ -1,5 +1,5 @@
 package ca.mcgill.ecse211.color;
-
+//TODO: add stddev
 public enum CanColor {
   RED("Red", new byte[] {47, 18, 16}), GREEN("Green", new byte[] {18, 46, 20}), BLUE("Blue",
       new byte[] {24, 43, 57}), YELLOW("Yellow", new byte[] {61, 43, 31}), UNKOWN;

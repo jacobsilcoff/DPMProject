@@ -62,7 +62,7 @@ public class Lab5 {
   /**
    * The robot's right-facing ultrasonic sensor
    */
-  public static final SampleProvider US_RIGHT;
+  //public static final SampleProvider US_RIGHT;
   /**
    * Represents the radius of each wheel, in cm
    */
@@ -100,9 +100,9 @@ public class Lab5 {
     SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
     US_FRONT = usSensor.getMode("Distance");
 
-    @SuppressWarnings("resource")
-    SensorModes usSensor2 = new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
-    US_RIGHT = usSensor2.getMode("Distance");
+    //@SuppressWarnings("resource")
+    //SensorModes usSensor2 = new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
+    //US_RIGHT = usSensor2.getMode("Distance");
 
   }
   /**
@@ -115,16 +115,16 @@ public class Lab5 {
     OdometryCorrection oc = new OdometryCorrection();
     Navigation nav = new Navigation(oc);
     nav.start();
-    
+    Button.waitForAnyPress();
     //Localizes robot
     UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
     LightLocalizer ll = new LightLocalizer(oc, 0,0);
-    ul.start();
-    ul.join();    
-    ll.start();
-    ll.join();
-    
-    
+    //ul.run();  
+    ll.run();
+    nav.travelTo(OdometryCorrection.LINE_SPACING, OdometryCorrection.LINE_SPACING);
+    while (nav.isNavigating()) Thread.sleep(100);
+    nav.turnTo(0);   
+    /*
     nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
     Sound.beep();
     
@@ -133,6 +133,8 @@ public class Lab5 {
     finder.start();
     finder.join();
     
+    nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
+    */
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
     

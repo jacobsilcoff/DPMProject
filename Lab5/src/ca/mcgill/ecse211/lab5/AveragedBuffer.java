@@ -73,4 +73,14 @@ public class AveragedBuffer<T extends Number> {
   public int getN() {
     return n;
   }
+  
+  /**
+   * Resets buffer
+   */
+  public void clear() {
+    samples = (T[]) new Number[n];
+    sampleIndex = 0;
+    avg = 0;
+    size = 0;
+  }
 }

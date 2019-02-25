@@ -23,7 +23,7 @@ public class LightLocalizer extends Thread {
   /**
    * The speed of the motors during localization
    */
-  private static final int MOTOR_SPEED = 100;
+  private static final int MOTOR_SPEED = 130;
   /**
    * The distance the robot moves downwards before detecting the y axis, in grid units
    */
@@ -58,6 +58,7 @@ public class LightLocalizer extends Thread {
   private AveragedBuffer<Float> samples;
   private int x;
   private int y;
+  private boolean firstTime;
 
 
   /**
@@ -78,71 +79,72 @@ public class LightLocalizer extends Thread {
     samples = new AveragedBuffer<Float>(100);
     this.x = x;
     this.y = y;
+    firstTime = true;
+  }
+  
+  public LightLocalizer(OdometryCorrection oc, int x, int y, boolean firstTime) throws OdometerExceptions {
+    try {
+      odo = Odometer.getOdometer();
+    } catch (OdometerExceptions e) {
+      e.printStackTrace();
+    }
+    this.nav = new Navigation(null); // start a new nav thread
+    nav.start();
+    samples = new AveragedBuffer<Float>(100);
+    this.x = x;
+    this.y = y;
+    this.firstTime = firstTime;
+    
   }
 
   /**
    * Starts the thread.
-   * When executed, the robot will turn to 270deg, and 
-   * move backwards until the y axis is detected.
-   * Then, it will move back to the center of the tile, and
-   * turn 90deg down to face 180deg, moving backwards until the
-   * x axis is detected. The robot will then navigate to the origin.
    */
   public void run() {
-    // find y-axis
-    nav.turnTo(90);
-    moveToLine(true); //move forwards to a line (should be x=0 gridline)
-    odo.setX(Lab5.LINE_OFFSET_Y + (x+1) * OdometryCorrection.LINE_SPACING);
-    //this line is used to make future steps more predictable
-    odo.setY((y + 0.5) * OdometryCorrection.LINE_SPACING);
-
-
-
-    //line up robot mid-point at with y-axis
-    nav.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - 0.9 * Lab5.LINE_OFFSET_Y, odo.getXYT()[1]);
-    while (nav.isNavigating()) {
-      sleep();
+    if (firstTime) {
+      //roughly sets up x and y
+      nav.turnTo(0);
+      moveToLine(true);
+      odo.setY(OdometryCorrection.LINE_SPACING * (y+1) + Lab5.LINE_OFFSET_Y);
+      nav.travelTo(odo.getXYT()[0],OdometryCorrection.LINE_SPACING/2);
+      while (nav.isNavigating()) sleep();
+      nav.turnTo(90);
+      moveToLine(true);
+      odo.setX(OdometryCorrection.LINE_SPACING * (x+1) + Lab5.LINE_OFFSET_Y);
     }
-    //TODO: Add verification that the robot is hitting the same line!
-    //TODO: Verify that this works!
-    rotateToLine(true);
-    double t1 = odo.getXYT()[2];
-    double t2;
-    do {
-      rotateToLine(false);
-      t2 = odo.getXYT()[2];
-    } while ((t1-t2+360) % 360 < MIN_ANGLE);
-    correctAngle(t1,t2);
-
-    nav.travelTo(OdometryCorrection.LINE_SPACING * (x+0.5), 
-        OdometryCorrection.LINE_SPACING * (y+0.5));
-    while (nav.isNavigating()) {
-      sleep();
-    }
-
     
-    // find x-axis
-    nav.turnTo(0);
-    moveToLine(true); //move forwards to a line (should be y=0 gridline)
-    odo.setY(Lab5.LINE_OFFSET_Y + (y+1) * OdometryCorrection.LINE_SPACING);
-    
-    nav.end();
-  }
+    //Moves to safe rotation position
+    nav.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - 6, 
+        OdometryCorrection.LINE_SPACING * (y+1) - 6);
+    while (nav.isNavigating()) sleep();
+    nav.turnTo(60); //this ensures light sensor within block
 
-  /**
-   * Given two angles that represent where the robot's light sensor
-   * interesected a straight line during a rotation, sets the
-   * odometer theta to be correct
-   * @param t1
-   * @param t2
-   */
-  private void correctAngle(double t1, double t2) {
-    double odoAvg = ((t1 + t2)/2 % 360);
-    if (odoAvg < 180) {
-      odoAvg += 180;
-    }
-    double err = CORRECT_T_AVG - odoAvg;
-    odo.setTheta(odo.getXYT()[2] + err);
+    //Find the 4 intersections
+    rotateToLine(false);
+    double tYN = odo.getXYT()[2];
+    rotateToLine(false);
+    double tXP = odo.getXYT()[2];
+    rotateToLine(false);
+    double tYP = odo.getXYT()[2];
+    rotateToLine(false);
+    double tXN = odo.getXYT()[2];
+
+    //calculates & updates values
+    double d = Math.sqrt(Math.pow(Lab5.LINE_OFFSET_X,2) + Math.pow(Lab5.LINE_OFFSET_Y, 2));
+    double tY = Math.abs(tYN - tYP);
+    tY = tY > 180 ? 360 - tY : tY; 
+    double tX = Math.abs(tXN - tXP);
+    tX = tX > 180 ? 360 - tX : tX;
+    odo.setX(OdometryCorrection.LINE_SPACING * (x+1) 
+        - d * Math.cos(Math.toRadians(tY/2)));
+    odo.setY(OdometryCorrection.LINE_SPACING * (y+1)
+        - d * Math.cos(Math.toRadians(tX/2)));
+    double sensorTheta = Math.toDegrees(Math.acos(Lab5.LINE_OFFSET_X / Lab5.LINE_OFFSET_Y));
+    double odo270 = (tY/2 + tYP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 270
+    double odo180 = (tX/2 + tXP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 180
+    double avgError = ((odo180 - 180) + (odo270 - 270)) / 2;
+    //TODO: Figure out where the hell 45 comes from
+    odo.setTheta(odo.getXYT()[2] - avgError + 45);
   }
 
   /**
@@ -184,6 +186,7 @@ public class LightLocalizer extends Thread {
       Lab5.LCD.drawString(sample[0] + ", " + samples.getAvg() + "      ",0,4);
       sleep();
     } while (sample[0] > samples.getAvg() - LIGHT_THRESHOLD);
+    samples.clear();
     Sound.beep();
   }
 
