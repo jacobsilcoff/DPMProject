@@ -140,7 +140,7 @@ public class Lab5 {
     //Start can finder
     Button.waitForAnyPress();
     
-    CanFinder finder = new CanFinder(nav, CanColor.RED);
+    CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
     finder.run();
     
     nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);

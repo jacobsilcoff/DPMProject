@@ -61,4 +61,19 @@ public enum CanColor {
   public String toString() {
     return name;
   }
+  
+  public static CanColor fromNumber(int n) {
+    switch(n) {
+      case 1:
+        return BLUE;
+      case 2: 
+        return GREEN;
+      case 3:
+        return YELLOW;
+      case 4:
+        return RED;
+      default:
+        return UNKOWN;
+    }
+  }
 }
