@@ -18,7 +18,7 @@ import ca.mcgill.ecse211.odometer.OdometryCorrection;
  * @author jacob
  *
  */
-public class LightLocalizer extends Thread {
+public class LightLocalizer {
 
   /**
    * The speed of the motors during localization
@@ -81,7 +81,7 @@ public class LightLocalizer extends Thread {
     this.y = y;
     firstTime = true;
   }
-  
+
   public LightLocalizer(OdometryCorrection oc, int x, int y, boolean firstTime) throws OdometerExceptions {
     try {
       odo = Odometer.getOdometer();
@@ -94,7 +94,7 @@ public class LightLocalizer extends Thread {
     this.x = x;
     this.y = y;
     this.firstTime = firstTime;
-    
+
   }
 
   /**
@@ -106,13 +106,12 @@ public class LightLocalizer extends Thread {
       nav.turnTo(0);
       moveToLine(true);
       odo.setY(OdometryCorrection.LINE_SPACING * (y+1) + Lab5.LINE_OFFSET_Y);
-      nav.travelTo(odo.getXYT()[0],OdometryCorrection.LINE_SPACING/2);
-      while (nav.isNavigating()) sleep();
+      moveBackwards(Lab5.LINE_OFFSET_Y + 10);
       nav.turnTo(90);
       moveToLine(true);
       odo.setX(OdometryCorrection.LINE_SPACING * (x+1) + Lab5.LINE_OFFSET_Y);
     }
-    
+
     //Moves to safe rotation position
     nav.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - 6, 
         OdometryCorrection.LINE_SPACING * (y+1) - 6);
@@ -143,8 +142,8 @@ public class LightLocalizer extends Thread {
     double odo270 = (tY/2 + tYP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 270
     double odo180 = (tX/2 + tXP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 180
     double avgError = ((odo180 - 180) + (odo270 - 270)) / 2;
-    //TODO: Figure out where the hell 45 comes from
-    odo.setTheta(odo.getXYT()[2] - avgError + 45);
+    //TODO: Figure out where the hell 42 comes from
+    odo.setTheta(odo.getXYT()[2] - avgError + 38);
   }
 
   /**
@@ -195,25 +194,27 @@ public class LightLocalizer extends Thread {
    */
   private void sleep() {
     try {
-      sleep(POLL_DELAY);
+      Thread.sleep(POLL_DELAY);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
   }
 
   /**
-   * Moves the robot forward (straight) a certain distance, using the odometer.
+   * Moves the robot backwards (straight) a certain distance, using the odometer.
    * 
    * @param dist
    */
-  private void moveForward(double dist) {
+  private void moveBackwards(double dist) {
     nav.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
     double[] start = nav.getOdo().getXYT();
-    Lab5.LEFT_MOTOR.forward();
-    Lab5.RIGHT_MOTOR.forward();
-    while (Navigation.dist(nav.getOdo().getXYT(), start) < dist) {
+
+    Lab5.LEFT_MOTOR.backward();
+    Lab5.RIGHT_MOTOR.backward();
+
+    while (Navigation.dist(nav.getOdo().getXYT(), start) < Math.abs(dist)) {
       try {
-        sleep(30);
+        Thread.sleep(30);
       } catch (InterruptedException e) {
       }
     }

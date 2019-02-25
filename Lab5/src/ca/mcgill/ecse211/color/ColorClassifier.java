@@ -9,7 +9,7 @@ import lejos.hardware.lcd.LCD;
  * 
  * @author jacob
  */
-public class ColorClassifier extends Thread {
+public class ColorClassifier {
 
   public static final int MAX_TACHO = 210;
   public static final int SLEEP_TIME = 20;
@@ -29,13 +29,12 @@ public class ColorClassifier extends Thread {
   /**
    * Starts by checking if the arm has been calibrated to zero. if it has,
    */
-  public void run() {
+  public CanColor classify() {
     if (!calibrated) {
       calibrate();
-      calibrated = true;
     }
     Lab5.SENSOR_MOTOR.setSpeed(SCAN_SPD);
-    Lab5.SENSOR_MOTOR.rotateTo(0, true);
+    Lab5.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
@@ -55,7 +54,7 @@ public class ColorClassifier extends Thread {
 
     LCD.drawString("pass 1 done", 0, 0);
 
-    Lab5.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
+    Lab5.SENSOR_MOTOR.rotateTo(0, true);
 
     while (Lab5.SENSOR_MOTOR.isMoving()) {
       float[] sample = new float[Lab5.COLOR_SENSOR.sampleSize()];
@@ -80,6 +79,8 @@ public class ColorClassifier extends Thread {
     colorLabel = CanColor.getClosestColor(new byte[] {(byte) (avgReading[0] * 1000),
         (byte) (avgReading[1] * 1000), (byte) (avgReading[2] * 1000)});
     LCD.drawString(colorLabel.toString(), 0, 4);
+
+    return colorLabel;
   }
 
   /**
@@ -93,23 +94,37 @@ public class ColorClassifier extends Thread {
 
 
   /**
-   * Ensures that the tachometer is zeroed properly by moving the arm as far CCW as possible and
-   * then back to the rest position.
+   * Ensures that the tachometer is zeroed properly by moving the arm as far CCW as possible 
    */
   public void calibrate() {
     // moves towards the left
     Lab5.SENSOR_MOTOR.setSpeed(SCAN_SPD);
     Lab5.SENSOR_MOTOR.backward();
     try {
-      sleep(4500);
+      Thread.sleep(4500);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
     Lab5.SENSOR_MOTOR.stop();
     Lab5.SENSOR_MOTOR.resetTachoCount();
-    Lab5.SENSOR_MOTOR.setSpeed(MOVE_SPD);
-    Lab5.SENSOR_MOTOR.rotateTo(MAX_TACHO);
-    Lab5.SENSOR_MOTOR.stop();
+    calibrated = true;
+  }
+
+  /** 
+   * Allows the arm to be calibrated as a thread.
+   * @param wait True to block, false to not block
+   */
+  public void calibrate(boolean wait) {
+    if (wait) {
+      calibrate();
+    } else {
+      (new Thread() {
+        public void run() {
+          calibrate();
+        }
+      }).start();
+    }
+
   }
 
   /**
@@ -133,7 +148,7 @@ public class ColorClassifier extends Thread {
    */
   private void sleep() {
     try {
-      sleep(SLEEP_TIME);
+      Thread.sleep(SLEEP_TIME);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }

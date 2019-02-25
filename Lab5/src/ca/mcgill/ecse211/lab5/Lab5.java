@@ -22,14 +22,11 @@ public class Lab5 {
   /**
    * Demo variables:
    */
-  public static final int LLx = 0;
-  public static final int LLy = 0;
-  public static final int URx = 0;
-  public static final int URy = 0;
+  public static final int LLx = 1;
+  public static final int LLy = 2;
+  public static final int URx = 4;
+  public static final int URy = 4;
   public static final int TR = 0;
-  
-  
-  
   
   /**
    * The robot's left motor
@@ -86,6 +83,11 @@ public class Lab5 {
    * center of where the can should be for measurment
    */
   public static final double CAN_DIST = 7;
+  
+  /**
+   * The can classifier used by the program
+   */
+  public static final ColorClassifier CLASSIFIER = new ColorClassifier();
 
   static {
     @SuppressWarnings("resource")
@@ -115,26 +117,34 @@ public class Lab5 {
     OdometryCorrection oc = new OdometryCorrection();
     Navigation nav = new Navigation(oc);
     nav.start();
+    //Start localization
     Button.waitForAnyPress();
+    CLASSIFIER.calibrate(false);
     //Localizes robot
     UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
     LightLocalizer ll = new LightLocalizer(oc, 0,0);
-    //ul.run();  
+    ul.run();  
     ll.run();
     nav.travelTo(OdometryCorrection.LINE_SPACING, OdometryCorrection.LINE_SPACING);
     while (nav.isNavigating()) Thread.sleep(100);
-    nav.turnTo(0);   
-    /*
+    nav.turnTo(0);
+    //move to ll
+    Button.waitForAnyPress();
+    
+    //Start the correction
+    (new Thread(oc)).start();
+    
     nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
     Sound.beep();
     
-    //TODO: Specify color correctly
+    //Start can finder
+    Button.waitForAnyPress();
+    
     CanFinder finder = new CanFinder(nav, CanColor.RED);
-    finder.start();
-    finder.join();
+    finder.run();
     
     nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
-    */
+    
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
     

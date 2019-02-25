@@ -28,7 +28,7 @@ public class CanFinder extends Thread {
   /**
    * The distance at which point a can is detected
    */
-  public static final int DETECTION_DIST = 25;
+  public static final int DETECTION_DIST = 20; //should be 25
   /**
    * The distance at which point a can is clearly not detected
    */
@@ -61,7 +61,7 @@ public class CanFinder extends Thread {
   }
   
   public void run() {
-    while (passNum * PASS_WIDTH < Lab5.URx * GRID_WIDTH) {
+    while (passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH <= Lab5.URx * GRID_WIDTH) {
       
       nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH, 
           (passNum % 2 == 0 ? Lab5.URy : Lab5.LLy) * GRID_WIDTH);
@@ -104,12 +104,7 @@ public class CanFinder extends Thread {
      */ 
     
     alignWithCan();
-    ColorClassifier c = new ColorClassifier();
-    c.start();
-    while (c.getColor() != CanColor.UNKOWN) {
-      sleep();
-    }
-    if (c.getColor() == target) {
+    if (Lab5.CLASSIFIER.classify() == target) {
       Sound.twoBeeps();
     } else {
       Sound.beep();

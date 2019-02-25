@@ -18,7 +18,7 @@ import ca.mcgill.ecse211.odometer.OdometryCorrection;
  * @author jacob silcoff & helen lin
  *
  */
-public class UltrasonicLocalizer extends Thread {
+public class UltrasonicLocalizer {
 
   /**
    * The time (ms) between polling the sensor
@@ -214,7 +214,7 @@ public class UltrasonicLocalizer extends Thread {
    */
   private void sleep() {
     try {
-      sleep(SLEEP_TIME);
+      Thread.sleep(SLEEP_TIME);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
