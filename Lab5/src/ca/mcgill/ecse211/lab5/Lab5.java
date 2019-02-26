@@ -144,6 +144,7 @@ public class Lab5 {
               Sound.beep();
               wait(1500);
               CLASSIFIER.getData();
+              wait(1000);
               detected = true;
             } else {
               detected = canSeen;
@@ -157,7 +158,7 @@ public class Lab5 {
           } catch (InterruptedException e) {}
         }
       }).start();
-      while (buttonChoice  != Button.ID_ESCAPE) {
+      while (buttonChoice != Button.ID_ESCAPE) {
         buttonChoice = Button.waitForAnyPress();
       }
       return;
@@ -165,22 +166,19 @@ public class Lab5 {
 
     (new Thread(Odometer.getOdometer())).start();
     OdometryCorrection oc = new OdometryCorrection();
-    Navigation nav = new Navigation(oc);
-    nav.start();
-    //Start localization
-    Button.waitForAnyPress();
-    CLASSIFIER.calibrate(false);
+    
     //Localizes robot
     UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
     LightLocalizer ll = new LightLocalizer(oc, 0,0);
     ul.run();  
     ll.run();
-
+    Navigation nav = new Navigation(oc);
+    nav.start();
     //Start the correction
     (new Thread(oc)).start();
     //Navigates to LL, beeps and waits a second before next step
     nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
-    while (nav.isNavigating()) Thread.sleep(100);;
+    while (nav.isNavigating()) Thread.sleep(100);
     Sound.beep();
     Thread.sleep(1000);
 
