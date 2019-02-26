@@ -86,7 +86,7 @@ public class ColorClassifier {
       sleep();
     }
 
-    Lab5.SENSOR_MOTOR.rotateTo(0, true);
+    Lab5.SENSOR_MOTOR.rotateTo(3, true);
 
     while (Lab5.SENSOR_MOTOR.isMoving()) {
       float[] sample = new float[Lab5.COLOR_SENSOR.sampleSize()];

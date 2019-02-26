@@ -26,11 +26,11 @@ public class Lab5 {
   /**
    * Demo variables:
    */
-  public static final int LLx = 1;
+  public static final int LLx = 2;
   public static final int LLy = 2;
   public static final int URx = 4;
-  public static final int URy = 4;
-  public static final int TR = 1;
+  public static final int URy = 5;
+  public static final int TR = 4;
 
   /**
    * The robot's left motor
