@@ -26,14 +26,6 @@ public class CanFinder extends Thread {
    */
   public static final int SLEEP_TIME = 15;
   /**
-   * The distance at which point a can is detected
-   */
-  public static final int DETECTION_DIST = 20; // should be 25
-  /**
-   * The distance at which point a can is clearly not detected
-   */
-  public static final int NO_CAN = 50;
-  /**
    * Speed used to scan a can
    */
   public static final int SCAN_SPD = 40;
@@ -64,7 +56,7 @@ public class CanFinder extends Thread {
   public void run() {
     while (nextX <= Lab5.URx - Lab5.URy) {
       int dir = nextX % 2 == 0 ? 1 : -1;
-      if ((nextY == 0 && nextX % 2 == 0) || (nextY == Lab5.URy - Lab5.LLy && nextX % 2 == 1)) {
+      if ( ((nextY == 0 && dir == 1) || (nextY == Lab5.URy - Lab5.LLy && dir == -1))) {
         // approach horizontally
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH - Lab5.CAN_DIST,
             (nextY + Lab5.LLy) * GRID_WIDTH);
@@ -87,19 +79,18 @@ public class CanFinder extends Thread {
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH,
             (nextY + Lab5.LLy) * GRID_WIDTH - dir * Lab5.CAN_DIST);
         awaitNav();
-        CanColor color = Lab5.CLASSIFIER.classify();
-        if (color != CanColor.UNKNOWN) {
-          if (color == target) {
+
+        if (Lab5.CLASSIFIER.canDetected()) {
+          if (Lab5.CLASSIFIER.classify() == target) {
             Sound.twoBeeps();
           } else {
             Sound.beep();
           }
-          if ((nextY == 0 && nextX % 2 == 1) || (nextY == Lab5.URy - Lab5.LLy && nextX % 2 == 0)) {
+          if ((nextY == 0 && dir == -1) || (nextY == Lab5.URy - Lab5.LLy && dir == 1)) {
             // end of a pass
             moveBack(15);
             nav.travelTo((nextX + Lab5.LLx + 0.5) * GRID_WIDTH, (Lab5.LLy + nextY) * GRID_WIDTH);
             awaitNav();
-            nextX++;
           } else {
             // Avoid collision
             moveBack(10);
@@ -110,6 +101,10 @@ public class CanFinder extends Thread {
             nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH, odo.getXYT()[1]);
             awaitNav();
           }
+        }
+        if ((nextY == 0 && dir == -1) 
+            || (nextY == Lab5.URy - Lab5.LLy && dir == 1)) {
+          nextX ++;
         }
         nextY += dir;
       }
@@ -131,17 +126,6 @@ public class CanFinder extends Thread {
     double[] start = odo.getXYT();
     nav.setSpeeds(-SCAN_SPD, -SCAN_SPD);
     while (Navigation.dist(start, odo.getXYT()) < dist) {
-      sleep();
-    }
-    nav.setSpeeds(0, 0);
-  }
-
-  /**
-   * Lines the robot up with the can to be scanned.
-   */
-  private void alignWithCan() {
-    nav.setSpeeds(30, 30);
-    while (readUS() > Lab5.CAN_DIST) {
       sleep();
     }
     nav.setSpeeds(0, 0);
