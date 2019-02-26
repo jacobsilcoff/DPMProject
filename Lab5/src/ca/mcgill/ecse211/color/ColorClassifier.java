@@ -23,7 +23,40 @@ public class ColorClassifier {
    * Creates a ColorClassifier
    */
   public ColorClassifier() {
-    colorLabel = CanColor.UNKOWN;
+    colorLabel = CanColor.UNKNOWN;
+  }
+  
+  /**
+   * Returns true if a can is seen, else false
+   * @return
+   */
+  public boolean canDetected() {
+    double[] totalReadings = new double[3];
+    int numReadings = 0;
+    for (int i = 0; i < 10; i++) {
+      float[] sample = new float[Lab5.COLOR_SENSOR.sampleSize()];
+      Lab5.COLOR_SENSOR.fetchSample(sample, 0);
+      if (!isWhite(sample)) {
+        for (int j = 0; j < sample.length; j++) {
+          totalReadings[j] += sample[j];
+        }
+        numReadings++;
+      }
+      sleep();
+    }
+    float[] avgReading = new float[totalReadings.length];
+    for (int i = 0; i < avgReading.length; i++) {
+      avgReading[i] = (float) (totalReadings[i] / numReadings);
+    }
+    for (int i = 0; i < 3; i++) {
+      if (Float.isNaN(avgReading[i])) {
+        //LCD.clear();
+        //LCD.drawString("NO CAN", 0, 0);
+        return false;
+      }
+    }
+    return true;
+    
   }
 
   /**
@@ -46,13 +79,10 @@ public class ColorClassifier {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
         }
-        printReading(toByte(sample));
         numReadings++;
       }
       sleep();
     }
-
-    LCD.drawString("pass 1 done", 0, 0);
 
     Lab5.SENSOR_MOTOR.rotateTo(0, true);
 
@@ -63,7 +93,6 @@ public class ColorClassifier {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
         }
-        printReading(toByte(sample));
         numReadings++;
       }
       sleep();
@@ -74,14 +103,81 @@ public class ColorClassifier {
       avgReading[i] = (float) (totalReadings[i] / numReadings);
     }
     for (int i = 0; i < 3; i++) {
+      if (Float.isNaN(avgReading[i])) {
+        LCD.clear();
+        LCD.drawString("NO CAN", 0, 0);
+        return CanColor.UNKNOWN;
+      }
+    }
+    for (int i = 0; i < 3; i++) {
       LCD.drawString(avgReading[i] * 1000 + "", 0, 5 + i);
     }
-    colorLabel = CanColor.getClosestColor(new byte[] {(byte) (avgReading[0] * 1000),
-        (byte) (avgReading[1] * 1000), (byte) (avgReading[2] * 1000)});
+    colorLabel = CanColor.getClosestColor(new int[] {(int) (avgReading[0] * 1000),
+        (int) (avgReading[1] * 1000), (int) (avgReading[2] * 1000)});
     LCD.drawString(colorLabel.toString(), 0, 4);
 
     return colorLabel;
   }
+  
+  /**
+   * Prints out information of the can
+   * used for testing.
+   */
+  public void getData() {
+    if (!calibrated) {
+      calibrate();
+    }
+    Lab5.SENSOR_MOTOR.setSpeed(SCAN_SPD);
+    Lab5.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
+
+    double[] totalReadings = new double[3];
+    int numReadings = 0;
+
+    while (Lab5.SENSOR_MOTOR.isMoving()) {
+      float[] sample = new float[Lab5.COLOR_SENSOR.sampleSize()];
+      Lab5.COLOR_SENSOR.fetchSample(sample, 0);
+      if (!isWhite(sample)) {
+        for (int i = 0; i < sample.length; i++) {
+          totalReadings[i] += sample[i];
+        }
+        numReadings++;
+      }
+      sleep();
+    }
+
+    Lab5.SENSOR_MOTOR.rotateTo(0, true);
+
+    while (Lab5.SENSOR_MOTOR.isMoving()) {
+      float[] sample = new float[Lab5.COLOR_SENSOR.sampleSize()];
+      Lab5.COLOR_SENSOR.fetchSample(sample, 0);
+      if (!isWhite(sample)) {
+        for (int i = 0; i < sample.length; i++) {
+          totalReadings[i] += sample[i];
+        }
+        numReadings++;
+      }
+      sleep();
+    }
+
+    float[] avgReading = new float[totalReadings.length];
+    for (int i = 0; i < avgReading.length; i++) {
+      avgReading[i] = (float) (totalReadings[i] / numReadings);
+    }
+    for (int i = 0; i < 3; i++) {
+      if (Float.isNaN(avgReading[i])) {
+        LCD.clear();
+        LCD.drawString("NO CAN", 0, 1);
+        return;
+      }
+    }
+//    for (int i = 0; i < 3; i++) {
+//      LCD.drawString(avgReading[i] * 1000 + "", 0, i);
+//    }
+    colorLabel = CanColor.getClosestColor(new int[] {(int)(avgReading[0] * 1000),
+        (int) (avgReading[1] * 1000), (int) (avgReading[2] * 1000)});
+    LCD.drawString(colorLabel.toString(), 0, 1);
+  }
+
 
   /**
    * Returns the identified color of the can
@@ -156,7 +252,7 @@ public class ColorClassifier {
 
   private static void printReading(byte[] c) {
 
-    LCD.drawString("rgb(" + c[0] + ", " + c[1] + ", " + c[2] + ")      ", 0, 1);
+    LCD.drawString("rgb(" + c[0] + ", " + c[1] + ", " + c[2] + ")      ", 0, 6);
   }
 
   private static byte[] toByte(float[] color) {
@@ -167,7 +263,7 @@ public class ColorClassifier {
   }
 
   private static byte toByte(float colorValue) {
-    return (byte) (colorValue * 256);
+    return (byte) (colorValue * 1000);
   }
 
 }

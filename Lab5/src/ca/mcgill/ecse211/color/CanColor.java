@@ -1,8 +1,8 @@
 package ca.mcgill.ecse211.color;
 //TODO: add stddev
 public enum CanColor {
-  RED("Red", new int[] {47, 18, 16}), GREEN("Green", new int[] {18, 46, 20}), BLUE("Blue",
-      new int[] {24, 43, 57}), YELLOW("Yellow", new int[] {61, 43, 31}), UNKOWN;
+  RED("Red", new int[] {117, 37, 36}), GREEN("Green", new int[] {18, 46, 20}), BLUE("Blue",
+      new int[] {24, 43, 57}), YELLOW("Yellow", new int[] {61, 43, 31}), UNKNOWN;
 
   private String name;
   private int[] avgRGB;
@@ -27,7 +27,7 @@ public enum CanColor {
       case "Yellow":
         return YELLOW;
       default:
-        return UNKOWN;
+        return UNKNOWN;
     }
   }
 
@@ -38,11 +38,12 @@ public enum CanColor {
    * @return the color w/ the closest euclidean distance to c
    */
   public static CanColor getClosestColor(int[] color) {
-    CanColor closest = UNKOWN;
-    double minDist = 28;
+    CanColor closest = UNKNOWN;
+    
+    double minDist = 2;
     for (CanColor c : new CanColor[] {RED, GREEN, YELLOW, BLUE}) {
-      if (c.distanceTo(color) < minDist) {
-        minDist = c.distanceTo(color);
+      if (c.normalizedDistTo(color) < minDist) {
+        minDist = c.normalizedDistTo(color);
         closest = c;
       }
     }
@@ -55,6 +56,29 @@ public enum CanColor {
       sum += Math.pow((int) c[i] - avgRGB[i], 2);
     }
     return Math.sqrt(sum);
+  }
+  
+  
+  public double normalizedDistTo(int[] c) {
+    double sum = 0;
+    double[] normalizedAvg = normalize(avgRGB);
+    double[] normalizedIn = normalize(c);
+    for (int i = 0; i < c.length; i++) {
+      sum += Math.pow(normalizedIn[i] - normalizedAvg[i], 2);
+    }
+    return Math.sqrt(sum);
+  }
+  
+  public static double[] normalize(int[] c) {
+    int sum = 0;
+    for (int i : c) {
+      sum += i;
+    }
+    double[] retVal = new double[3];
+    for (int i = 0; i < 3; i++) {
+      retVal[i] = ((double) c[i]) / sum;
+    }
+    return retVal;
   }
 
 
@@ -73,7 +97,7 @@ public enum CanColor {
       case 4:
         return RED;
       default:
-        return UNKOWN;
+        return UNKNOWN;
     }
   }
 }

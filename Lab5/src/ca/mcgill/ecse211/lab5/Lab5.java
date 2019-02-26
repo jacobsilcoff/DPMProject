@@ -27,7 +27,7 @@ public class Lab5 {
   public static final int URx = 4;
   public static final int URy = 4;
   public static final int TR = 1;
-  
+
   /**
    * The robot's left motor
    */
@@ -83,7 +83,7 @@ public class Lab5 {
    * center of where the can should be for measurment
    */
   public static final double CAN_DIST = 7;
-  
+
   /**
    * The can classifier used by the program
    */
@@ -113,6 +113,56 @@ public class Lab5 {
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
 
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
+
+    int buttonChoice;
+    do {
+
+      // clear the display
+      LCD.clear();
+
+      // ask the user whether the motors should drive in a square or float
+      LCD.drawString("< Left | Right >", 0, 0);
+      LCD.drawString("       |        ", 0, 1);
+      LCD.drawString(" Find  | Search  ", 0, 2);
+      LCD.drawString(" can   | for  ", 0, 3);
+      LCD.drawString("colors | cans ", 0, 4);
+
+      buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
+    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
+
+    if (buttonChoice == Button.ID_LEFT) {
+      CLASSIFIER.calibrate();
+      (new Thread() {
+        public void run() {
+          boolean detected = false;
+          while (true) {
+            
+            boolean canSeen = CLASSIFIER.canDetected();
+            if (!canSeen) LCD.clear();
+            if (canSeen && !detected) {
+              LCD.drawString("OBJECT DETECTED", 0, 0);
+              Sound.beep();
+              wait(1500);
+              CLASSIFIER.getData();
+              detected = true;
+            } else {
+              detected = canSeen;
+              wait(100);
+            }
+          }
+        }
+        public void wait(int i) {
+          try {
+            sleep(i);
+          } catch (InterruptedException e) {}
+        }
+      }).start();
+      while (buttonChoice  != Button.ID_ESCAPE) {
+        buttonChoice = Button.waitForAnyPress();
+      }
+      return;
+    }
+
     (new Thread(Odometer.getOdometer())).start();
     OdometryCorrection oc = new OdometryCorrection();
     Navigation nav = new Navigation(oc);
@@ -121,39 +171,31 @@ public class Lab5 {
     Button.waitForAnyPress();
     CLASSIFIER.calibrate(false);
     //Localizes robot
-//    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
-//    LightLocalizer ll = new LightLocalizer(oc, 0,0);
-//    ul.run();  
-//    ll.run();
-    Odometer.getOdometer().setX(OdometryCorrection.LINE_SPACING);
-    Odometer.getOdometer().setY(OdometryCorrection.LINE_SPACING);
-    Odometer.getOdometer().setTheta(0);
-    //TODO: ADD BACK
-    //nav.travelTo(OdometryCorrection.LINE_SPACING, OdometryCorrection.LINE_SPACING);
-    while (nav.isNavigating()) Thread.sleep(100);
-    nav.turnTo(0);
-    //move to ll
-    //Button.waitForAnyPress();
-    
+    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
+    LightLocalizer ll = new LightLocalizer(oc, 0,0);
+    ul.run();  
+    ll.run();
+
     //Start the correction
     (new Thread(oc)).start();
-    
+    //Navigates to LL, beeps and waits a second before next step
     nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
+    while (nav.isNavigating()) Thread.sleep(100);;
     Sound.beep();
-    
+    Thread.sleep(1000);
+
     //Start can finder
-    //Button.waitForAnyPress();
-    
+
     CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
     finder.run();
-    
+
     nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
-    
+
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);
     System.exit(0);
-    
+
   }
-  
+
   /**
    * Calculates the center of the robot from the position of the
    * line sensor, denoted as an array
@@ -175,7 +217,7 @@ public class Lab5 {
     }
     return result;
   }
-  
+
   /**
    * Calculates the center of the sensor from the position of the
    * robot, denoted as an array
