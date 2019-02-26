@@ -113,7 +113,8 @@ public class Lab5 {
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
 
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-
+    SENSOR_MOTOR.flt();
+    
     int buttonChoice;
     do {
 
@@ -129,7 +130,7 @@ public class Lab5 {
 
       buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
     } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
-
+    LCD.clear();
     if (buttonChoice == Button.ID_LEFT) {
       CLASSIFIER.calibrate();
       (new Thread() {
@@ -170,11 +171,11 @@ public class Lab5 {
     //Localizes robot
     UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
     LightLocalizer ll = new LightLocalizer(oc, 0,0);
-    ul.run();  
+    ul.run();
     ll.run();
+    
     Navigation nav = new Navigation(oc);
     nav.start();
-    //Start the correction
     (new Thread(oc)).start();
     //Navigates to LL, beeps and waits a second before next step
     nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
@@ -183,7 +184,6 @@ public class Lab5 {
     Thread.sleep(1000);
 
     //Start can finder
-
     CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
     finder.run();
 

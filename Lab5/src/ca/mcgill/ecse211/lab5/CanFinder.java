@@ -15,7 +15,7 @@ import lejos.hardware.Sound;
  * @author jacob
  *
  */
-public class CanFinder extends Thread {
+public class CanFinder {
 
   /**
    * The amount the robot moves over, in cm, for each pass it completes
@@ -54,14 +54,14 @@ public class CanFinder extends Thread {
   }
 
   public void run() {
-    while (nextX <= Lab5.URx - Lab5.URy) {
+    while (nextX <= Lab5.URx - Lab5.LLx) {
       int dir = nextX % 2 == 0 ? 1 : -1;
-      if ( ((nextY == 0 && dir == 1) || (nextY == Lab5.URy - Lab5.LLy && dir == -1))) {
+      if (((nextY == 0 && dir == 1) || (nextY == Lab5.URy - Lab5.LLy && dir == -1))) {
         // approach horizontally
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH - Lab5.CAN_DIST,
             (nextY + Lab5.LLy) * GRID_WIDTH);
         awaitNav();
-        if (Lab5.CLASSIFIER.classify() != CanColor.UNKNOWN) {
+        if (Lab5.CLASSIFIER.canDetected()) {
           if (Lab5.CLASSIFIER.classify() == target) {
             Sound.twoBeeps();
           } else {
@@ -69,11 +69,10 @@ public class CanFinder extends Thread {
           }
 
           moveBack(15);
-          nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH, (Lab5.LLy + nextY + dir * 0.5));
+          nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH, (Lab5.LLy + nextY + dir * 0.5) * GRID_WIDTH);
           awaitNav();
         }
         nextY += dir;
-
       } else {
         // approaching vertically
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH,
@@ -105,8 +104,9 @@ public class CanFinder extends Thread {
         if ((nextY == 0 && dir == -1) 
             || (nextY == Lab5.URy - Lab5.LLy && dir == 1)) {
           nextX ++;
+        } else {
+          nextY += dir;
         }
-        nextY += dir;
       }
     }
   }
@@ -132,7 +132,7 @@ public class CanFinder extends Thread {
 
   private void sleep() {
     try {
-      sleep(SLEEP_TIME);
+      Thread.sleep(SLEEP_TIME);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
