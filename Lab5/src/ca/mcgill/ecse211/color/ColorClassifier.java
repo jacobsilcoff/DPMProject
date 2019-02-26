@@ -118,6 +118,8 @@ public class ColorClassifier {
         (int) (avgReading[1] * 1000), (int) (avgReading[2] * 1000)});
     LCD.drawString(colorLabel.toString(), 0, 4);
 
+    Lab5.SENSOR_MOTOR.flt();
+    
     return colorLabel;
   }
   
@@ -202,6 +204,7 @@ public class ColorClassifier {
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
+    Lab5.SENSOR_MOTOR.flt();
     Lab5.SENSOR_MOTOR.setSpeed(0);
     Lab5.SENSOR_MOTOR.resetTachoCount();
     calibrated = true;

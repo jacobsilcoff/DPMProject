@@ -84,7 +84,7 @@ public class CanFinder {
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH - Lab5.CAN_DIST,
             (nextY + Lab5.LLy) * GRID_WIDTH);
         awaitNav();
-        if (Lab5.CLASSIFIER.canDetected()) {
+        if (canDetected()) {
           if (Lab5.CLASSIFIER.classify() == target) {
             Sound.twoBeeps();
           } else {
@@ -105,7 +105,7 @@ public class CanFinder {
             (nextY + Lab5.LLy) * GRID_WIDTH - dir * Lab5.CAN_DIST);
         awaitNav();
 
-        if (Lab5.CLASSIFIER.canDetected()) {
+        if (canDetected()) {
           if (Lab5.CLASSIFIER.classify() == target) {
             Sound.twoBeeps();
           } else {
@@ -142,6 +142,16 @@ public class CanFinder {
   }
   
   /**
+   * Returns true if a can is detected in front of the sensor,
+   * using ultrasonic and light sensor data.
+   * @return True for a can detected, else false
+   */
+  private boolean canDetected() {
+    float dist = readUS();
+    return Lab5.CLASSIFIER.canDetected() || (dist != -1 && dist < 10);
+  }
+  
+  /**
    * Used internally to wait for the
    * navigation to finish navigating to its
    * target location
@@ -175,5 +185,19 @@ public class CanFinder {
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
+  }
+  
+  /**
+   * Polls the ultrasonic sensor and returns the result
+   * 
+   * @return The US reading in cm
+   */
+  private float readUS() {
+    float[] usData = new float[Lab5.US_FRONT.sampleSize()];
+    Lab5.US_FRONT.fetchSample(usData, 0);
+    if (usData[0] == 255) {
+      return -1;
+    }
+    return usData[0] * 100f;
   }
 }
