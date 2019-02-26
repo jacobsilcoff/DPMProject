@@ -108,7 +108,6 @@ public class CanFinder extends Thread {
         }
         nextY += dir;
       }
-
     }
   }
 

@@ -142,8 +142,8 @@ public class LightLocalizer {
     double odo270 = (tY/2 + tYP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 270
     double odo180 = (tX/2 + tXP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 180
     double avgError = ((odo180 - 180) + (odo270 - 270)) / 2;
-    //TODO: Figure out where the hell 42 comes from
     odo.setTheta(odo.getXYT()[2] - avgError + 38);
+    nav.end();
   }
 
   /**
