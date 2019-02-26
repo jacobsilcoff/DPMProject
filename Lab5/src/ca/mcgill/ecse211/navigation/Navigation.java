@@ -283,6 +283,17 @@ public class Navigation extends Thread {
       destT = (destT + 360) % 360; // normalize theta
     }
   }
+  
+  public double angleTo(double x, double y) {
+    double dx = x - odo.getXYT()[0];
+    double dy = y - odo.getXYT()[1];
+    if (dy == 0) {
+      return (dx > 0) ? 90 : 270;
+    } else {
+      double d = Math.toDegrees(Math.atan(dx / dy)) + ((dy > 0) ? 0 : 180);
+      return (d + 360) % 360; // normalize theta
+    }
+  }
 
   /**
    * Checks if the robot is facing a certain angle
@@ -340,8 +351,7 @@ public class Navigation extends Thread {
   private void setSpeeds(int l, int r) {
     setSpeeds((float) l, (float) r);
   }
-
-
+  
   /**
    * Takes a given distance, and returns the number of degrees the robot's wheels need to turn to
    * move forward that distance.

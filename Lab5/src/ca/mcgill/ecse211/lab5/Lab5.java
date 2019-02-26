@@ -26,7 +26,7 @@ public class Lab5 {
   public static final int LLy = 2;
   public static final int URx = 4;
   public static final int URy = 4;
-  public static final int TR = 0;
+  public static final int TR = 1;
   
   /**
    * The robot's left motor
@@ -121,15 +121,19 @@ public class Lab5 {
     Button.waitForAnyPress();
     CLASSIFIER.calibrate(false);
     //Localizes robot
-    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
-    LightLocalizer ll = new LightLocalizer(oc, 0,0);
-    ul.run();  
-    ll.run();
-    nav.travelTo(OdometryCorrection.LINE_SPACING, OdometryCorrection.LINE_SPACING);
+//    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
+//    LightLocalizer ll = new LightLocalizer(oc, 0,0);
+//    ul.run();  
+//    ll.run();
+    Odometer.getOdometer().setX(OdometryCorrection.LINE_SPACING);
+    Odometer.getOdometer().setY(OdometryCorrection.LINE_SPACING);
+    Odometer.getOdometer().setTheta(0);
+    //TODO: ADD BACK
+    //nav.travelTo(OdometryCorrection.LINE_SPACING, OdometryCorrection.LINE_SPACING);
     while (nav.isNavigating()) Thread.sleep(100);
     nav.turnTo(0);
     //move to ll
-    Button.waitForAnyPress();
+    //Button.waitForAnyPress();
     
     //Start the correction
     (new Thread(oc)).start();
@@ -138,7 +142,7 @@ public class Lab5 {
     Sound.beep();
     
     //Start can finder
-    Button.waitForAnyPress();
+    //Button.waitForAnyPress();
     
     CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
     finder.run();
