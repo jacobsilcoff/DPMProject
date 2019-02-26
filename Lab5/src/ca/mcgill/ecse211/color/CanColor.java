@@ -49,14 +49,6 @@ public enum CanColor {
     }
     return closest;
   }
-
-  public double distanceTo(int[] c) {
-    int sum = 0;
-    for (int i = 0; i < c.length; i++) {
-      sum += Math.pow((int) c[i] - avgRGB[i], 2);
-    }
-    return Math.sqrt(sum);
-  }
   
   
   public double normalizedDistTo(int[] c) {

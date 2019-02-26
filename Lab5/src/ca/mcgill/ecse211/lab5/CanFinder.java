@@ -66,16 +66,16 @@ public class CanFinder extends Thread {
       int dir = nextX % 2 == 0 ? 1 : -1;
       if ((nextY == 0 && nextX % 2 == 0) || (nextY == Lab5.URy - Lab5.LLy && nextX % 2 == 1)) {
         // approach horizontally
-        nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH - Lab5.CAN_DIST, 
+        nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH - Lab5.CAN_DIST,
             (nextY + Lab5.LLy) * GRID_WIDTH);
         awaitNav();
-        if (Lab5.CLASSIFIER.classify() != CanColor.UNKOWN) {
+        if (Lab5.CLASSIFIER.classify() != CanColor.UNKNOWN) {
           if (Lab5.CLASSIFIER.classify() == target) {
             Sound.twoBeeps();
           } else {
             Sound.beep();
           }
-          
+
           moveBack(15);
           nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH, (Lab5.LLy + nextY + dir * 0.5));
           awaitNav();
@@ -83,12 +83,13 @@ public class CanFinder extends Thread {
         nextY += dir;
 
       } else {
-        //approaching vertically
+        // approaching vertically
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH,
             (nextY + Lab5.LLy) * GRID_WIDTH - dir * Lab5.CAN_DIST);
         awaitNav();
-        if (Lab5.CLASSIFIER.classify() != CanColor.UNKOWN) {
-          if (Lab5.CLASSIFIER.classify() == target) {
+        CanColor color = Lab5.CLASSIFIER.classify();
+        if (color != CanColor.UNKNOWN) {
+          if (color == target) {
             Sound.twoBeeps();
           } else {
             Sound.beep();
@@ -121,64 +122,6 @@ public class CanFinder extends Thread {
       sleep();
   }
 
-  // public void run() {
-  // while (passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH < Lab5.URx * GRID_WIDTH) {
-  //
-  // nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH,
-  // (passNum % 2 == 0 ? Lab5.URy : Lab5.LLy) * GRID_WIDTH);
-  //
-  // while (nav.isNavigating()) {
-  // if (readUS() < DETECTION_DIST) { //initiate can handling sequence
-  // nav.setSpeeds(0, 0);
-  // handleCan();
-  // nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH,
-  // (passNum % 2 == 0 ? Lab5.URy : Lab5.LLy) * GRID_WIDTH);
-  // }
-  // sleep();
-  // }
-  //
-  // nav.travelTo(odo.getXYT()[0] + PASS_WIDTH, odo.getXYT()[1]);
-  // while (nav.isNavigating()) sleep();
-  //
-  // passNum++;
-  // }
-  // }
-
-  /**
-   * Centers a can under the sensor, reads its color, and navigates the robot to the other side of
-   * the can so it can continue with navigation.
-   */
-  // public void handleCan() {
-  // //TODO: Implement this!
-  // /*
-  // * Implementation concept:
-  // * first, center the can by turning left and right to find the
-  // * 'edge' of the can with the ultrasonic sensor. The angle bisector
-  // * of the angles the robot was at when each edge was detected is the angle
-  // * pointing straight towards the can. Move until the can is the right
-  // * distance away, as measured by the US sensor. Use the color identification
-  // * program in the color package to read the color. Then, use the navigation to
-  // * back up, turn 90deg ccw, move forward a certain distance to give clearance for the can,
-  // * turn 90deg cw, move forward a bit, turn 90deg cw, move forward.
-  // */
-  //
-  // alignWithCan();
-  // if (Lab5.CLASSIFIER.classify() == target) {
-  // Sound.twoBeeps();
-  // } else {
-  // Sound.beep();
-  // }
-  // //TODO: Replace constants with variables and verify they work
-  // //Code to get around can:
-  // moveBack(15);
-  // nav.travelTo(odo.getXYT()[0] - 15, odo.getXYT()[1]);
-  // while(nav.isNavigating()) sleep();
-  // nav.travelTo(odo.getXYT()[0], odo.getXYT()[1] + 25 * (passNum % 2 == 0?1:-1));
-  // while (nav.isNavigating()) sleep();
-  // nav.travelTo(passNum * PASS_WIDTH + Lab5.LLx * GRID_WIDTH, odo.getXYT()[1]);
-  // while (nav.isNavigating()) sleep();
-  // }
-  //
   /**
    * Moves backwards a certain distance
    * 
