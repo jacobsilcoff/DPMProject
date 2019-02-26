@@ -18,6 +18,10 @@ import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.SampleProvider;
 
+/**
+ * The main class for lab 5
+ * @author team6
+ */
 public class Lab5 {
   /**
    * Demo variables:
@@ -56,10 +60,6 @@ public class Lab5 {
    * The robot's front-facing ultrasonic sensor
    */
   public static final SampleProvider US_FRONT;
-  /**
-   * The robot's right-facing ultrasonic sensor
-   */
-  //public static final SampleProvider US_RIGHT;
   /**
    * Represents the radius of each wheel, in cm
    */
@@ -102,16 +102,19 @@ public class Lab5 {
     SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
     US_FRONT = usSensor.getMode("Distance");
 
-    //@SuppressWarnings("resource")
-    //SensorModes usSensor2 = new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
-    //US_RIGHT = usSensor2.getMode("Distance");
-
   }
   /**
    * The LCD used to output during the robot's journey
    */
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
 
+  /**
+   * Localizes the robot using US and light,
+   * then moves to a specified search area and searches for cans
+   * @param args not used
+   * @throws OdometerExceptions 
+   * @throws InterruptedException
+   */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     SENSOR_MOTOR.flt();
     
@@ -186,7 +189,8 @@ public class Lab5 {
     //Start can finder
     CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
     finder.run();
-
+    
+    //Move to upper right hand corner
     nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
 
     while (Button.waitForAnyPress() != Button.ID_ESCAPE);

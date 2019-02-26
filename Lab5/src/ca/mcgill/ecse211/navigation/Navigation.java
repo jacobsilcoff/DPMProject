@@ -6,8 +6,9 @@ import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
 
 
-/*
+/**
  * A class used to navigate the robot according to waypoints and obstacles.
+ * @author group 6
  */
 public class Navigation extends Thread {
   /**
@@ -18,10 +19,6 @@ public class Navigation extends Thread {
    * The motor speed used by the robot when turning
    */
   private static final int ROTATE_SPEED = 100;
-  /**
-   * The distance, in cm, between grid lines
-   */
-  private static final double TILE_SIZE = 30.48;
   /**
    * The maximum distance between two points where they are considered to be roughly equal.
    */

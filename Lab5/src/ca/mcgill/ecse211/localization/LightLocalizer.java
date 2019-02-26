@@ -1,7 +1,6 @@
 package ca.mcgill.ecse211.localization;
 
 import lejos.hardware.Sound;
-import lejos.hardware.lcd.LCD;
 import ca.mcgill.ecse211.lab5.AveragedBuffer;
 import ca.mcgill.ecse211.lab5.Lab5;
 import ca.mcgill.ecse211.navigation.Navigation;
@@ -24,10 +23,6 @@ public class LightLocalizer {
    * The speed of the motors during localization
    */
   private static final int MOTOR_SPEED = 130;
-  /**
-   * The distance the robot moves downwards before detecting the y axis, in grid units
-   */
-  private static final double DOWN_DIST = 0.5;
 
   /**
    * The time between polling the sensor, in ms
@@ -43,15 +38,6 @@ public class LightLocalizer {
    * considered significant
    */
   private static final float LIGHT_THRESHOLD = 0.05f;
-  /**
-   * The correct value of t when the light sensor is perpendicular to the y axis
-   */
-  private static final double CORRECT_T_AVG =
-      (Math.toDegrees(Math.atan(Lab5.LINE_OFFSET_X/Lab5.LINE_OFFSET_Y)) + 270) % 360;
-  /**
-   * Min rotation for reading to be valid
-   */
-  private static final double MIN_ANGLE = 90;
 
   private Odometer odo;
   private Navigation nav;
@@ -81,7 +67,15 @@ public class LightLocalizer {
     this.y = y;
     firstTime = true;
   }
-
+  /**
+   * Creates a light localizer instance with a navigation thread
+   * @param oc The odometry correction that is turned on/off as the localizer operates
+   * @param x The x coordinate of the robot's block, from bottom left hand corner
+   * @param y The y coordinate of the robot's block, from the bottom left hand corner
+   * @param firstTime Whether or not this is the first time localizing the robot.
+   * This is used to determine whether or not the odometer's x and y are reliable
+   * @throws OdometerExceptions if there are problems creating the odometer
+   */
   public LightLocalizer(OdometryCorrection oc, int x, int y, boolean firstTime) throws OdometerExceptions {
     try {
       odo = Odometer.getOdometer();
@@ -94,15 +88,18 @@ public class LightLocalizer {
     this.x = x;
     this.y = y;
     this.firstTime = firstTime;
-
   }
 
   /**
-   * Starts the thread.
+   * Starts the localization.
    */
   public void run() {
     if (firstTime) {
-      //roughly sets up x and y
+      /*
+       * Roughly sets up x and y in the case
+       * where the odometer's position values
+       * are unreliable
+       */
       nav.turnTo(0);
       moveToLine(true);
       odo.setY(OdometryCorrection.LINE_SPACING * (y+1) + Lab5.LINE_OFFSET_Y);
@@ -112,11 +109,19 @@ public class LightLocalizer {
       odo.setX(OdometryCorrection.LINE_SPACING * (x+1) + Lab5.LINE_OFFSET_Y);
     }
 
-    //Moves to safe rotation position
+    /*
+     * Moves to safe rotation position,
+     * about which all 4 lines will be intersected
+     */
     nav.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - 6, 
         OdometryCorrection.LINE_SPACING * (y+1) - 6);
     while (nav.isNavigating()) sleep();
-    nav.turnTo(60); //this ensures light sensor within block
+    /*
+     * Turns to 60 deg to ensure the light sensor is in the
+     * starting block, to more easily know the order in which
+     * lines will be crossed
+     */
+    nav.turnTo(60); 
 
     //Find the 4 intersections
     rotateToLine(false);

@@ -9,8 +9,10 @@ import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import lejos.hardware.Sound;
 
 /**
- * This is a thread that takes a robot, which we assume is on LL and calibrated, and searches the
- * designated search region for cans. We will search in strips of predefined width
+ * This is a thread that takes a robot, which we assume is on LL and calibrated,
+ * and searches the
+ * designated search region for cans. We will search in strips of predefined width,
+ * using the light sensor to detect cans at each lattice point.
  * 
  * @author jacob
  *
@@ -19,6 +21,8 @@ public class CanFinder {
 
   /**
    * The amount the robot moves over, in cm, for each pass it completes
+   * This is set to the line spacing, but could be generalized to any number
+   * for aribtrary search patterns.
    */
   public static final double PASS_WIDTH = OdometryCorrection.LINE_SPACING;
   /**
@@ -29,7 +33,10 @@ public class CanFinder {
    * Speed used to scan a can
    */
   public static final int SCAN_SPD = 40;
-
+  
+  /**
+   * The spacing between tiles. Copied from odometry correction to save characters.
+   */
   public static final float GRID_WIDTH = OdometryCorrection.LINE_SPACING;
 
   private Navigation nav;
@@ -39,11 +46,14 @@ public class CanFinder {
   private int nextY;
 
 
-
+  /**
+   * Creates a can finder.
+   * @param nav The navigation to use to control the robot
+   * @param target The color of can the robot is looking for
+   */
   public CanFinder(Navigation nav, CanColor target) {
     this.target = target;
     this.nav = nav;
-    // pass num is the number of passes back & forth made by the robot
     nextX = 0;
     nextY = 1;
     try {
@@ -53,11 +63,24 @@ public class CanFinder {
     }
   }
 
+  /**
+   * Searches the area specified by Lab5.URx/y and Lab5.LLx/y
+   * Goes in vertical passes, using the light sensor to detect
+   * cans at lattice points.
+   */
   public void run() {
+    /*
+     * Implementation comment:
+     * The variables nextX and nextY specify
+     * the lattice point that the robot will check
+     * for a can on the current pass through the loop.
+     */
     while (nextX <= Lab5.URx - Lab5.LLx) {
       int dir = nextX % 2 == 0 ? 1 : -1;
+      /*
+       * This represents the case of apporaching a can horizontally
+       */
       if (((nextY == 0 && dir == 1) || (nextY == Lab5.URy - Lab5.LLy && dir == -1))) {
-        // approach horizontally
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH - Lab5.CAN_DIST,
             (nextY + Lab5.LLy) * GRID_WIDTH);
         awaitNav();
@@ -67,14 +90,17 @@ public class CanFinder {
           } else {
             Sound.beep();
           }
-
+          //Avoids hitting the can
           moveBack(15);
           nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH, (Lab5.LLy + nextY + dir * 0.5) * GRID_WIDTH);
           awaitNav();
         }
         nextY += dir;
-      } else {
-        // approaching vertically
+      } 
+      /*
+       * Represents the case where a can is approached vertically
+       */
+      else {
         nav.travelTo((nextX + Lab5.LLx) * GRID_WIDTH,
             (nextY + Lab5.LLy) * GRID_WIDTH - dir * Lab5.CAN_DIST);
         awaitNav();
@@ -85,13 +111,17 @@ public class CanFinder {
           } else {
             Sound.beep();
           }
+          /*
+           * Follows a different can avoidance technique
+           * if it is at the end of a vertical pass
+           */
           if ((nextY == 0 && dir == -1) || (nextY == Lab5.URy - Lab5.LLy && dir == 1)) {
-            // end of a pass
+            //END OF A PASS:
             moveBack(15);
             nav.travelTo((nextX + Lab5.LLx + 0.5) * GRID_WIDTH, (Lab5.LLy + nextY) * GRID_WIDTH);
             awaitNav();
           } else {
-            // Avoid collision
+            // MIDDLE OF A PASS:
             moveBack(10);
             nav.travelTo((nextX + Lab5.LLx - 0.5) * GRID_WIDTH, odo.getXYT()[1]);
             awaitNav();
@@ -110,7 +140,12 @@ public class CanFinder {
       }
     }
   }
-
+  
+  /**
+   * Used internally to wait for the
+   * navigation to finish navigating to its
+   * target location
+   */
   private void awaitNav() {
     while (nav.isNavigating())
       sleep();
@@ -130,26 +165,15 @@ public class CanFinder {
     nav.setSpeeds(0, 0);
   }
 
+  /**
+   * Sleeps for one tick, as specified
+   * by the SLEEP_TIME variable
+   */
   private void sleep() {
     try {
       Thread.sleep(SLEEP_TIME);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
-  }
-
-  /**
-   * Polls the ultrasonic sensor and returns the result
-   * 
-   * @return The US reading in cm
-   */
-  public float readUS() {
-    float[] usData = new float[Lab5.US_FRONT.sampleSize()];
-    Lab5.US_FRONT.fetchSample(usData, 0);
-    Lab5.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 0);
-    if (usData[0] == 255) {
-      return -1;
-    }
-    return usData[0] * 100f;
   }
 }

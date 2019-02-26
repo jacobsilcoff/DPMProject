@@ -4,10 +4,11 @@ import ca.mcgill.ecse211.lab5.Lab5;
 import lejos.hardware.lcd.LCD;
 
 /**
- * This is a routine that can be used to identify the color of a soda can located in front of the
- * robot, assuming that the can is centered under the axis of rotation of the light sensor arm
+ * This is a routine that can be used to identify the color of a soda can
+ * located in front of the robot, assuming that the can is centered under
+ * the axis of rotation of the light sensor arm
  * 
- * @author jacob
+ * @author group 6
  */
 public class ColorClassifier {
 
@@ -28,7 +29,7 @@ public class ColorClassifier {
   
   /**
    * Returns true if a can is seen, else false
-   * @return
+   * @return true if a can is seen, else false
    */
   public boolean canDetected() {
     double[] totalReadings = new double[3];
@@ -55,12 +56,13 @@ public class ColorClassifier {
         return false;
       }
     }
-    return true;
-    
+    return true; 
   }
 
   /**
-   * Starts by checking if the arm has been calibrated to zero. if it has,
+   * Uses the light sensor to calculate the 
+   * color of the can.
+   * @return The color of the can. CanColor.UNKONWN if no can is detected
    */
   public CanColor classify() {
     if (!calibrated) {
@@ -121,7 +123,9 @@ public class ColorClassifier {
   
   /**
    * Prints out information of the can
-   * used for testing.
+   * used for testing. This method can be modified
+   * to find the mean, std dev, and other stats
+   * about a can
    */
   public void getData() {
     if (!calibrated) {
@@ -170,9 +174,6 @@ public class ColorClassifier {
         return;
       }
     }
-//    for (int i = 0; i < 3; i++) {
-//      LCD.drawString(avgReading[i] * 1000 + "", 0, i);
-//    }
     colorLabel = CanColor.getClosestColor(new int[] {(int)(avgReading[0] * 1000),
         (int) (avgReading[1] * 1000), (int) (avgReading[2] * 1000)});
     LCD.drawString(colorLabel.toString(), 0, 1);

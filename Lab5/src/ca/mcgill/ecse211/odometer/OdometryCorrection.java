@@ -8,7 +8,7 @@ import lejos.hardware.Sound;
  * Represents a thread that uses a light sensor to update the values of a robots odometer to reduce
  * error.
  * 
- * @author Group 71
+ * @author Group 6
  */
 public class OdometryCorrection implements Runnable {
 
@@ -35,9 +35,6 @@ public class OdometryCorrection implements Runnable {
   private AveragedBuffer<Float> samples;
   private double[] lastPos;
   private boolean on;
-
-
-  // TODO: UPDATE FOR SENSOR PLACEMENT
 
   /**
    * This is the default class constructor. An existing instance of the odometer is used to ensure

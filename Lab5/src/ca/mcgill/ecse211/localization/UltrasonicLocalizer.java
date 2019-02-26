@@ -14,7 +14,6 @@ import ca.mcgill.ecse211.odometer.OdometryCorrection;
  * 
  * This will only use falling edge detection
  * 
- * 
  * @author jacob silcoff & helen lin
  *
  */
@@ -32,18 +31,6 @@ public class UltrasonicLocalizer {
    * The motor speed (deg/s) used by the robot when turning
    */
   private static final int ROTATE_SPEED = 80;
-  /**
-   * The motor speed (deg/s) used by the robot when minimizing distance
-   */
-  private static final int MIN_SPEED = 30;
-  /**
-   * The error threshold (cm) for finding falling or rising edge angles
-   */
-  private static final double ERROR_THRESH = 2;
-  /**
-   * The number of readings in a row to be considered valid
-   */
-  private static final int POLL_COUNT = 20;
 
 
   private Odometer odo;
@@ -136,25 +123,6 @@ public class UltrasonicLocalizer {
     Lab5.LCD.drawString("Edge detected", 0, 4);
     Sound.beep(); //audio notification
 
-    /*
-    double lastReading = readUS();
-
-
-    //if rising edge, turn other direction
-    //tries to minimize value (ie, face perpendicular to wall)
-    dir = rising? -dir:dir;
-    int count = 0;
-    nav.setSpeeds(dir * MIN_SPEED, - dir * MIN_SPEED);
-    while (count < POLL_COUNT) {
-      if (lastReading >= (reading=readUS())) {
-        count++;
-      } else {
-        count = 0;
-      }
-      lastReading = reading;
-      sleep();
-    }*/
-
     nav.setSpeeds(0, 0); //stop robot
     return odo.getXYT()[2];
   }
@@ -189,6 +157,9 @@ public class UltrasonicLocalizer {
     }
   }
 
+  /**
+   * Executes the localization routine
+   */
   public void run() {
 
     //Find first edge
