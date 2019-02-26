@@ -201,7 +201,7 @@ public class ColorClassifier {
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
-    Lab5.SENSOR_MOTOR.stop();
+    Lab5.SENSOR_MOTOR.setSpeed(0);
     Lab5.SENSOR_MOTOR.resetTachoCount();
     calibrated = true;
   }
