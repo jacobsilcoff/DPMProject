@@ -25,6 +25,10 @@ public abstract class GameSettings {
   public static Rect searchZone = null;
   public static Rect tunnel = null;
   
+  /**
+   * Communicates with the server to get access to game information
+   * Initializes public static fields
+   */
   public static void init() {
     System.out.println("Running..");
 
@@ -64,19 +68,4 @@ public abstract class GameSettings {
     }
     initialized = true;
   }
-  
-  private static class Rect {
-    int URx;
-    int URy;
-    int LLx;
-    int LLy;
-    
-    public Rect(String prefix, Map data) {
-      this.URx = ((Long) data.get(prefix + "_UR_x")).intValue();
-      this.LLx = ((Long) data.get(prefix + "_LL_x")).intValue();
-      this.URy = ((Long) data.get(prefix + "_UR_y")).intValue();
-      this.LLy = ((Long) data.get(prefix + "_LL_y")).intValue(); 
-    }
-  }
-
 }

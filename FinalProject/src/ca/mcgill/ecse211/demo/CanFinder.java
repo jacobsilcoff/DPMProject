@@ -1,49 +1,30 @@
 package ca.mcgill.ecse211.demo;
 
-import ca.mcgill.ecse211.color.CanColor;
-import ca.mcgill.ecse211.color.ColorClassifier;
+import java.util.ArrayList;
+import java.util.List;
+import ca.mcgill.ecse211.canhandling.CanColor;
+import ca.mcgill.ecse211.canhandling.Claw;
+import ca.mcgill.ecse211.canhandling.ColorClassifier;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
+import ca.mcgill.ecse211.wifi.GameSettings;
 import lejos.hardware.Sound;
 
 /**
- * This is a thread that takes a robot, which we assume is on LL and calibrated,
- * and searches the
- * designated search region for cans. We will search in strips of predefined width,
- * using the light sensor to detect cans at each lattice point.
+ * Gives the robot the ability to search for cans
  * 
  * @author jacob
  *
  */
-public class CanFinder {
-
-  /**
-   * The amount the robot moves over, in cm, for each pass it completes
-   * This is set to the line spacing, but could be generalized to any number
-   * for aribtrary search patterns.
-   */
-  public static final double PASS_WIDTH = OdometryCorrection.LINE_SPACING;
-  /**
-   * The amount of time the system sleeps between ticks
-   */
-  public static final int SLEEP_TIME = 15;
-  /**
-   * Speed used to scan a can
-   */
-  public static final int SCAN_SPD = 40;
-  
-  /**
-   * The spacing between tiles. Copied from odometry correction to save characters.
-   */
-  public static final float GRID_WIDTH = OdometryCorrection.LINE_SPACING;
+public class CanFinder implements Runnable {
 
   private Navigation nav;
   private Odometer odo;
   private CanColor target;
-  private int nextX;
-  private int nextY;
+  private Point nextCan;
+  private State state;
 
 
   /**
@@ -54,126 +35,112 @@ public class CanFinder {
   public CanFinder(Navigation nav, CanColor target) {
     this.target = target;
     this.nav = nav;
-    nextX = 0;
-    nextY = 1;
+    nextCan = null;
+    state = State.INIT;
     try {
       odo = Odometer.getOdometer();
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
   }
-
+  
+  private enum State {
+    INIT, NAV_TO_SEARCH, FIND_CAN, GRAB_CAN, NAV_TO_START, DROPOFF;
+  }
+  
   /**
-   * Searches the area specified by Lab5.URx/y and Lab5.LLx/y
-   * Goes in vertical passes, using the light sensor to detect
-   * cans at lattice points.
+   * Continuously takes cans from the search zone
+   * and returns them to the start area
    */
   public void run() {
-    /*
-     * Implementation comment:
-     * The variables nextX and nextY specify
-     * the lattice point that the robot will check
-     * for a can on the current pass through the loop.
-     */
-    while (nextX <= Demo.URx - Demo.LLx) {
-      int dir = nextX % 2 == 0 ? 1 : -1;
-      /*
-       * This represents the case of apporaching a can horizontally
-       */
-      if (((nextY == 0 && dir == 1) || (nextY == Demo.URy - Demo.LLy && dir == -1))) {
-        nav.travelTo((nextX + Demo.LLx) * GRID_WIDTH - Demo.CAN_DIST,
-            (nextY + Demo.LLy) * GRID_WIDTH);
-        awaitNav();
-        if (canDetected()) {
-          if (Demo.CLASSIFIER.classify() == target) {
-            Sound.twoBeeps();
-          } else {
-            Sound.beep();
+    while (true) {
+      switch (state) {
+        case INIT:
+          state = State.NAV_TO_SEARCH;
+          break;
+        case NAV_TO_SEARCH:
+          goToSearchArea();
+          if (GameSettings.searchZone.contains(odo.getXYT()[0], odo.getXYT()[1])) {
+            state = State.FIND_CAN;
           }
-          //Avoids hitting the can
-          moveBack(15);
-          nav.travelTo((nextX + Demo.LLx) * GRID_WIDTH, (Demo.LLy + nextY + dir * 0.5) * GRID_WIDTH);
-          awaitNav();
-        }
-        nextY += dir;
-      } 
-      /*
-       * Represents the case where a can is approached vertically
-       */
-      else {
-        nav.travelTo((nextX + Demo.LLx) * GRID_WIDTH,
-            (nextY + Demo.LLy) * GRID_WIDTH - dir * Demo.CAN_DIST);
-        awaitNav();
-
-        if (canDetected()) {
-          if (Demo.CLASSIFIER.classify() == target) {
-            Sound.twoBeeps();
-          } else {
-            Sound.beep();
-          }
-          /*
-           * Follows a different can avoidance technique
-           * if it is at the end of a vertical pass
-           */
-          if ((nextY == 0 && dir == -1) || (nextY == Demo.URy - Demo.LLy && dir == 1)) {
-            //END OF A PASS:
-            moveBack(15);
-            nav.travelTo((nextX + Demo.LLx + 0.5) * GRID_WIDTH, (Demo.LLy + nextY) * GRID_WIDTH);
-            awaitNav();
-          } else {
-            // MIDDLE OF A PASS:
-            moveBack(10);
-            nav.travelTo((nextX + Demo.LLx - 0.5) * GRID_WIDTH, odo.getXYT()[1]);
-            awaitNav();
-            nav.travelTo(odo.getXYT()[0], (nextY + Demo.LLy + 0.5) * GRID_WIDTH);
-            awaitNav();
-            nav.travelTo((nextX + Demo.LLx) * GRID_WIDTH, odo.getXYT()[1]);
-            awaitNav();
-          }
-        }
-        if ((nextY == 0 && dir == -1) 
-            || (nextY == Demo.URy - Demo.LLy && dir == 1)) {
-          nextX ++;
-        } else {
-          nextY += dir;
-        }
+          break;
+        case FIND_CAN:
+          search();
+          state = State.GRAB_CAN;
+          break;
+        case GRAB_CAN:
+          grabNextCan();
+          state = State.NAV_TO_START;
+          break;
+        case NAV_TO_START:
+          goToStart();
+          state = State.DROPOFF;
+          break;
+        case DROPOFF:
+          dropOffCan();
+          state = State.INIT;
+          break;
       }
+      sleep();
     }
   }
   
   /**
-   * Returns true if a can is detected in front of the sensor,
-   * using ultrasonic and light sensor data.
-   * @return True for a can detected, else false
+   * Finds the next can to grab
+   * 
+   * Uses the sideways facing ultrasonic sensor
    */
-  private boolean canDetected() {
-    float dist = readUS();
-    return Demo.CLASSIFIER.canDetected() || (dist != -1 && dist < 10);
+  public void search() {
+    /*
+     * TODO: Scan along search zone to give nextCan a value
+     */
   }
   
   /**
-   * Used internally to wait for the
-   * navigation to finish navigating to its
-   * target location
+   * Transports the robot from the starting zone to 
+   * the search area
    */
-  private void awaitNav() {
-    while (nav.isNavigating())
-      sleep();
+  public void goToSearchArea() {
+    if (GameSettings.searchZone.contains(odo.getXYT()[0], odo.getXYT()[1])) {
+      //Already in search area...
+      return;
+    }
+    //TODO: Implement
+  }
+  
+  /**
+   * Transports the robot from the search zone to
+   * the starting area
+   */
+  public void goToStart() {
+    if (GameSettings.startZone.contains(odo.getXYT()[0], odo.getXYT()[1])) {
+      //Already in start area...
+      return;
+    }
+    //TODO: Implement
+  }
+  
+  /** 
+   * Navigates to the next can (assuming it is defined)
+   * Analyzes its color and weight, and picks it up with the claw
+   */
+  public void grabNextCan() {
+    if (nextCan == null) {
+      return; //no next can defined
+    } 
+    
+    //We no longer know what the next can is, because we just picked up the last one
+    nextCan = null;
+  }
+  
+  /**
+   * Drops off a can in the start zone
+   */
+  public void dropOffCan() {
+    //TODO: Implement
   }
 
-  /**
-   * Moves backwards a certain distance
-   * 
-   * @param dist The distance to move, in cm
-   */
-  private void moveBack(float dist) {
-    double[] start = odo.getXYT();
-    nav.setSpeeds(-SCAN_SPD, -SCAN_SPD);
-    while (Navigation.dist(start, odo.getXYT()) < dist) {
-      sleep();
-    }
-    nav.setSpeeds(0, 0);
-  }
+  
 
   /**
    * Sleeps for one tick, as specified
@@ -181,7 +148,7 @@ public class CanFinder {
    */
   private void sleep() {
     try {
-      Thread.sleep(SLEEP_TIME);
+      Thread.sleep(30);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
@@ -199,5 +166,18 @@ public class CanFinder {
       return -1;
     }
     return usData[0] * 100f;
+  }
+  
+  /**
+   * Represents a 2D Point
+   * @author jacob
+   */
+  private class Point {
+    float x;
+    float y;
+    Point(float x, float y) {
+      this.x = x; 
+      this.y = y;
+    }
   }
 }

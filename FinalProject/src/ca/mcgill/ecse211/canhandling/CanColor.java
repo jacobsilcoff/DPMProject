@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.color;
+package ca.mcgill.ecse211.canhandling;
 
 /**
  * Represents the 4 different possible can colors. 

@@ -1,7 +1,8 @@
 package ca.mcgill.ecse211.demo;
 
-import ca.mcgill.ecse211.color.CanColor;
-import ca.mcgill.ecse211.color.ColorClassifier;
+import ca.mcgill.ecse211.canhandling.CanColor;
+import ca.mcgill.ecse211.canhandling.Claw;
+import ca.mcgill.ecse211.canhandling.ColorClassifier;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
 import ca.mcgill.ecse211.navigation.Navigation;
@@ -87,7 +88,7 @@ public class Demo {
   /**
    * The can classifier used by the program
    */
-  public static final ColorClassifier CLASSIFIER = new ColorClassifier();
+  public static final Claw CLAW = new Claw();
 
   static {
     @SuppressWarnings("resource")
@@ -135,19 +136,19 @@ public class Demo {
     } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
     LCD.clear();
     if (buttonChoice == Button.ID_LEFT) {
-      CLASSIFIER.calibrate();
+      Claw.CLASSIFIER.calibrate();
       (new Thread() {
         public void run() {
           boolean detected = false;
           while (true) {
             
-            boolean canSeen = CLASSIFIER.canDetected();
+            boolean canSeen = Claw.CLASSIFIER.canDetected();
             if (!canSeen) LCD.clear();
             if (canSeen && !detected) {
               LCD.drawString("OBJECT DETECTED", 0, 0);
               Sound.beep();
               wait(1500);
-              CLASSIFIER.getData();
+              Claw.CLASSIFIER.getData();
               wait(1000);
               detected = true;
             } else {

@@ -1,4 +1,4 @@
-package ca.mcgill.ecse211.color;
+package ca.mcgill.ecse211.canhandling;
 
 import ca.mcgill.ecse211.demo.Demo;
 import lejos.hardware.lcd.LCD;
