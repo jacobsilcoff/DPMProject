@@ -1,0 +1,50 @@
+<xml>
+	<value key="RedTeam">1</value>
+	<value key="RedCorner">3</value>
+
+	<value key="GreenTeam">2</value>
+	<value key="GreenCorner">1</value>
+
+	<value key="Red_LL_x">0</value>
+	<value key="Red_LL_y">5</value>
+
+	<value key="Red_UR_x">4</value>
+	<value key="Red_UR_y">9</value>
+
+	<value key="Green_LL_x">10</value>
+	<value key="Green_LL_y">0</value>
+
+	<value key="Green_UR_x">15</value>
+	<value key="Green_UR_y">4</value>
+
+	<value key="Island_LL_x">6</value>
+	<value key="Island_LL_y">5</value>
+
+	<value key="Island_UR_x">15</value>
+	<value key="Island_UR_y">9</value>
+
+	<value key="TNR_LL_x">4</value>
+	<value key="TNR_LL_y">7</value>
+
+	<value key="TNR_UR_x">6</value>
+	<value key="TNR_UR_y">8</value>
+
+	<value key="TNG_LL_x">10</value>
+	<value key="TNG_LL_y">3</value>
+
+	<value key="TNG_UR_x">11</value>
+	<value key="TNG_UR_y">5</value>
+
+	<value key="SZR_LL_x">7</value>
+	<value key="SZR_LL_y">6</value>
+
+	<value key="SZR_UR_x">10</value>
+	<value key="SZR_UR_y">8</value>
+
+	<value key="SZG_LL_x">11</value>
+	<value key="SZG_LL_y">6</value>
+
+	<value key="SZG_UR_x">14</value>
+	<value key="SZG_UR_y">8</value>
+
+</xml>

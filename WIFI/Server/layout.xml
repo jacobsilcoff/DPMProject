@@ -1,0 +1,58 @@
+<XML>
+	<inputs>
+		<team key="RedTeam">
+			<label>Red team number</label>
+		</team>
+		<int key="RedCorner">
+			<label>Red team's starting corner</label>
+		</int>
+		<team key="GreenTeam">
+			<label>Green team number</label>
+		</team>
+		<int key="GreenCorner">
+			<label>Green team's starting corner</label>
+		</int>
+		<coordinate keyx="Red_LL_x" keyy="Red_LL_y">
+			<label>Lower left hand corner of Red Zone</label>
+		</coordinate>
+		<coordinate keyx="Red_UR_x" keyy="Red_UR_y">
+			<label>Upper right hand corner of Red Zone</label>
+		</coordinate>
+		<coordinate keyx="Green_LL_x" keyy="Green_LL_y">
+			<label>Lower left hand corner of Green Zone</label>
+		</coordinate>
+		<coordinate keyx="Green_UR_x" keyy="Green_UR_y">
+			<label>Upper right hand corner of Green Zone</label>
+		</coordinate>
+		<coordinate keyx="Island_LL_x" keyy="Island_LL_y">
+			<label>Lower left hand corner of the Island</label>
+		</coordinate>
+		<coordinate keyx="Island_UR_x" keyy="Island_UR_y">
+			<label>Upper right hand corner of the Island</label>
+		</coordinate>
+		<coordinate keyx="TNR_LL_x" keyy="TNR_LL_y">
+			<label>Lower left hand corner of the red tunnel footprint</label>
+		</coordinate>
+		<coordinate keyx="TNR_UR_x" keyy="TNR_UR_y">
+			<label>Upper right hand corner of the red tunnel footprint</label>
+		</coordinate>
+		<coordinate keyx="TNG_LL_x" keyy="TNG_LL_y">
+			<label>Lower left hand corner of the green tunnel footprint</label>
+		</coordinate>
+		<coordinate keyx="TNG_UR_x" keyy="TNG_UR_y">
+			<label>Upper right hand corner of the green tunnel footprint</label>
+		</coordinate>
+		<coordinate keyx="SZR_LL_x" keyy="SZR_LL_y">
+			<label>Lower left hand corner of the red player search zone</label>
+		</coordinate>
+		<coordinate keyx="SZR_UR_x" keyy="SZR_UR_y">
+			<label>Upper right hand corner of the red player search zone</label>
+		</coordinate>
+		<coordinate keyx="SZG_LL_x" keyy="SZG_LL_y">
+			<label>Lower left hand corner of the green player search zone</label>
+		</coordinate>
+		<coordinate keyx="SZG_UR_x" keyy="SZG_UR_y">
+			<label>Upper right hand corner of the green player search zone</label>
+		</coordinate>
+	</inputs>
+</XML>
