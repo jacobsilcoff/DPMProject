@@ -36,31 +36,28 @@ public class Demo {
   /**
    * The robot's left motor
    */
-  public static final EV3LargeRegulatedMotor LEFT_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  public static final EV3LargeRegulatedMotor LEFT_MOTOR = null;
   /**
    * The robot's right motor
    */
-  public static final EV3LargeRegulatedMotor RIGHT_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  public static final EV3LargeRegulatedMotor RIGHT_MOTOR = null;
   /**
    * The light sensor motor
    */
-  public static final EV3LargeRegulatedMotor SENSOR_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
+  public static final EV3LargeRegulatedMotor SENSOR_MOTOR = null;
   /**
    * The robot's color-detecting light sensor
    */
-  public static final SampleProvider COLOR_SENSOR;
+  public static final SampleProvider COLOR_SENSOR = null;
   /**
    * The robot's line-detecting light sensor
    */
-  public static final SampleProvider LINE_SENSOR;
+  public static final SampleProvider LINE_SENSOR = null;
 
   /**
    * The robot's front-facing ultrasonic sensor
    */
-  public static final SampleProvider US_FRONT;
+  public static final SampleProvider US_FRONT = null;
   /**
    * Represents the radius of each wheel, in cm
    */
@@ -88,117 +85,118 @@ public class Demo {
   /**
    * The can classifier used by the program
    */
-  public static final Claw CLAW = new Claw();
+  public static final Claw CLAW = null;
 
-  static {
-    @SuppressWarnings("resource")
-    SensorModes lightSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S1"));
-    COLOR_SENSOR = lightSensorMode.getMode("RGB");
-
-    @SuppressWarnings("resource")
-    SensorModes lightSensorMode2 = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
-    LINE_SENSOR = lightSensorMode2.getMode("Red");
-
-    @SuppressWarnings("resource")
-    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
-    US_FRONT = usSensor.getMode("Distance");
-
-  }
+//  static {
+//    @SuppressWarnings("resource")
+//    SensorModes lightSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S1"));
+//    COLOR_SENSOR = lightSensorMode.getMode("RGB");
+//
+//    @SuppressWarnings("resource")
+//    SensorModes lightSensorMode2 = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
+//    LINE_SENSOR = lightSensorMode2.getMode("Red");
+//
+//    @SuppressWarnings("resource")
+//    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
+//    US_FRONT = usSensor.getMode("Distance");
+//
+//  }
   /**
    * The LCD used to output during the robot's journey
    */
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
 
-  /**
-   * Localizes the robot using US and light,
-   * then moves to a specified search area and searches for cans
-   * @param args not used
-   * @throws OdometerExceptions 
-   * @throws InterruptedException
-   */
-  public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-    SENSOR_MOTOR.flt();
-    
-    int buttonChoice;
-    do {
-
-      // clear the display
-      LCD.clear();
-
-      // ask the user whether the motors should drive in a square or float
-      LCD.drawString("< Left | Right >", 0, 0);
-      LCD.drawString("       |        ", 0, 1);
-      LCD.drawString(" Find  | Search  ", 0, 2);
-      LCD.drawString(" can   | for  ", 0, 3);
-      LCD.drawString("colors | cans ", 0, 4);
-
-      buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
-    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
-    LCD.clear();
-    if (buttonChoice == Button.ID_LEFT) {
-      Claw.CLASSIFIER.calibrate();
-      (new Thread() {
-        public void run() {
-          boolean detected = false;
-          while (true) {
-            
-            boolean canSeen = Claw.CLASSIFIER.canDetected();
-            if (!canSeen) LCD.clear();
-            if (canSeen && !detected) {
-              LCD.drawString("OBJECT DETECTED", 0, 0);
-              Sound.beep();
-              wait(1500);
-              Claw.CLASSIFIER.getData();
-              wait(1000);
-              detected = true;
-            } else {
-              detected = canSeen;
-              wait(100);
-            }
-          }
-        }
-        public void wait(int i) {
-          try {
-            sleep(i);
-          } catch (InterruptedException e) {}
-        }
-      }).start();
-      while (buttonChoice != Button.ID_ESCAPE) {
-        buttonChoice = Button.waitForAnyPress();
-      }
-      return;
-    }
-
-    (new Thread(Odometer.getOdometer())).start();
-    OdometryCorrection oc = new OdometryCorrection();
-    
-    //Localizes robot
-    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
-    LightLocalizer ll = new LightLocalizer(oc, 0,0);
-    ul.run();
-    ll.run();
-    
-    Navigation nav = new Navigation(oc);
-    nav.start();
-    (new Thread(oc)).start();
-    //Navigates to LL, beeps and waits a second before next step
-    nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
-    while (nav.isNavigating()) Thread.sleep(100);
-    Sound.beep();
-    Thread.sleep(1000);
-
-    //Start can finder
-    CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
-    finder.run();
-    
-    //Move to upper right hand corner
-    nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
-
-    while (Button.waitForAnyPress() != Button.ID_ESCAPE);
-    System.exit(0);
-
-  }
-
+//  
+//  /**
+//   * Localizes the robot using US and light,
+//   * then moves to a specified search area and searches for cans
+//   * @param args not used
+//   * @throws OdometerExceptions 
+//   * @throws InterruptedException
+//   */
+//  public static void main(String[] args) throws OdometerExceptions, InterruptedException {
+//    SENSOR_MOTOR.flt();
+//    
+//    int buttonChoice;
+//    do {
+//
+//      // clear the display
+//      LCD.clear();
+//
+//      // ask the user whether the motors should drive in a square or float
+//      LCD.drawString("< Left | Right >", 0, 0);
+//      LCD.drawString("       |        ", 0, 1);
+//      LCD.drawString(" Find  | Search  ", 0, 2);
+//      LCD.drawString(" can   | for  ", 0, 3);
+//      LCD.drawString("colors | cans ", 0, 4);
+//
+//      buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
+//    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
+//    LCD.clear();
+//    if (buttonChoice == Button.ID_LEFT) {
+//      Claw.CLASSIFIER.calibrate();
+//      (new Thread() {
+//        public void run() {
+//          boolean detected = false;
+//          while (true) {
+//            
+//            boolean canSeen = Claw.CLASSIFIER.canDetected();
+//            if (!canSeen) LCD.clear();
+//            if (canSeen && !detected) {
+//              LCD.drawString("OBJECT DETECTED", 0, 0);
+//              Sound.beep();
+//              wait(1500);
+//              Claw.CLASSIFIER.getData();
+//              wait(1000);
+//              detected = true;
+//            } else {
+//              detected = canSeen;
+//              wait(100);
+//            }
+//          }
+//        }
+//        public void wait(int i) {
+//          try {
+//            sleep(i);
+//          } catch (InterruptedException e) {}
+//        }
+//      }).start();
+//      while (buttonChoice != Button.ID_ESCAPE) {
+//        buttonChoice = Button.waitForAnyPress();
+//      }
+//      return;
+//    }
+//
+//    (new Thread(Odometer.getOdometer())).start();
+//    OdometryCorrection oc = new OdometryCorrection();
+//    
+//    //Localizes robot
+//    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
+//    LightLocalizer ll = new LightLocalizer(oc, 0,0);
+//    ul.run();
+//    ll.run();
+//    
+//    Navigation nav = new Navigation(oc);
+//    nav.start();
+//    (new Thread(oc)).start();
+//    //Navigates to LL, beeps and waits a second before next step
+//    nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
+//    while (nav.isNavigating()) Thread.sleep(100);
+//    Sound.beep();
+//    Thread.sleep(1000);
+//
+//    //Start can finder
+//    CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
+//    finder.run();
+//    
+//    //Move to upper right hand corner
+//    nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
+//
+//    while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+//    System.exit(0);
+//
+//  }
+//
   /**
    * Calculates the center of the robot from the position of the
    * line sensor, denoted as an array

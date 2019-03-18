@@ -10,7 +10,7 @@ import lejos.hardware.Sound;
  * 
  * @author Group 6
  */
-public class OdometryCorrection implements Runnable {
+public class OdometryCorrection extends Thread {
 
   /**
    * This represents the minimum difference from the mean for a light sensor reading to be

@@ -20,7 +20,6 @@ import lejos.hardware.Sound;
  */
 public class CanFinder implements Runnable {
 
-  private Navigation nav;
   private Odometer odo;
   private CanColor target;
   private Point nextCan;
@@ -29,12 +28,10 @@ public class CanFinder implements Runnable {
 
   /**
    * Creates a can finder.
-   * @param nav The navigation to use to control the robot
    * @param target The color of can the robot is looking for
    */
-  public CanFinder(Navigation nav, CanColor target) {
+  public CanFinder(CanColor target) {
     this.target = target;
-    this.nav = nav;
     nextCan = null;
     state = State.INIT;
     try {

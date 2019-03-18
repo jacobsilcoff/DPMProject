@@ -77,7 +77,8 @@ public class Navigation extends Thread {
 
   /**
    * Sets robot to travel to a given TILE point, updating the destination direction and position
-   * 
+   * It is recommended that this method is called in conjunction with
+   * waitUntilDone()
    * @param x The desired x in cm
    * @param y The desired y in cm
    */
@@ -223,6 +224,19 @@ public class Navigation extends Thread {
       }
       try {
         sleep(SLEEP_TIME);
+      } catch (InterruptedException e) {
+      }
+    }
+  }
+  
+  /**
+   * Waits until the thread is finished navigating
+   * Uses 1/2 second intervals to save compute time
+   */
+  public void waitUntilDone() {
+    while (isNavigating) {
+      try {
+        sleep(500);
       } catch (InterruptedException e) {
       }
     }

@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.localization;
 import lejos.hardware.Sound;
 import ca.mcgill.ecse211.demo.AveragedBuffer;
+import ca.mcgill.ecse211.demo.BetaDemo;
 import ca.mcgill.ecse211.demo.Demo;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
@@ -34,32 +35,9 @@ public class UltrasonicLocalizer {
 
 
   private Odometer odo;
-  private Navigation nav;
   private AveragedBuffer<Float> samples;
 
 
-
-  /**
-   * Creates an ultrasonic sensor localizer instance for rising or falling edge localization
-   * 
-   * @param oc The odometry correction thread to be turned off during this process
-   */
-  public UltrasonicLocalizer(OdometryCorrection oc) {
-    samples = new AveragedBuffer<Float>(5);
-    try {
-      odo = Odometer.getOdometer();
-    } catch (OdometerExceptions e) {
-      e.printStackTrace();
-    }
-
-    // start a new navigation thread
-    try {
-      this.nav = new Navigation(oc);
-    } catch (OdometerExceptions e) {
-      e.printStackTrace();
-    }
-    nav.start();
-  }
 
   /**
    * Creates an ultrasonic sensor localizer instance for rising or falling edge localization
@@ -71,14 +49,6 @@ public class UltrasonicLocalizer {
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
-
-    // start a new navigation thread
-    try {
-      this.nav = new Navigation(null);
-    } catch (OdometerExceptions e) {
-      e.printStackTrace();
-    }
-    nav.start();
   }
 
 
@@ -93,7 +63,7 @@ public class UltrasonicLocalizer {
    */
   public double getEdge(boolean cw) {
     int dir = cw? 1 : -1;
-    nav.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED); //set clockwise or counterclockwise turn
+    BetaDemo.NAV.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED); //set clockwise or counterclockwise turn
     Demo.LCD.drawString("STAGE 1", 0, 4);
     double reading = readUS();
     //loops to not be thrown off by 1 bad reading
@@ -108,8 +78,8 @@ public class UltrasonicLocalizer {
     }
     //ensures you are well past the rising edge
     if (seesWall) {
-      nav.turnTo((odo.getXYT()[2] + dir * 45 + 360)%360);
-      nav.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED);
+      BetaDemo.NAV.turnTo((odo.getXYT()[2] + dir * 45 + 360)%360);
+      BetaDemo.NAV.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED);
     }
 
 
@@ -118,12 +88,12 @@ public class UltrasonicLocalizer {
       sleep();
       reading = readUS(); //final readings
     }
-    nav.setSpeeds(0, 0);// stop
+    BetaDemo.NAV.setSpeeds(0, 0);// stop
 
     Demo.LCD.drawString("Edge detected", 0, 4);
     Sound.beep(); //audio notification
 
-    nav.setSpeeds(0, 0); //stop robot
+    BetaDemo.NAV.setSpeeds(0, 0); //stop robot
     return odo.getXYT()[2];
   }
 
@@ -172,12 +142,12 @@ public class UltrasonicLocalizer {
     odo.setXYT(0, 0, realAngle); 
 
     // turn to localized North
-    nav.turnTo(0);
+    BetaDemo.NAV.turnTo(0);
     if (readUS() < DETECTION_DISTANCE) {
       odo.setTheta(180);
     }
-    nav.turnTo(0);
-    nav.end();
+    BetaDemo.NAV.turnTo(0);
+    BetaDemo.NAV.waitUntilDone();
   }
 
   /**
