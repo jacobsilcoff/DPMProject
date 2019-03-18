@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.canhandling;
 
+import ca.mcgill.ecse211.demo.BetaDemo;
 import ca.mcgill.ecse211.demo.Demo;
 import lejos.hardware.lcd.LCD;
 
@@ -25,6 +26,7 @@ public class ColorClassifier {
    */
   public ColorClassifier() {
     colorLabel = CanColor.UNKNOWN;
+    
   }
   
   /**
@@ -197,16 +199,16 @@ public class ColorClassifier {
    */
   public void calibrate() {
     // moves towards the left
-    Demo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
-    Demo.SENSOR_MOTOR.backward();
+    BetaDemo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
+    BetaDemo.SENSOR_MOTOR.backward();
     try {
       Thread.sleep(4500);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
-    Demo.SENSOR_MOTOR.flt();
-    Demo.SENSOR_MOTOR.setSpeed(0);
-    Demo.SENSOR_MOTOR.resetTachoCount();
+    BetaDemo.SENSOR_MOTOR.flt();
+    BetaDemo.SENSOR_MOTOR.setSpeed(0);
+    BetaDemo.SENSOR_MOTOR.resetTachoCount();
     calibrated = true;
   }
 

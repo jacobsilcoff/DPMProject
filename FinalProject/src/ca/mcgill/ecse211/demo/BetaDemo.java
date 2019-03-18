@@ -110,87 +110,85 @@ public class BetaDemo {
 	   * @throws InterruptedException
 	   */
 	  public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-		touchSensorMode.getAvailableModes();
-//	    SENSOR_MOTOR.flt();
-//	    
-//	    int buttonChoice;
-//	    do {
-//
-//	      // clear the display
-//	      LCD.clear();
-//
-//	      // ask the user whether the motors should drive in a square or float
-//	      LCD.drawString("< Left | Right >", 0, 0);
-//	      LCD.drawString("       |        ", 0, 1);
-//	      LCD.drawString(" Find  | Search  ", 0, 2);
-//	      LCD.drawString(" can   | for  ", 0, 3);
-//	      LCD.drawString("colors | cans ", 0, 4);
-//
-//	      buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
-//	    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
-//	    LCD.clear();
-//	    if (buttonChoice == Button.ID_LEFT) {
-//	      Claw.CLASSIFIER.calibrate();
-//	      (new Thread() {
-//	        public void run() {
-//	          boolean detected = false;
-//	          while (true) {
-//	            
-//	            boolean canSeen = Claw.CLASSIFIER.canDetected();
-//	            if (!canSeen) LCD.clear();
-//	            if (canSeen && !detected) {
-//	              LCD.drawString("OBJECT DETECTED", 0, 0);
-//	              Sound.beep();
-//	              wait(1500);
-//	              Claw.CLASSIFIER.getData();
-//	              wait(1000);
-//	              detected = true;
-//	            } else {
-//	              detected = canSeen;
-//	              wait(100);
-//	            }
-//	          }
-//	        }
-//	        public void wait(int i) {
-//	          try {
-//	            sleep(i);
-//	          } catch (InterruptedException e) {}
-//	        }
-//	      }).start();
-//	      while (buttonChoice != Button.ID_ESCAPE) {
-//	        buttonChoice = Button.waitForAnyPress();
-//	      }
-//	      return;
-//	    }
-//
-//	    (new Thread(Odometer.getOdometer())).start();
-//	    OdometryCorrection oc = new OdometryCorrection();
-//	    
-//	    //Localizes robot
-//	    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
-//	    LightLocalizer ll = new LightLocalizer(oc, 0,0);
-//	    ul.run();
-//	    ll.run();
-//	    
-//	    Navigation nav = new Navigation(oc);
-//	    nav.start();
-//	    (new Thread(oc)).start();
-//	    //Navigates to LL, beeps and waits a second before next step
-//	    nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
-//	    while (nav.isNavigating()) Thread.sleep(100);
-//	    Sound.beep();
-//	    Thread.sleep(1000);
-//
-//	    //Start can finder
-//	    CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
-//	    finder.run();
-//	    
-//	    //Move to upper right hand corner
-//	    nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
-//
-//	    while (Button.waitForAnyPress() != Button.ID_ESCAPE);
-//	    System.exit(0);
+	    SENSOR_MOTOR.flt();
+	    
+	    int buttonChoice;
+	    do {
 
+	      // clear the display
+	      LCD.clear();
+
+	      // ask the user whether the motors should drive in a square or float
+	      LCD.drawString("< Left | Right >", 0, 0);
+	      LCD.drawString("       |        ", 0, 1);
+	      LCD.drawString(" Find  | Search  ", 0, 2);
+	      LCD.drawString(" can   | for  ", 0, 3);
+	      LCD.drawString("colors | cans ", 0, 4);
+
+	      buttonChoice = Button.waitForAnyPress(); // Record choice (left or right press)
+	    } while (buttonChoice != Button.ID_LEFT && buttonChoice != Button.ID_RIGHT);
+	    LCD.clear();
+	    if (buttonChoice == Button.ID_LEFT) {
+	      Claw.CLASSIFIER.calibrate();
+	      (new Thread() {
+	        public void run() {
+	          boolean detected = false;
+	          while (true) {
+	            
+	            boolean canSeen = Claw.CLASSIFIER.canDetected();
+	            if (!canSeen) LCD.clear();
+	            if (canSeen && !detected) {
+	              LCD.drawString("OBJECT DETECTED", 0, 0);
+	              Sound.beep();
+	              wait(1500);
+	              Claw.CLASSIFIER.getData();
+	              wait(1000);
+	              detected = true;
+	            } else {
+	              detected = canSeen;
+	              wait(100);
+	            }
+	          }
+	        }
+	        public void wait(int i) {
+	          try {
+	            sleep(i);
+	          } catch (InterruptedException e) {}
+	        }
+	      }).start();
+	      while (buttonChoice != Button.ID_ESCAPE) {
+	        buttonChoice = Button.waitForAnyPress();
+	      }
+	      return;
+	    }
+
+	    (new Thread(Odometer.getOdometer())).start();
+	    OdometryCorrection oc = new OdometryCorrection();
+	    
+	    //Localizes robot
+	    UltrasonicLocalizer ul = new UltrasonicLocalizer(oc);
+	    LightLocalizer ll = new LightLocalizer(oc, 0,0);
+	    ul.run();
+	    ll.run();
+	    
+	    Navigation nav = new Navigation(oc);
+	    nav.start();
+	    (new Thread(oc)).start();
+	    //Navigates to LL, beeps and waits a second before next step
+	    nav.travelTo(LLx * OdometryCorrection.LINE_SPACING, LLy * OdometryCorrection.LINE_SPACING);
+	    while (nav.isNavigating()) Thread.sleep(100);
+	    Sound.beep();
+	    Thread.sleep(1000);
+
+	    //Start can finder
+	    CanFinder finder = new CanFinder(nav, CanColor.fromNumber(TR));
+	    finder.run();
+	    
+	    //Move to upper right hand corner
+	    nav.travelTo(URx * OdometryCorrection.LINE_SPACING, URy * OdometryCorrection.LINE_SPACING);
+
+	    while (Button.waitForAnyPress() != Button.ID_ESCAPE);
+	    System.exit(0);
 	  }
 
 	  /**

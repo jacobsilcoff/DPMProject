@@ -34,7 +34,6 @@ public class Claw {
 	 */
 	public void open() {
 		if(!open) {
-			
 			open = true;
 		}    
 	}
