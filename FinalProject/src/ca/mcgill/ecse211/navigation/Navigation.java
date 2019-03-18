@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.navigation;
 
-import ca.mcgill.ecse211.demo.Demo;
+import ca.mcgill.ecse211.demo.BetaDemo;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
@@ -87,7 +87,7 @@ public class Navigation extends Thread {
     destY = y; // convert Y tile pt
     updateT();
     isNavigating = true;
-    Demo.LCD.drawString("Dest:" + (int) destX + "," + (int) destY + "," + (int) destT, 0, 4);
+    BetaDemo.LCD.drawString("Dest:" + (int) destX + "," + (int) destY + "," + (int) destT, 0, 4);
 
   }
 
@@ -137,21 +137,21 @@ public class Navigation extends Thread {
     }
     double presTheta = odo.getXYT()[2]; // get current heading
     double ang = (theta - presTheta + 360) % 360; // gets absolute angle required to turn
-    Demo.LEFT_MOTOR.setSpeed(speed);
-    Demo.RIGHT_MOTOR.setSpeed(speed);
+    BetaDemo.LEFT_MOTOR.setSpeed(speed);
+    BetaDemo.RIGHT_MOTOR.setSpeed(speed);
 
     // turn using MINIMUM angle
     if (ang < 180) {
-      Demo.LCD.drawString("Ang: " + ang + "deg  ", 0, 5);
+      BetaDemo.LCD.drawString("Ang: " + ang + "deg  ", 0, 5);
       // increase angle
-      Demo.LEFT_MOTOR.rotate(convertAngle(ang), true);
-      Demo.RIGHT_MOTOR.rotate(-convertAngle(ang), false);
+      BetaDemo.LEFT_MOTOR.rotate(convertAngle(ang), true);
+      BetaDemo.RIGHT_MOTOR.rotate(-convertAngle(ang), false);
     } else {
       ang = 360 - ang;
-      Demo.LCD.drawString("Ang: " + ang + "deg   ", 0, 5); // display angle of rotation
+      BetaDemo.LCD.drawString("Ang: " + ang + "deg   ", 0, 5); // display angle of rotation
       // Need to check against odometer
-      Demo.LEFT_MOTOR.rotate(-convertAngle(ang), true);
-      Demo.RIGHT_MOTOR.rotate(convertAngle(ang), false);
+      BetaDemo.LEFT_MOTOR.rotate(-convertAngle(ang), true);
+      BetaDemo.RIGHT_MOTOR.rotate(convertAngle(ang), false);
     }
     updateT();// update new angle after turn;
   }
@@ -187,7 +187,7 @@ public class Navigation extends Thread {
       double[] lastPos = {0, 0};
       switch (state) {
         case INIT:
-          Demo.LCD.drawString("State: INIT", 0, 6);
+          BetaDemo.LCD.drawString("State: INIT", 0, 6);
           if (isNavigating) {
             state = State.TURNING;
           }
@@ -196,7 +196,7 @@ public class Navigation extends Thread {
           }
           break;
         case TURNING:
-          Demo.LCD.drawString("State: TURN", 0, 6);
+          BetaDemo.LCD.drawString("State: TURN", 0, 6);
           turnTo(destT);
           if (facing(destT)) {
             state = State.TRAVELING;
@@ -204,7 +204,7 @@ public class Navigation extends Thread {
           }
           break;
         case TRAVELING:
-          Demo.LCD.drawString("State: TRVL", 0, 6);
+          BetaDemo.LCD.drawString("State: TRVL", 0, 6);
           updateT();
           if (getDist() > CORRECTION_DIST && dist(lastPos, odo.getXYT()) > CORRECTION_DIST
               && !facing(destT)) {
@@ -258,8 +258,8 @@ public class Navigation extends Thread {
     } else {
       setSpeeds(0, 0);
     }
-    Demo.LEFT_MOTOR.forward();
-    Demo.RIGHT_MOTOR.forward();
+    BetaDemo.LEFT_MOTOR.forward();
+    BetaDemo.RIGHT_MOTOR.forward();
   }
 
   /**
@@ -334,22 +334,22 @@ public class Navigation extends Thread {
    * @param r The desired speed of the right motor
    */
   public void setSpeeds(float l, float r) {
-    Demo.LEFT_MOTOR.setSpeed(Math.abs(l));
-    Demo.RIGHT_MOTOR.setSpeed(Math.abs(r));
+    BetaDemo.LEFT_MOTOR.setSpeed((int) Math.abs(l));
+    BetaDemo.RIGHT_MOTOR.setSpeed((int) Math.abs(r));
     if (l > 0) {
-      Demo.LEFT_MOTOR.forward();
+      BetaDemo.LEFT_MOTOR.forward();
     } else if (l < 0) {
-      Demo.LEFT_MOTOR.backward();
+      BetaDemo.LEFT_MOTOR.backward();
     } else {
-      Demo.LEFT_MOTOR.stop();
+      BetaDemo.LEFT_MOTOR.stop();
     }
     
     if (r > 0) {
-      Demo.RIGHT_MOTOR.forward();
+      BetaDemo.RIGHT_MOTOR.forward();
     } else if (r < 0) {
-      Demo.RIGHT_MOTOR.backward();
+      BetaDemo.RIGHT_MOTOR.backward();
     } else {
-      Demo.RIGHT_MOTOR.stop();
+      BetaDemo.RIGHT_MOTOR.stop();
     }
   }
 
@@ -371,7 +371,7 @@ public class Navigation extends Thread {
    * @return The number of degrees of wheel rotation needed for the given distance
    */
   private static int convertDistance(double distance) {
-    return (int) ((180.0 * distance) / (Math.PI * Demo.WHEEL_RAD));
+    return (int) ((180.0 * distance) / (Math.PI * BetaDemo.WHEEL_RAD));
   }
 
 
@@ -383,7 +383,7 @@ public class Navigation extends Thread {
    * @return The number of degrees of wheel rotation needed for the given angle
    */
   private static int convertAngle(double angle) {
-    return convertDistance(Math.PI * Demo.TRACK * angle / 360.0);
+    return convertDistance(Math.PI * BetaDemo.TRACK * angle / 360.0);
   }
 
   /**

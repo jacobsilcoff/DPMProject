@@ -1,7 +1,6 @@
 package ca.mcgill.ecse211.canhandling;
 
 import ca.mcgill.ecse211.demo.BetaDemo;
-import ca.mcgill.ecse211.demo.Demo;
 import lejos.hardware.lcd.LCD;
 
 /**
@@ -37,8 +36,8 @@ public class ColorClassifier {
     double[] totalReadings = new double[3];
     int numReadings = 0;
     for (int i = 0; i < 10; i++) {
-      float[] sample = new float[Demo.COLOR_SENSOR.sampleSize()];
-      Demo.COLOR_SENSOR.fetchSample(sample, 0);
+      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
+      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int j = 0; j < sample.length; j++) {
           totalReadings[j] += sample[j];
@@ -70,15 +69,15 @@ public class ColorClassifier {
     if (!calibrated) {
       calibrate();
     }
-    Demo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
-    Demo.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
+    //BetaDemo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
+    //BetaDemo.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
 
-    while (Demo.SENSOR_MOTOR.isMoving()) {
-      float[] sample = new float[Demo.COLOR_SENSOR.sampleSize()];
-      Demo.COLOR_SENSOR.fetchSample(sample, 0);
+    while (BetaDemo.CAN_MOTOR.isMoving()) {
+      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
+      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
@@ -88,11 +87,11 @@ public class ColorClassifier {
       sleep();
     }
 
-    Demo.SENSOR_MOTOR.rotateTo(3, true);
+    BetaDemo.CAN_MOTOR.rotateTo(3, true);
 
-    while (Demo.SENSOR_MOTOR.isMoving()) {
-      float[] sample = new float[Demo.COLOR_SENSOR.sampleSize()];
-      Demo.COLOR_SENSOR.fetchSample(sample, 0);
+    while (BetaDemo.CAN_MOTOR.isMoving()) {
+      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
+      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
@@ -120,7 +119,7 @@ public class ColorClassifier {
         (int) (avgReading[1] * 1000), (int) (avgReading[2] * 1000)});
     LCD.drawString(colorLabel.toString(), 0, 4);
 
-    Demo.SENSOR_MOTOR.flt();
+    BetaDemo.CAN_MOTOR.flt();
     
     return colorLabel;
   }
@@ -135,15 +134,15 @@ public class ColorClassifier {
     if (!calibrated) {
       calibrate();
     }
-    Demo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
-    Demo.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
+    BetaDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
+    BetaDemo.CAN_MOTOR.rotateTo(MAX_TACHO, true);
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
 
-    while (Demo.SENSOR_MOTOR.isMoving()) {
-      float[] sample = new float[Demo.COLOR_SENSOR.sampleSize()];
-      Demo.COLOR_SENSOR.fetchSample(sample, 0);
+    while (BetaDemo.CAN_MOTOR.isMoving()) {
+      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
+      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
@@ -153,11 +152,11 @@ public class ColorClassifier {
       sleep();
     }
 
-    Demo.SENSOR_MOTOR.rotateTo(0, true);
+    BetaDemo.CAN_MOTOR.rotateTo(0, true);
 
-    while (Demo.SENSOR_MOTOR.isMoving()) {
-      float[] sample = new float[Demo.COLOR_SENSOR.sampleSize()];
-      Demo.COLOR_SENSOR.fetchSample(sample, 0);
+    while (BetaDemo.CAN_MOTOR.isMoving()) {
+      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
+      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
@@ -199,16 +198,16 @@ public class ColorClassifier {
    */
   public void calibrate() {
     // moves towards the left
-    BetaDemo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
-    BetaDemo.SENSOR_MOTOR.backward();
+    //BetaDemo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
+    //BetaDemo.SENSOR_MOTOR.backward();
     try {
       Thread.sleep(4500);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
-    BetaDemo.SENSOR_MOTOR.flt();
-    BetaDemo.SENSOR_MOTOR.setSpeed(0);
-    BetaDemo.SENSOR_MOTOR.resetTachoCount();
+    //BetaDemo.SENSOR_MOTOR.flt();
+    //BetaDemo.SENSOR_MOTOR.setSpeed(0);
+    //BetaDemo.SENSOR_MOTOR.resetTachoCount();
     calibrated = true;
   }
 

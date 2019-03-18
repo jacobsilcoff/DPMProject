@@ -1,7 +1,7 @@
 package ca.mcgill.ecse211.odometer;
 
 import ca.mcgill.ecse211.demo.AveragedBuffer;
-import ca.mcgill.ecse211.demo.Demo;
+import ca.mcgill.ecse211.demo.BetaDemo;
 import lejos.hardware.Sound;
 
 /**
@@ -44,7 +44,7 @@ public class OdometryCorrection extends Thread {
    */
   public OdometryCorrection() throws OdometerExceptions {
     this.odometer = Odometer.getOdometer();
-    sample = new float[Demo.LINE_SENSOR.sampleSize()];
+    sample = new float[BetaDemo.LINE_SENSOR.sampleSize()];
     samples = new AveragedBuffer<Float>(100);
     on = true;
   }
@@ -64,7 +64,7 @@ public class OdometryCorrection extends Thread {
 
     while (true) {
       correctionStart = System.currentTimeMillis();
-      Demo.LINE_SENSOR.fetchSample(sample, 0);
+      BetaDemo.LINE_SENSOR.fetchSample(sample, 0);
       double[] pos = odometer.getXYT(); // current odo-position
 
       /*
@@ -82,18 +82,18 @@ public class OdometryCorrection extends Thread {
          * ignore the first line because it is the sensor moving about starting point
          */
         
-        double[] sensor = Demo.toSensor(pos);
+        double[] sensor = BetaDemo.toSensor(pos);
         if (lineCount != 1) {
           double roundedX = Math.round(sensor[0] / LINE_SPACING) * LINE_SPACING;
           double roundedY = Math.round(sensor[1] / LINE_SPACING) * LINE_SPACING;
           if (Math.abs(sensor[0] - roundedX)< Math.abs(sensor[1] - roundedY)) {
             // here we round the x position
             sensor[0] = roundedX;
-            odometer.setX(Demo.toRobot(sensor)[0]);
+            odometer.setX(BetaDemo.toRobot(sensor)[0]);
           } else {
             // here we round the y position
             sensor[1] = roundedY;
-            odometer.setY(Demo.toRobot(sensor)[1]);
+            odometer.setY(BetaDemo.toRobot(sensor)[1]);
           }
 
           // update last pos of line detected

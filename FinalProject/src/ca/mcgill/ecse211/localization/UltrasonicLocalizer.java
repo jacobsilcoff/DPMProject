@@ -2,7 +2,7 @@ package ca.mcgill.ecse211.localization;
 import lejos.hardware.Sound;
 import ca.mcgill.ecse211.demo.AveragedBuffer;
 import ca.mcgill.ecse211.demo.BetaDemo;
-import ca.mcgill.ecse211.demo.Demo;
+import ca.mcgill.ecse211.demo.BetaDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
@@ -64,7 +64,7 @@ public class UltrasonicLocalizer {
   public double getEdge(boolean cw) {
     int dir = cw? 1 : -1;
     BetaDemo.NAV.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED); //set clockwise or counterclockwise turn
-    Demo.LCD.drawString("STAGE 1", 0, 4);
+    BetaDemo.LCD.drawString("STAGE 1", 0, 4);
     double reading = readUS();
     //loops to not be thrown off by 1 bad reading
     boolean seesWall = false;
@@ -83,14 +83,14 @@ public class UltrasonicLocalizer {
     }
 
 
-    Demo.LCD.drawString("STAGE 2", 0, 4);
+    BetaDemo.LCD.drawString("STAGE 2", 0, 4);
     while ((reading > DETECTION_DISTANCE) || reading == -1) {
       sleep();
       reading = readUS(); //final readings
     }
     BetaDemo.NAV.setSpeeds(0, 0);// stop
 
-    Demo.LCD.drawString("Edge detected", 0, 4);
+    BetaDemo.LCD.drawString("Edge detected", 0, 4);
     Sound.beep(); //audio notification
 
     BetaDemo.NAV.setSpeeds(0, 0); //stop robot
@@ -167,9 +167,9 @@ public class UltrasonicLocalizer {
    * @return The US reading in cm
    */
   private float readUS() {
-    float[] usData = new float[Demo.US_FRONT.sampleSize()];
-    Demo.US_FRONT.fetchSample(usData, 0);
-    Demo.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 7);
+    float[] usData = new float[BetaDemo.US_FRONT.sampleSize()];
+    BetaDemo.US_FRONT.fetchSample(usData, 0);
+    BetaDemo.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 7);
     samples.add((usData[0] * 100f));
     if (usData[0] == 255) {
       return -1;

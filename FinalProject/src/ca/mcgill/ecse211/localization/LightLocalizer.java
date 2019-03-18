@@ -3,7 +3,7 @@ package ca.mcgill.ecse211.localization;
 import lejos.hardware.Sound;
 import ca.mcgill.ecse211.demo.AveragedBuffer;
 import ca.mcgill.ecse211.demo.BetaDemo;
-import ca.mcgill.ecse211.demo.Demo;
+import ca.mcgill.ecse211.demo.BetaDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
@@ -98,11 +98,11 @@ public class LightLocalizer {
        */
       BetaDemo.NAV.turnTo(0);
       moveToLine(true);
-      odo.setY(OdometryCorrection.LINE_SPACING * (y+1) + Demo.LINE_OFFSET_Y);
-      moveBackwards(Demo.LINE_OFFSET_Y + 10);
+      odo.setY(OdometryCorrection.LINE_SPACING * (y+1) + BetaDemo.LINE_OFFSET_Y);
+      moveBackwards(BetaDemo.LINE_OFFSET_Y + 10);
       BetaDemo.NAV.turnTo(90);
       moveToLine(true);
-      odo.setX(OdometryCorrection.LINE_SPACING * (x+1) + Demo.LINE_OFFSET_Y);
+      odo.setX(OdometryCorrection.LINE_SPACING * (x+1) + BetaDemo.LINE_OFFSET_Y);
     }
 
     /*
@@ -130,7 +130,7 @@ public class LightLocalizer {
     double tXN = odo.getXYT()[2];
 
     //calculates & updates values
-    double d = Math.sqrt(Math.pow(Demo.LINE_OFFSET_X,2) + Math.pow(Demo.LINE_OFFSET_Y, 2));
+    double d = Math.sqrt(Math.pow(BetaDemo.LINE_OFFSET_X,2) + Math.pow(BetaDemo.LINE_OFFSET_Y, 2));
     double tY = Math.abs(tYN - tYP);
     tY = tY > 180 ? 360 - tY : tY; 
     double tX = Math.abs(tXN - tXP);
@@ -139,7 +139,7 @@ public class LightLocalizer {
         - d * Math.cos(Math.toRadians(tY/2)));
     odo.setY(OdometryCorrection.LINE_SPACING * (y+1)
         - d * Math.cos(Math.toRadians(tX/2)));
-    double sensorTheta = Math.toDegrees(Math.acos(Demo.LINE_OFFSET_X / Demo.LINE_OFFSET_Y));
+    double sensorTheta = Math.toDegrees(Math.acos(BetaDemo.LINE_OFFSET_X / BetaDemo.LINE_OFFSET_Y));
     double odo270 = (tY/2 + tYP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 270
     double odo180 = (tX/2 + tXP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 180
     double avgError = ((odo180 - 180) + (odo270 - 270)) / 2;
@@ -178,12 +178,12 @@ public class LightLocalizer {
    * Blocks until a line is detetected by the robot
    */
   private void waitUntilLine() {
-    float[] sample = new float[Demo.LINE_SENSOR.sampleSize()];
+    float[] sample = new float[BetaDemo.LINE_SENSOR.sampleSize()];
     do {
-      Demo.LINE_SENSOR.fetchSample(sample, 0);
+      BetaDemo.LINE_SENSOR.fetchSample(sample, 0);
       samples.add(sample[0]);
-      Demo.LCD.clear();
-      Demo.LCD.drawString(sample[0] + ", " + samples.getAvg() + "      ",0,4);
+      BetaDemo.LCD.clear();
+      BetaDemo.LCD.drawString(sample[0] + ", " + samples.getAvg() + "      ",0,4);
       sleep();
     } while (sample[0] > samples.getAvg() - LIGHT_THRESHOLD);
     samples.clear();
@@ -210,8 +210,8 @@ public class LightLocalizer {
     BetaDemo.NAV.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
     double[] start = BetaDemo.NAV.getOdo().getXYT();
 
-    Demo.LEFT_MOTOR.backward();
-    Demo.RIGHT_MOTOR.backward();
+    BetaDemo.LEFT_MOTOR.backward();
+    BetaDemo.RIGHT_MOTOR.backward();
 
     while (Navigation.dist(BetaDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
       try {

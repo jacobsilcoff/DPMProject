@@ -18,24 +18,33 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
+import lejos.robotics.MirrorMotor;
+import lejos.robotics.RegulatedMotor;
 import lejos.robotics.SampleProvider;
 
 public class BetaDemo {
   /**
    * The robot's left motor
    */
-  public static final EV3LargeRegulatedMotor LEFT_MOTOR = 
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  public static final RegulatedMotor LEFT_MOTOR = 
+      MirrorMotor.invertMotor(new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C")));
   /**
    * The robot's right motor
    */
-  public static final EV3LargeRegulatedMotor RIGHT_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  public static final RegulatedMotor RIGHT_MOTOR =
+      MirrorMotor.invertMotor(new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B")));
   /**
-   * The light sensor motor
+   * The claw motor
    */
-  public static final EV3LargeRegulatedMotor SENSOR_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("C"));
+  public static final EV3LargeRegulatedMotor CLAW_MOTOR =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
+  
+  /**
+   * The motor used to spin cans
+   */
+  public static final EV3LargeRegulatedMotor CAN_MOTOR =
+      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
+  
   /**
    * The robot's color-detecting light sensor
    */
@@ -57,29 +66,46 @@ public class BetaDemo {
    */
   public static final double WHEEL_RAD = 2.18;
   /**
-   * Represents half the distance between the wheels, in cm Will need updating
+   * Represents the distance between the wheels, in cm
    */
-  public static final double TRACK = 13.6;
+  public static final double TRACK = 10.33;
   /**
    * The offset between the robot turning center and the line sensor in
    * the Y direction, in cm. Note: magnitude only.
    */
-  public static final double LINE_OFFSET_Y = 10.5;
+  public static final double LINE_OFFSET_Y = 7.01;
   /**
    * The offset between the robot turning center and the line sensor in
    * the X direction, in cm. Note: magnitude only.
    */
   public static final double LINE_OFFSET_X = TRACK/2;
-  /**
-   * The offset between the robot turning center and the
-   * center of where the can should be for measurment
-   */
-  public static final double CAN_DIST = 7;
 
   /**
    * The can classifier used by the program
    */
   public static final Claw CLAW = new Claw();
+
+  static {
+    @SuppressWarnings("resource")
+    SensorModes colorSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
+    COLOR_SENSOR = colorSensorMode.getMode("RGB");
+
+    @SuppressWarnings("resource")
+    SensorModes lineSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S1"));
+    LINE_SENSOR = lineSensorMode.getMode("Red");
+
+    @SuppressWarnings("resource")
+    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
+    US_FRONT = usSensor.getMode("Distance");
+
+    @SuppressWarnings("resource")
+    SensorModes touchSensorMode = new EV3TouchSensor(LocalEV3.get().getPort("S4"));
+    TOUCH_SENSOR = touchSensorMode.getMode("Touch");
+  }
+  /**
+   * The LCD used to output during the robot's journey
+   */
+  public static final TextLCD LCD = LocalEV3.get().getTextLCD();
 
   /**
    * The Odometry correction system for the robot
@@ -104,29 +130,11 @@ public class BetaDemo {
       return null;
     }
   }
-
-  static {
-    @SuppressWarnings("resource")
-    SensorModes lightSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S1"));
-    COLOR_SENSOR = lightSensorMode.getMode("RGB");
-
-    @SuppressWarnings("resource")
-    SensorModes lightSensorMode2 = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
-    LINE_SENSOR = lightSensorMode2.getMode("Red");
-
-    @SuppressWarnings("resource")
-    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
-    US_FRONT = usSensor.getMode("Distance");
-
-    @SuppressWarnings("resource")
-    SensorModes touchSensorMode = new EV3TouchSensor(LocalEV3.get().getPort("S3"));
-    TOUCH_SENSOR = touchSensorMode.getMode("Touch");
-  }
+  
   /**
-   * The LCD used to output during the robot's journey
+   * Distance between lines in cm
    */
-  public static final TextLCD LCD = LocalEV3.get().getTextLCD();
-
+  public static final float GRID_WIDTH = 30.48f;
 
   /**
    * Localizes the robot using US and light,
@@ -137,8 +145,11 @@ public class BetaDemo {
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();
-    localize();
-    squareDrive(false);
+    //Button.waitForAnyPress();
+    //localize();
+    squareDrive(true);
+    //rotateX(3);
+    System.exit(0);
   }
   
   /**
@@ -147,7 +158,7 @@ public class BetaDemo {
    * @throws OdometerExceptions
    */
   private static void init() throws OdometerExceptions {
-    GameSettings.init();
+    //GameSettings.init();
     (new Thread(Odometer.getOdometer())).start();
     NAV.start();
     OC.start();
@@ -165,21 +176,8 @@ public class BetaDemo {
     OC.setOn(true);
   }
 
-  /**
-   * Drives in a square
-   * @param ocOn Whether or not to use correction
-   */
-  private static void squareDrive(boolean ocOn) {
-    OC.setOn(ocOn);
-    NAV.travelTo(0, 2);
-    NAV.waitUntilDone();
-    NAV.travelTo(2,2);
-    NAV.waitUntilDone();
-    NAV.travelTo(0, 0);
-    NAV.waitUntilDone();
-    OC.setOn(true);
-  }
-
+  
+  
   /**
    * Calculates the center of the sensor from the position of the
    * robot, denoted as an array
@@ -192,13 +190,75 @@ public class BetaDemo {
     if (robot.length == 3) {
       double t = robot[2];
       result[0] = robot[0] 
-          + Demo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
-          - Demo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+          + BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          - BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
       result[1] = robot[1] 
-          - Demo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
-          - Demo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+          - BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          - BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
       result[2] = t;
     }
     return result;
+  }
+  
+  /**
+   * Calculates the center of the robot from the position of the
+   * line sensor, denoted as an array
+   * @param sensor An array of the form {x,y,t} representing the
+   * position of the sensor
+   * @return
+   */
+  public static double[] toRobot(double[] sensor) {
+    double[] result = new double[3];
+    if (sensor.length == 3) {
+      double t = sensor[2];
+      result[0] = sensor[0] 
+          - BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          + BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+      result[1] = sensor[1] 
+          + BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          + BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+      result[2] = t;
+    }
+    return result;
+  }
+  
+  
+  
+  /*
+   * ***********************
+   * TESTING METHODS
+   * ***********************
+   */
+  
+  /**
+   * Drives in a square
+   * FOR TESTING
+   * @param ocOn Whether or not to use correction
+   */
+  private static void squareDrive(boolean ocOn) {
+    OC.setOn(ocOn);
+    NAV.travelTo(0, 2*GRID_WIDTH);
+    NAV.waitUntilDone();
+    NAV.travelTo(2*GRID_WIDTH,2*GRID_WIDTH);
+    NAV.waitUntilDone();
+    NAV.travelTo(2*GRID_WIDTH, 0);
+    NAV.waitUntilDone();
+    NAV.travelTo(0, 0);
+    NAV.waitUntilDone();
+    OC.setOn(true);
+  }
+  
+  /**
+   * Spins the robot around 360 * x, where
+   * x is a number of times
+   * FOR TESTING
+   * to test the parameters for the wheels
+   */
+  private static void rotateX(int x) {
+    int t = 0;
+    for (int i = 0; i < 3 * x + 1; i++) {
+      NAV.turnTo(t);
+      t = (t + 120) % 360;
+    }
   }
 }

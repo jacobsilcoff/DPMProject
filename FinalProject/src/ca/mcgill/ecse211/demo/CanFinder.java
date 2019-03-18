@@ -157,8 +157,8 @@ public class CanFinder implements Runnable {
    * @return The US reading in cm
    */
   private float readUS() {
-    float[] usData = new float[Demo.US_FRONT.sampleSize()];
-    Demo.US_FRONT.fetchSample(usData, 0);
+    float[] usData = new float[BetaDemo.US_FRONT.sampleSize()];
+    BetaDemo.US_FRONT.fetchSample(usData, 0);
     if (usData[0] == 255) {
       return -1;
     }

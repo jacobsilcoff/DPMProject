@@ -23,7 +23,7 @@ import lejos.robotics.SampleProvider;
  * The main class for lab 5
  * @author team6
  */
-public class Demo {
+public class FinalDemo {
   /**
    * Demo variables:
    */
@@ -209,11 +209,11 @@ public class Demo {
     if (sensor.length == 3) {
       double t = sensor[2];
       result[0] = sensor[0] 
-          - Demo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
-          + Demo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+          - BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          + BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
       result[1] = sensor[1] 
-          + Demo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
-          + Demo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+          + BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          + BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
       result[2] = t;
     }
     return result;
@@ -231,11 +231,11 @@ public class Demo {
     if (robot.length == 3) {
       double t = robot[2];
       result[0] = robot[0] 
-          + Demo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
-          - Demo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+          + BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          - BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
       result[1] = robot[1] 
-          - Demo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
-          - Demo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+          - BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          - BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
       result[2] = t;
     }
     return result;
