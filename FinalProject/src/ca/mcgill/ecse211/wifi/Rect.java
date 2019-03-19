@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.wifi;
 
 import java.util.Map;
+import ca.mcgill.ecse211.demo.BetaDemo;
 
 public class Rect {
   public final int URx;
@@ -16,7 +17,8 @@ public class Rect {
   }
 
   public boolean contains(double x, double y) {
-    return x <= URx && x >= LLx && y <= URy && y >= LLy;
+    return x <= BetaDemo.GRID_WIDTH*URx && x >= BetaDemo.GRID_WIDTH*LLx
+        && y <= BetaDemo.GRID_WIDTH*URy && y >= BetaDemo.GRID_WIDTH*LLy;
   }
   
   public boolean contains(double[] xyt) {

@@ -27,6 +27,7 @@ public class CanFinder implements Runnable {
   private Point nextCan;
   private State state;
   public static final float GRID_WIDTH = BetaDemo.GRID_WIDTH;
+  public static final int SCAN_SPEED = 50;
 
   /**
    * Creates a can finder.
@@ -90,9 +91,31 @@ public class CanFinder implements Runnable {
    * Uses the sideways facing ultrasonic sensor
    */
   public void search() {
-    /*
-     * TODO: Scan along search zone to give nextCan a value
-     */
+    BetaDemo.NAV.turnTo(90);
+    BetaDemo.NAV.setSpeeds(-SCAN_SPEED, SCAN_SPEED);
+    while (odo.getXYT()[2] > 0.5 && odo.getXYT()[2] < 180) {
+      float dist = readUS();
+      if (GameSettings.searchZone.contains(pointFromDist(dist))) {
+        BetaDemo.NAV.setSpeeds(0, 0);
+        Sound.beepSequence();
+        sleep(500);
+        BetaDemo.NAV.setSpeeds(-SCAN_SPEED, SCAN_SPEED);
+      }
+      sleep();
+    }
+  }
+  
+  /**
+   * Gives the point located a given distance
+   * from the front of the robot
+   * @param d the distance from the robot
+   * @return 
+   */
+  private double[] pointFromDist(double d) {
+    double[] pt = odo.getXYT();
+    pt[0] += d * Math.sin(Math.toRadians(pt[2]));
+    pt[1] += d * Math.cos(Math.toRadians(pt[2]));
+    return pt;
   }
   
   /**
@@ -194,6 +217,18 @@ public class CanFinder implements Runnable {
   private void sleep() {
     try {
       Thread.sleep(30);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
+  }
+  /**
+   * Sleeps for one tick, as specified
+   * by x
+   * @param x the time to sleep in ms
+   */
+  private void sleep(int x) {
+    try {
+      Thread.sleep(x);
     } catch (InterruptedException e) {
       e.printStackTrace();
     }
