@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.demo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import ca.mcgill.ecse211.canhandling.CanColor;
 import ca.mcgill.ecse211.canhandling.Claw;
 import ca.mcgill.ecse211.canhandling.ColorClassifier;
@@ -10,6 +11,7 @@ import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import ca.mcgill.ecse211.wifi.GameSettings;
+import ca.mcgill.ecse211.wifi.Rect;
 import lejos.hardware.Sound;
 
 /**
@@ -24,7 +26,7 @@ public class CanFinder implements Runnable {
   private CanColor target;
   private Point nextCan;
   private State state;
-
+  public static final float GRID_WIDTH = BetaDemo.GRID_WIDTH;
 
   /**
    * Creates a can finder.
@@ -98,11 +100,57 @@ public class CanFinder implements Runnable {
    * the search area
    */
   public void goToSearchArea() {
-    if (GameSettings.searchZone.contains(odo.getXYT()[0], odo.getXYT()[1])) {
-      //Already in search area...
-      return;
+    if (GameSettings.initialized && !GameSettings.searchZone.contains(odo.getXYT())) {
+      if (!GameSettings.island.contains(odo.getXYT())) {
+        //Get to island through tunnel 
+        Rect tunnel = GameSettings.tunnel;
+        Rect start = GameSettings.startZone;
+        Rect island = GameSettings.island;
+        double[] llBlock = {(tunnel.LLx + .5) * GRID_WIDTH, 
+                            (tunnel.LLy + .5) * GRID_WIDTH};
+        double[] urBlock = {(tunnel.URx + .5) * GRID_WIDTH, 
+                            (tunnel.URy + .5) * GRID_WIDTH};
+        double[] N = translate(urBlock, 0, GRID_WIDTH);
+        double[] S = translate(llBlock, 0, -GRID_WIDTH);
+        double[] E = translate(urBlock, GRID_WIDTH, 0);
+        double[] W = translate(llBlock, -GRID_WIDTH, 0);
+        //strictly one of N, S, E, W is contained in start
+        double[] entrance = N, exit = S;
+        if (start.contains(N) && island.contains(S)) {
+          entrance = N; exit = S;
+        } else if (start.contains(S) && island.contains(N)) {
+          entrance = S; exit = N;
+        } else if (start.contains(E) && island.contains(W)) {
+          entrance = E; 
+          exit = W;
+        } else if (start.contains(W) && island.contains(E)){
+          entrance = W;
+          exit = E;
+        }
+        BetaDemo.NAV.travelTo(entrance[0], entrance[1]);
+        BetaDemo.NAV.waitUntilDone();
+        boolean ocOn = BetaDemo.OC.getOn();
+        BetaDemo.OC.setOn(false);
+        BetaDemo.NAV.travelTo(exit[0], exit[1]);
+        BetaDemo.NAV.waitUntilDone();
+        BetaDemo.OC.setOn(ocOn);
+      }
+      //Get to search area from island
+      BetaDemo.NAV.travelTo(GameSettings.searchZone.LLx * GRID_WIDTH, 
+                            GameSettings.searchZone.LLy * GRID_WIDTH);
+      BetaDemo.NAV.waitUntilDone();
     }
-    //TODO: Implement
+  }
+  
+  /**
+   * Modifies a point by adding x and y
+   * @param pt the original point
+   * @param x the translation x amt
+   * @param y the translation yamt
+   * @return the translated point
+   */
+  private static double[] translate(double[] pt, double x, double y) {
+    return new double[] {pt[0] + x, pt[1] + y};
   }
   
   /**
