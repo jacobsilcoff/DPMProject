@@ -5,8 +5,8 @@ package ca.mcgill.ecse211.canhandling;
  * @author Group 6
  */
 public enum CanColor {
-  RED("Red", new int[] {117, 37, 36}), GREEN("Green", new int[] {18, 46, 20}), BLUE("Blue",
-      new int[] {24, 43, 57}), YELLOW("Yellow", new int[] {61, 43, 31}), UNKNOWN;
+  RED("Red", new int[] {43, 15, 25}), GREEN("Green", new int[] {18, 46, 20}), BLUE("Blue",
+      new int[] {24, 43, 57}), YELLOW("Yellow", new int[] {39, 25, 32}), UNKNOWN;
 
   private String name;
   private int[] avgRGB;

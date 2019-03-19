@@ -28,6 +28,8 @@ public class CanFinder implements Runnable {
   private State state;
   public static final float GRID_WIDTH = BetaDemo.GRID_WIDTH;
   public static final int SCAN_SPEED = 50;
+  public static final int CAN_STOP_DIST = 5;
+  public static final int TURN_SPEED = 100;
 
   /**
    * Creates a can finder.
@@ -119,10 +121,25 @@ public class CanFinder implements Runnable {
   }
   
   /**
+   * Gets the point to navigate to
+   * to be a comfortable distance away from 
+   * the can
+   * @return
+   */
+  private double[] canStoppingPoint() {
+    double[] pt = {nextCan.x, nextCan.y};
+    double t = BetaDemo.NAV.angleTo(nextCan.x, nextCan.y);
+    pt[0] -=  CAN_STOP_DIST * Math.sin(Math.toRadians(t));
+    pt[1] -= CAN_STOP_DIST * Math.cos(Math.toRadians(t));
+    return pt;
+  }
+  
+  /**
    * Transports the robot from the starting zone to 
    * the search area
    */
   public void goToSearchArea() {
+    BetaDemo.CLAW.close();
     if (GameSettings.initialized && !GameSettings.searchZone.contains(odo.getXYT())) {
       if (!GameSettings.island.contains(odo.getXYT())) {
         //Get to island through tunnel 
@@ -193,12 +210,26 @@ public class CanFinder implements Runnable {
    * Analyzes its color and weight, and picks it up with the claw
    */
   public void grabNextCan() {
-    if (nextCan == null) {
-      return; //no next can defined
+    if (nextCan != null) {
+      double[] stop = canStoppingPoint();
+      BetaDemo.NAV.travelTo(stop[0], stop[1]);
+      BetaDemo.NAV.waitUntilDone();
+      BetaDemo.CLAW.open();
+      int destAngle = (int)(odo.getXYT()[2] + 180) % 360;
+      BetaDemo.NAV.setSpeeds(-TURN_SPEED,TURN_SPEED);
+      while (Math.abs(minAngle(odo.getXYT()[2], destAngle)) < 1) {
+        sleep();
+      }
+      BetaDemo.NAV.setSpeeds(0, 0);
+      BetaDemo.CLAW.close();
     } 
-    
     //We no longer know what the next can is, because we just picked up the last one
     nextCan = null;
+  }
+  
+  private static double minAngle(double x, double y) {
+    double a = ((x - y) + 360) % 360;
+    return (a < 180) ? a : 360 - a;
   }
   
   /**

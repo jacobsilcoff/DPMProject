@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.canhandling;
 
 import ca.mcgill.ecse211.demo.BetaDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
+import lejos.hardware.lcd.LCD;
 
 public class Claw {
 
@@ -9,33 +10,49 @@ public class Claw {
 	 * The can classifier used by the Claw
 	 */
 	public static final ColorClassifier CLASSIFIER = new ColorClassifier();
-
+	public static final int CLOSED_ANGLE = 100;
 	private boolean open;
+	private static boolean calibrated = false;
 
 	/**
 	 * Creates a claw
 	 */
 	public Claw() {
-		CLASSIFIER.calibrate();
 		open = false;
+		if (!calibrated) {
+		  calibrate();
+		}
+	}
+	
+	private void calibrate() {
+	  BetaDemo.CLAW_MOTOR.setSpeed(150);
+      BetaDemo.CLAW_MOTOR.backward();
+      try {
+          Thread.sleep(2000);
+      } catch (InterruptedException ie) {
+          ie.printStackTrace();
+      }
+      BetaDemo.CLAW_MOTOR.stop();
+      BetaDemo.CLAW_MOTOR.flt();
+      BetaDemo.CLAW_MOTOR.resetTachoCount();
+      calibrated = true;
 	}
 
 	/**
 	 * Closes the claw
 	 */
-	@SuppressWarnings("deprecation")
 	public void close() {
 		if(open) {
-			BetaDemo.CLAW_MOTOR.setSpeed(75);
+			BetaDemo.CLAW_MOTOR.setSpeed(150);
 			BetaDemo.CLAW_MOTOR.forward();
 			try {
-				Thread.sleep(4500);
+				Thread.sleep(2200);
 			} catch (InterruptedException ie) {
 				ie.printStackTrace();
 			}
 			BetaDemo.CLAW_MOTOR.stop();
-			BetaDemo.CLAW_MOTOR.lock(100);
 			open = false;
+			LCD.drawString("<"+BetaDemo.CLAW_MOTOR.getTachoCount(), 0, 5);
 		}
 	}
 
@@ -43,18 +60,8 @@ public class Claw {
 	 * Opens the claw
 	 */
 	public void open() {
-		if(!open) {
-			BetaDemo.CLAW_MOTOR.setSpeed(75);
-			BetaDemo.CLAW_MOTOR.backward();
-			try {
-				Thread.sleep(4500);
-			} catch (InterruptedException ie) {
-				ie.printStackTrace();
-			}
-			BetaDemo.CLAW_MOTOR.stop();
-			BetaDemo.CLAW_MOTOR.flt();
-			open = true;
-		}    
+		BetaDemo.CLAW_MOTOR.rotateTo(3);
+		open = true;
 	}
 
 	/**

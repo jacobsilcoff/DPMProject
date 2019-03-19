@@ -2,6 +2,7 @@ package ca.mcgill.ecse211.wifi;
 
 import java.util.Map;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
+import ca.mcgill.ecse211.canhandling.CanColor;
 import lejos.hardware.Button;
 
 /**
@@ -24,6 +25,7 @@ public abstract class GameSettings {
   public static Rect island = null;
   public static Rect searchZone = null;
   public static Rect tunnel = null;
+  public static CanColor targetColor = null;
   
   /**
    * Communicates with the server to get access to game information
@@ -45,6 +47,7 @@ public abstract class GameSettings {
       //Get team assignment
       long rTeam = ((Long) data.get("RedTeam")).intValue();
       long greenTeam = ((Long) data.get("GreenTeam")).intValue();
+      targetColor = CanColor.fromNumber((int) greenTeam);
       if (rTeam == TEAM_NUMBER) {
         redTeam = true;
       } else if (greenTeam != TEAM_NUMBER) {

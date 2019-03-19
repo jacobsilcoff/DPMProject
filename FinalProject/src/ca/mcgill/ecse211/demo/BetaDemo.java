@@ -145,18 +145,14 @@ public class BetaDemo {
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();
-    //Button.waitForAnyPress();
-    //Thread.sleep(1000);
-    
-    localize();
-    NAV.travelTo(30.48, 30.48);
-    NAV.waitUntilDone();
-    NAV.turnTo(0);
-    LCD.clear();
-    LCD.drawString("DONE",0,0);
-    Button.waitForAnyPress();
-    squareDrive(true);
-    //rotateX(3);
+    //localize();
+    resetOdo();
+    while (Button.waitForAnyPress() != Button.ID_ESCAPE) {
+      CLAW.open();
+      CLAW.close();
+      LCD.clear();
+      Claw.CLASSIFIER.getData();
+    }
     System.exit(0);
   }
   
@@ -270,5 +266,13 @@ public class BetaDemo {
       NAV.turnTo(t);
       t = (t + 120) % 360;
     }
+  }
+  
+  /**
+   * Sets the odometer to 1,1,0
+   * @throws OdometerExceptions 
+   */
+  private static void resetOdo() throws OdometerExceptions {
+    Odometer.getOdometer().setXYT(GRID_WIDTH, GRID_WIDTH, 0);
   }
 }

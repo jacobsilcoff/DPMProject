@@ -14,9 +14,8 @@ public class ColorClassifier {
 
   public static final int MAX_TACHO = 210;
   public static final int SLEEP_TIME = 20;
-  public static final int SCAN_SPD = 50;
+  public static final int SCAN_SPD = 180;
   public static final int MOVE_SPD = 150;
-  private static boolean calibrated = false;
   private CanColor colorLabel;
 
 
@@ -25,7 +24,6 @@ public class ColorClassifier {
    */
   public ColorClassifier() {
     colorLabel = CanColor.UNKNOWN;
-    
   }
   
   /**
@@ -66,17 +64,14 @@ public class ColorClassifier {
    * @return The color of the can. CanColor.UNKONWN if no can is detected
    */
   public CanColor classify() {
-    if (!calibrated) {
-      calibrate();
-    }
+    BetaDemo.CAN_MOTOR.resetTachoCount();
     BetaDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
-//    BetaDemo.CAN_MOTOR.rotateTo(MAX_TACHO, true);
-    BetaDemo.CAN_MOTOR.rotate(-270);
+    BetaDemo.CAN_MOTOR.backward();
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
 
-    while (BetaDemo.CAN_MOTOR.isMoving()) {
+    while (Math.abs(BetaDemo.CAN_MOTOR.getTachoCount()) < 360*3) {
       float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
       BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
@@ -87,21 +82,8 @@ public class ColorClassifier {
       }
       sleep();
     }
-
-    //BetaDemo.CAN_MOTOR.rotateTo(3, true);
-    BetaDemo.CAN_MOTOR.rotate(-180);
-
-    while (BetaDemo.CAN_MOTOR.isMoving()) {
-      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
-      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
-      if (!isWhite(sample)) {
-        for (int i = 0; i < sample.length; i++) {
-          totalReadings[i] += sample[i];
-        }
-        numReadings++;
-      }
-      sleep();
-    }
+    BetaDemo.CAN_MOTOR.setSpeed(0);
+    BetaDemo.CAN_MOTOR.stop();
 
     float[] avgReading = new float[totalReadings.length];
     for (int i = 0; i < avgReading.length; i++) {
@@ -133,16 +115,14 @@ public class ColorClassifier {
    * about a can
    */
   public void getData() {
-    if (!calibrated) {
-      calibrate();
-    }
+    BetaDemo.CAN_MOTOR.resetTachoCount();
     BetaDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
-    BetaDemo.CAN_MOTOR.rotateTo(MAX_TACHO, true);
+    BetaDemo.CAN_MOTOR.backward();
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
 
-    while (BetaDemo.CAN_MOTOR.isMoving()) {
+    while (Math.abs(BetaDemo.CAN_MOTOR.getTachoCount()) < 360*3) {
       float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
       BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
@@ -154,20 +134,9 @@ public class ColorClassifier {
       sleep();
     }
 
-    BetaDemo.CAN_MOTOR.rotateTo(0, true);
-
-    while (BetaDemo.CAN_MOTOR.isMoving()) {
-      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
-      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
-      if (!isWhite(sample)) {
-        for (int i = 0; i < sample.length; i++) {
-          totalReadings[i] += sample[i];
-        }
-        numReadings++;
-      }
-      sleep();
-    }
-
+    BetaDemo.CAN_MOTOR.setSpeed(0);
+    BetaDemo.CAN_MOTOR.stop();
+    
     float[] avgReading = new float[totalReadings.length];
     for (int i = 0; i < avgReading.length; i++) {
       avgReading[i] = (float) (totalReadings[i] / numReadings);
@@ -177,11 +146,14 @@ public class ColorClassifier {
         LCD.clear();
         LCD.drawString("NO CAN", 0, 1);
         return;
+      } else {
+        LCD.drawString((new String[]{"r: ", "g: ", "b: "})[i] + 
+            (int)(avgReading[i] * 1000), 0, 1+i);
       }
     }
     colorLabel = CanColor.getClosestColor(new int[] {(int)(avgReading[0] * 1000),
         (int) (avgReading[1] * 1000), (int) (avgReading[2] * 1000)});
-    LCD.drawString(colorLabel.toString(), 0, 1);
+    LCD.drawString(colorLabel.toString(), 0, 0);
   }
 
 
@@ -192,40 +164,6 @@ public class ColorClassifier {
    */
   public CanColor getColor() {
     return colorLabel;
-  }
-
-
-  /**
-   * Ensures that the tachometer is zeroed properly by moving the arm as far CCW as possible 
-   */
-public void calibrate() {
-	  BetaDemo.CLAW_MOTOR.setSpeed(75);
-	  BetaDemo.CLAW_MOTOR.forward();
-    try {
-      Thread.sleep(3000);
-    } catch (InterruptedException ie) {
-      ie.printStackTrace();
-    }
-    BetaDemo.CLAW_MOTOR.stop();
-    
-    calibrated = true;
-  }
-
-  /** 
-   * Allows the arm to be calibrated as a thread.
-   * @param wait True to block, false to not block
-   */
-  public void calibrate(boolean wait) {
-    if (wait) {
-      calibrate();
-    } else {
-      (new Thread() {
-        public void run() {
-          calibrate();
-        }
-      }).start();
-    }
-
   }
 
   /**
