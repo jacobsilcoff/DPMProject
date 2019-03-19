@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.canhandling;
 
+import ca.mcgill.ecse211.demo.BetaDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
 
 public class Claw {
@@ -16,15 +17,24 @@ public class Claw {
 	 */
 	public Claw() {
 		CLASSIFIER.calibrate();
-		//TODO: Write code to calibrate claw
 		open = false;
 	}
 
 	/**
 	 * Closes the claw
 	 */
+	@SuppressWarnings("deprecation")
 	public void close() {
 		if(open) {
+			BetaDemo.CLAW_MOTOR.setSpeed(75);
+			BetaDemo.CLAW_MOTOR.forward();
+			try {
+				Thread.sleep(4500);
+			} catch (InterruptedException ie) {
+				ie.printStackTrace();
+			}
+			BetaDemo.CLAW_MOTOR.stop();
+			BetaDemo.CLAW_MOTOR.lock(100);
 			open = false;
 		}
 	}
@@ -34,6 +44,15 @@ public class Claw {
 	 */
 	public void open() {
 		if(!open) {
+			BetaDemo.CLAW_MOTOR.setSpeed(75);
+			BetaDemo.CLAW_MOTOR.backward();
+			try {
+				Thread.sleep(4500);
+			} catch (InterruptedException ie) {
+				ie.printStackTrace();
+			}
+			BetaDemo.CLAW_MOTOR.stop();
+			BetaDemo.CLAW_MOTOR.flt();
 			open = true;
 		}    
 	}
@@ -64,6 +83,11 @@ public class Claw {
 		//Move backwards 3cm and turn 180 degrees
 		nav.travelTo(nav.getOdo().getXYT()[0],nav.getOdo().getXYT()[1]-3);
 		nav.turnTo(180);
+	    try {
+	        Thread.sleep(500);
+	      } catch (InterruptedException ie) {
+	        ie.printStackTrace();
+	      }
 		close();
 		return false;
 	}

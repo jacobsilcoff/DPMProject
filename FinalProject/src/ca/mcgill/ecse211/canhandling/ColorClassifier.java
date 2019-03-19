@@ -196,18 +196,15 @@ public class ColorClassifier {
   /**
    * Ensures that the tachometer is zeroed properly by moving the arm as far CCW as possible 
    */
-  public void calibrate() {
-    // moves towards the left
-    //BetaDemo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
-    //BetaDemo.SENSOR_MOTOR.backward();
+public void calibrate() {
+	  BetaDemo.CLAW_MOTOR.setSpeed(75);
+	  BetaDemo.CLAW_MOTOR.forward();
     try {
       Thread.sleep(4500);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
-    //BetaDemo.SENSOR_MOTOR.flt();
-    //BetaDemo.SENSOR_MOTOR.setSpeed(0);
-    //BetaDemo.SENSOR_MOTOR.resetTachoCount();
+    BetaDemo.CLAW_MOTOR.stop();
     calibrated = true;
   }
 
