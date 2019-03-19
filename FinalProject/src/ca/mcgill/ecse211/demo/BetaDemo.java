@@ -151,6 +151,8 @@ public class BetaDemo {
       CLAW.open();
       CLAW.close();
       LCD.clear();
+
+      LCD.drawString("<: " + CLAW_MOTOR.getTachoCount(), 0, 4);
       Claw.CLASSIFIER.getData();
     }
     System.exit(0);
