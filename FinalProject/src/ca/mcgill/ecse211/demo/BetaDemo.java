@@ -152,7 +152,10 @@ public class BetaDemo {
     NAV.travelTo(30.48, 30.48);
     NAV.waitUntilDone();
     NAV.turnTo(0);
-    //squareDrive(true);
+    LCD.clear();
+    LCD.drawString("DONE",0,0);
+    Button.waitForAnyPress();
+    squareDrive(true);
     //rotateX(3);
     System.exit(0);
   }
@@ -244,13 +247,13 @@ public class BetaDemo {
    */
   private static void squareDrive(boolean ocOn) {
     OC.setOn(ocOn);
-    NAV.travelTo(0, 2*GRID_WIDTH);
+    NAV.travelTo(1*GRID_WIDTH, 3*GRID_WIDTH);
     NAV.waitUntilDone();
-    NAV.travelTo(2*GRID_WIDTH,2*GRID_WIDTH);
+    NAV.travelTo(3*GRID_WIDTH,3*GRID_WIDTH);
     NAV.waitUntilDone();
-    NAV.travelTo(2*GRID_WIDTH, 0);
+    NAV.travelTo(3*GRID_WIDTH, 1*GRID_WIDTH);
     NAV.waitUntilDone();
-    NAV.travelTo(0, 0);
+    NAV.travelTo(1*GRID_WIDTH, 1*GRID_WIDTH);
     NAV.waitUntilDone();
     OC.setOn(true);
   }

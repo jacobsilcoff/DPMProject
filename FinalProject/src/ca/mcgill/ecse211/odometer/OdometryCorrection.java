@@ -16,7 +16,7 @@ public class OdometryCorrection extends Thread {
    * This represents the minimum difference from the mean for a light sensor reading to be
    * considered significant
    */
-  private static final float LIGHT_THRESHOLD = 0.07f;//was .05
+  private static final float LIGHT_THRESHOLD = 0.065f;
   /**
    * This represents the distance between lines on the grid, in cm
    */
@@ -126,6 +126,10 @@ public class OdometryCorrection extends Thread {
    */
   public void setOn(boolean value) {
     on = value;
+  }
+  
+  public boolean getOn() {
+    return on;
   }
 
 
