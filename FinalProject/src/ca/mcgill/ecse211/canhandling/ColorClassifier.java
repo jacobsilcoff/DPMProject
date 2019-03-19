@@ -71,7 +71,7 @@ public class ColorClassifier {
     }
     BetaDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
 //    BetaDemo.CAN_MOTOR.rotateTo(MAX_TACHO, true);
-    BetaDemo.CAN_MOTOR.rotate(-180);
+    BetaDemo.CAN_MOTOR.rotate(-270);
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
