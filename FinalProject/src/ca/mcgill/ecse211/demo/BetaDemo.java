@@ -87,7 +87,7 @@ public class BetaDemo {
 
   static {
     @SuppressWarnings("resource")
-    SensorModes colorSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S2"));
+    SensorModes colorSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S3"));
     COLOR_SENSOR = colorSensorMode.getMode("RGB");
 
     @SuppressWarnings("resource")
@@ -95,7 +95,7 @@ public class BetaDemo {
     LINE_SENSOR = lineSensorMode.getMode("Red");
 
     @SuppressWarnings("resource")
-    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S3"));
+    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S2"));
     US_FRONT = usSensor.getMode("Distance");
 
     @SuppressWarnings("resource")
@@ -146,8 +146,13 @@ public class BetaDemo {
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();
     //Button.waitForAnyPress();
-    //localize();
-    squareDrive(true);
+    //Thread.sleep(1000);
+    
+    localize();
+    NAV.travelTo(30.48, 30.48);
+    NAV.waitUntilDone();
+    NAV.turnTo(0);
+    //squareDrive(true);
     //rotateX(3);
     System.exit(0);
   }
@@ -171,7 +176,9 @@ public class BetaDemo {
    * @throws OdometerExceptions
    */
   private static void localize() throws OdometerExceptions {
+    OC.setOn(false);
     (new UltrasonicLocalizer()).run();
+    OC.setOn(false);
     (new LightLocalizer(0,0)).run();
     OC.setOn(true);
   }
@@ -190,10 +197,10 @@ public class BetaDemo {
     if (robot.length == 3) {
       double t = robot[2];
       result[0] = robot[0] 
-          + BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          - BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
           - BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
       result[1] = robot[1] 
-          - BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          + BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
           - BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
       result[2] = t;
     }
@@ -212,10 +219,10 @@ public class BetaDemo {
     if (sensor.length == 3) {
       double t = sensor[2];
       result[0] = sensor[0] 
-          - BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          + BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
           + BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
       result[1] = sensor[1] 
-          + BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          - BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
           + BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
       result[2] = t;
     }

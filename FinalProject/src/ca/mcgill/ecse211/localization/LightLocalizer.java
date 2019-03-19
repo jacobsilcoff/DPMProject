@@ -23,7 +23,7 @@ public class LightLocalizer {
   /**
    * The speed of the motors during localization
    */
-  private static final int MOTOR_SPEED = 130;
+  private static final int MOTOR_SPEED = 150;
 
   /**
    * The time between polling the sensor, in ms
@@ -117,7 +117,7 @@ public class LightLocalizer {
      * starting block, to more easily know the order in which
      * lines will be crossed
      */
-    BetaDemo.NAV.turnTo(60); 
+    BetaDemo.NAV.turnTo(45); 
 
     //Find the 4 intersections
     rotateToLine(false);
@@ -140,10 +140,10 @@ public class LightLocalizer {
     odo.setY(OdometryCorrection.LINE_SPACING * (y+1)
         - d * Math.cos(Math.toRadians(tX/2)));
     double sensorTheta = Math.toDegrees(Math.acos(BetaDemo.LINE_OFFSET_X / BetaDemo.LINE_OFFSET_Y));
-    double odo270 = (tY/2 + tYP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 270
-    double odo180 = (tX/2 + tXP - sensorTheta + 360) % 360; //what the odometer reads when the robot is at 180
+    double odo270 = (tY/2 + tYP + 360) % 360; //what the odometer reads when the robot is at 270
+    double odo180 = (tX/2 + tXP + 360) % 360; //what the odometer reads when the robot is at 180
     double avgError = ((odo180 - 180) + (odo270 - 270)) / 2;
-    odo.setTheta(odo.getXYT()[2] - avgError + 38);
+    odo.setTheta(odo.getXYT()[2] - avgError + 26.2);
     BetaDemo.NAV.waitUntilDone();
   }
 

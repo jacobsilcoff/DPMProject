@@ -65,23 +65,23 @@ public class UltrasonicLocalizer {
     int dir = cw? 1 : -1;
     BetaDemo.NAV.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED); //set clockwise or counterclockwise turn
     BetaDemo.LCD.drawString("STAGE 1", 0, 4);
-    double reading = readUS();
-    //loops to not be thrown off by 1 bad reading
-    boolean seesWall = false;
-    for (int i = 0; i < 20; i++) {
-      while ((reading < DETECTION_DISTANCE) || reading == -1) {
-        seesWall = true;
+    boolean seesWall;
+    double reading = 0;
+    do {
+      seesWall = false;
+      //Must not see the wall for 20 readings
+      for (int i = 0; i < 20; i++) {
+        reading = readUS();
+        while ((reading < DETECTION_DISTANCE) || reading == -1) {
+          seesWall = true;
+          sleep(); 
+          reading = readUS(); //keep turning + updating readings
+        }
         sleep(); 
-        reading = readUS(); //keep turning + updating readings
       }
-      sleep(); 
-    }
-    //ensures you are well past the rising edge
-    if (seesWall) {
-      BetaDemo.NAV.turnTo((odo.getXYT()[2] + dir * 45 + 360)%360);
-      BetaDemo.NAV.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED);
-    }
-
+    } while (seesWall);
+    //In principle, a wall should not be seen. Play happy beep to show clear:
+    //Sound.beepSequenceUp();
 
     BetaDemo.LCD.drawString("STAGE 2", 0, 4);
     while ((reading > DETECTION_DISTANCE) || reading == -1) {
