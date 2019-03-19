@@ -69,8 +69,9 @@ public class ColorClassifier {
     if (!calibrated) {
       calibrate();
     }
-    //BetaDemo.SENSOR_MOTOR.setSpeed(SCAN_SPD);
-    //BetaDemo.SENSOR_MOTOR.rotateTo(MAX_TACHO, true);
+    BetaDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
+//    BetaDemo.CAN_MOTOR.rotateTo(MAX_TACHO, true);
+    BetaDemo.CAN_MOTOR.rotate(-180);
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
@@ -87,7 +88,8 @@ public class ColorClassifier {
       sleep();
     }
 
-    BetaDemo.CAN_MOTOR.rotateTo(3, true);
+    //BetaDemo.CAN_MOTOR.rotateTo(3, true);
+    BetaDemo.CAN_MOTOR.rotate(-180);
 
     while (BetaDemo.CAN_MOTOR.isMoving()) {
       float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
@@ -200,11 +202,12 @@ public void calibrate() {
 	  BetaDemo.CLAW_MOTOR.setSpeed(75);
 	  BetaDemo.CLAW_MOTOR.forward();
     try {
-      Thread.sleep(4500);
+      Thread.sleep(3000);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
     BetaDemo.CLAW_MOTOR.stop();
+    
     calibrated = true;
   }
 
@@ -253,7 +256,6 @@ public void calibrate() {
   }
 
   private static void printReading(byte[] c) {
-
     LCD.drawString("rgb(" + c[0] + ", " + c[1] + ", " + c[2] + ")      ", 0, 6);
   }
 
