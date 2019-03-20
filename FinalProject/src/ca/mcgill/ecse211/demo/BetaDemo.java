@@ -146,9 +146,16 @@ public class BetaDemo {
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();  
     CLAW.close();
-    localize();
+    resetOdo();
+    //localize();
     CanFinder cf = new CanFinder();
-    cf.goToSearchArea();
+    cf.search();
+    cf.grabNextCan();
+    while (Button.waitForAnyPress() != Button.ID_ESCAPE) {
+      
+    }
+    System.exit(0);
+    //cf.goToSearchArea();
   }
   
   /**

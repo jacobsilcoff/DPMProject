@@ -13,7 +13,7 @@ public class USTester {
   public static final SampleProvider DIST;
   static {
     @SuppressWarnings("resource")
-    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S1"));
+    SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S4"));
     DIST = usSensor.getMode("Distance");
   }
 
@@ -23,7 +23,7 @@ public class USTester {
       public void run() {
         while (true) {
           float dist = readUS();
-          if (dist < 60) {
+          if (dist < 40) {
             Sound.beepSequenceUp();
             try {
               sleep(1000);
