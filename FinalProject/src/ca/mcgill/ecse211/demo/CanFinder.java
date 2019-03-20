@@ -35,8 +35,8 @@ public class CanFinder implements Runnable {
    * Creates a can finder.
    * @param target The color of can the robot is looking for
    */
-  public CanFinder(CanColor target) {
-    this.target = target;
+  public CanFinder() {
+    this.target = GameSettings.targetColor;
     nextCan = null;
     state = State.INIT;
     try {
@@ -142,14 +142,15 @@ public class CanFinder implements Runnable {
     BetaDemo.CLAW.close();
     if (GameSettings.initialized && !GameSettings.searchZone.contains(odo.getXYT())) {
       if (!GameSettings.island.contains(odo.getXYT())) {
+        Sound.buzz();
         //Get to island through tunnel 
         Rect tunnel = GameSettings.tunnel;
         Rect start = GameSettings.startZone;
         Rect island = GameSettings.island;
         double[] llBlock = {(tunnel.LLx + .5) * GRID_WIDTH, 
                             (tunnel.LLy + .5) * GRID_WIDTH};
-        double[] urBlock = {(tunnel.URx + .5) * GRID_WIDTH, 
-                            (tunnel.URy + .5) * GRID_WIDTH};
+        double[] urBlock = {(tunnel.URx - .5) * GRID_WIDTH, 
+                            (tunnel.URy - .5) * GRID_WIDTH};
         double[] N = translate(urBlock, 0, GRID_WIDTH);
         double[] S = translate(llBlock, 0, -GRID_WIDTH);
         double[] E = translate(urBlock, GRID_WIDTH, 0);

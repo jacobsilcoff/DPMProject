@@ -144,18 +144,11 @@ public class BetaDemo {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-    init();
-    //localize();
-    resetOdo();
-    while (Button.waitForAnyPress() != Button.ID_ESCAPE) {
-      CLAW.open();
-      CLAW.close();
-      LCD.clear();
-
-      LCD.drawString("<: " + CLAW_MOTOR.getTachoCount(), 0, 4);
-      Claw.CLASSIFIER.getData();
-    }
-    System.exit(0);
+    init();  
+    CLAW.close();
+    localize();
+    CanFinder cf = new CanFinder();
+    cf.goToSearchArea();
   }
   
   /**
@@ -164,8 +157,8 @@ public class BetaDemo {
    * @throws OdometerExceptions
    */
   private static void init() throws OdometerExceptions {
-    //GameSettings.init();
     (new Thread(Odometer.getOdometer())).start();
+    GameSettings.init();
     NAV.start();
     OC.start();
     OC.setOn(false);

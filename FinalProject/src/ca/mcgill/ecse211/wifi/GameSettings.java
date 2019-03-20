@@ -4,6 +4,8 @@ import java.util.Map;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
 import ca.mcgill.ecse211.canhandling.CanColor;
 import lejos.hardware.Button;
+import lejos.hardware.Sound;
+import lejos.hardware.lcd.LCD;
 
 /**
  * Gets and holds values from the server to set up a game
@@ -12,11 +14,11 @@ import lejos.hardware.Button;
 public abstract class GameSettings {
   
   /** Set these as appropriate for your team and current situation **/
-  private static final String SERVER_IP = "192.168.2.33";
+  private static final String SERVER_IP = "192.168.2.15";
   private static final int TEAM_NUMBER = 1;
 
   // Enable/disable printing of debug info from the WiFi class
-  private static final boolean ENABLE_DEBUG_WIFI_PRINT = true;
+  private static final boolean ENABLE_DEBUG_WIFI_PRINT = false;
   
   public static boolean initialized = false;
   public static boolean redTeam = false;
@@ -32,7 +34,6 @@ public abstract class GameSettings {
    * Initializes public static fields
    */
   public static void init() {
-    System.out.println("Running..");
 
     // Initialize WifiConnection class
     WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
@@ -40,11 +41,10 @@ public abstract class GameSettings {
     // Connect to server and get the data, catching any errors that might occur
     try {
       Map data = conn.getData();
-
-      // Example 1: Print out all received data
-      System.out.println("Map:\n" + data);
+      LCD.clear();
 
       //Get team assignment
+
       long rTeam = ((Long) data.get("RedTeam")).intValue();
       long greenTeam = ((Long) data.get("GreenTeam")).intValue();
       targetColor = CanColor.fromNumber((int) greenTeam);
@@ -64,7 +64,6 @@ public abstract class GameSettings {
       island = new Rect("Island", data);
       tunnel = new Rect("TN" + colorAbrv , data);
       searchZone = new Rect("SZ" + colorAbrv, data);
-      
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
       initialized = false;
