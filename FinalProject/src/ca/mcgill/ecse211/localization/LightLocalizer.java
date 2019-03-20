@@ -103,6 +103,10 @@ public class LightLocalizer {
       BetaDemo.NAV.turnTo(90);
       moveToLine(true);
       odo.setX(OdometryCorrection.LINE_SPACING * (x+1) + BetaDemo.LINE_OFFSET_Y);
+      //This is here to speed up the nominal localization for beta demo
+      BetaDemo.NAV.travelTo(OdometryCorrection.LINE_SPACING * (x+1),
+                            OdometryCorrection.LINE_SPACING * (y+1));
+      Sound.beep();
     }
 
     /*

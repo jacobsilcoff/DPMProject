@@ -98,7 +98,7 @@ public class CanFinder implements Runnable {
     BetaDemo.NAV.setSpeeds(-SCAN_SPEED, SCAN_SPEED);
     double minDist = Double.MAX_VALUE;
     double[] minPt = new double[2];
-    double minT = 90;
+    double minT = -1;
     while (odo.getXYT()[2] > 0.5 && odo.getXYT()[2] < 180) {
       float dist = readUS();
       double t = (odo.getXYT()[2] - Math.toDegrees(CAN_RAD/dist) + 360) % 360;
@@ -112,7 +112,11 @@ public class CanFinder implements Runnable {
       }
       sleep();
     }
-    nextCan = new Point((float)minPt[0], (float)minPt[1]);
+    if (minT == - 1) {
+      nextCan = null;
+    } else {
+      nextCan = new Point((float)minPt[0], (float)minPt[1]);
+    }
   }
   
   /**
@@ -155,7 +159,7 @@ public class CanFinder implements Runnable {
    */
   public void goToSearchArea() {
     BetaDemo.CLAW.close();
-    if (GameSettings.initialized && !GameSettings.searchZone.contains(odo.getXYT())) {
+    if (GameSettings.initialized /*&& !GameSettings.searchZone.contains(odo.getXYT())*/) {
       if (!GameSettings.island.contains(odo.getXYT())) {
         Sound.buzz();
         //Get to island through tunnel 
@@ -224,29 +228,35 @@ public class CanFinder implements Runnable {
   /** 
    * Navigates to the next can (assuming it is defined)
    * Analyzes its color and weight, and picks it up with the claw
+   * @return Returns true if a can was acquired succesfully
    */
-  public void grabNextCan() {
+  public boolean grabNextCan() {
     if (nextCan != null) {
       double[] stop = canStoppingPoint();
       BetaDemo.NAV.travelTo(stop[0], stop[1]);
       BetaDemo.NAV.waitUntilDone();
       BetaDemo.CLAW.open();
-      int destAngle = (int)(odo.getXYT()[2] + 180) % 360;
-      BetaDemo.NAV.setSpeeds(TURN_SPEED,-TURN_SPEED);
-      while (Math.abs(minAngle(odo.getXYT()[2], destAngle)) > 1) {
-        sleep();
-      }
-      BetaDemo.NAV.setSpeeds(0, 0);
-      moveBackwards(10);
+      BetaDemo.NAV.turnTo(BetaDemo.NAV.angleTo(nextCan.x, nextCan.y) + 180);
+      moveBackward(10);
       BetaDemo.CLAW.close();
     } 
     //We no longer know what the next can is, because we just picked up the last one
     nextCan = null;
+    return BetaDemo.CLAW.hasCan();
   }
   
   private static double minAngle(double x, double y) {
     double a = ((x - y) + 360) % 360;
     return (a < 180) ? a : 360 - a;
+  }
+  
+  /**
+   * Returns whether or not a next can to pickup
+   * has been found
+   * @return
+   */
+  public boolean hasNextCan() {
+    return nextCan != null;
   }
   
   /**
@@ -300,12 +310,33 @@ public class CanFinder implements Runnable {
    * 
    * @param dist
    */
-  private void moveBackwards(double dist) {
+  private void moveBackward(double dist) {
     BetaDemo.NAV.setSpeeds(TURN_SPEED,TURN_SPEED);
     double[] start = BetaDemo.NAV.getOdo().getXYT();
 
     BetaDemo.LEFT_MOTOR.backward();
     BetaDemo.RIGHT_MOTOR.backward();
+
+    while (Navigation.dist(BetaDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
+      try {
+        Thread.sleep(30);
+      } catch (InterruptedException e) {
+      }
+    }
+    BetaDemo.NAV.setSpeeds(0, 0);
+  }
+  
+  /**
+   * Moves the robot forwards (straight) a certain distance, using the odometer.
+   * 
+   * @param dist
+   */
+  private void moveForward(double dist) {
+    BetaDemo.NAV.setSpeeds(TURN_SPEED,TURN_SPEED);
+    double[] start = BetaDemo.NAV.getOdo().getXYT();
+
+    BetaDemo.LEFT_MOTOR.forward();
+    BetaDemo.RIGHT_MOTOR.forward();
 
     while (Navigation.dist(BetaDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
       try {
@@ -324,8 +355,15 @@ public class CanFinder implements Runnable {
     float x;
     float y;
     Point(float x, float y) {
-      this.x = x; 
+      this.x = x;
       this.y = y;
     }
+  }
+
+  public void ejectCan() {
+    BetaDemo.CLAW.open();
+    moveForward(10);
+    BetaDemo.CLAW.close();
+    moveBackward(10);
   }
 }

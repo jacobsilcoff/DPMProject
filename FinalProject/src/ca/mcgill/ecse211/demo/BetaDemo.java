@@ -38,13 +38,13 @@ public class BetaDemo {
    */
   public static final EV3LargeRegulatedMotor CLAW_MOTOR =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
-  
+
   /**
    * The motor used to spin cans
    */
   public static final EV3LargeRegulatedMotor CAN_MOTOR =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-  
+
   /**
    * The robot's color-detecting light sensor
    */
@@ -130,7 +130,7 @@ public class BetaDemo {
       return null;
     }
   }
-  
+
   /**
    * Distance between lines in cm
    */
@@ -146,18 +146,39 @@ public class BetaDemo {
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();  
     CLAW.close();
-    resetOdo();
-    //localize();
+    localize(); //TODO: add beeping at right time
     CanFinder cf = new CanFinder();
-    cf.search();
-    cf.grabNextCan();
-    while (Button.waitForAnyPress() != Button.ID_ESCAPE) {
-      
+    cf.goToSearchArea();
+    beepNTimes(5);
+    //We now look for the search area until time is up:
+    while (true) {
+      cf.search();
+      if (cf.hasNextCan()) {
+        cf.grabNextCan();
+      } else {
+        break;
+      }
+
+      if (CLAW.getColor().equals(GameSettings.targetColor)) {
+        beepNTimes(10);
+        break;
+      }
+
+      //Found a can of the wrong color:
+      cf.goToSearchArea();
+      NAV.turnTo(0);
+      cf.ejectCan();
+
+      //OPTIONAL : Light Localize --
+      //lightLocalizeAtSearchLL();
     }
+    NAV.travelTo(GameSettings.searchZone.URx * GRID_WIDTH, 
+        GameSettings.searchZone.URy * GRID_WIDTH);
+    NAV.waitUntilDone();
+    beepNTimes(5);
     System.exit(0);
-    //cf.goToSearchArea();
   }
-  
+
   /**
    * Initializes the robot by getting game settings,
    * starting the odometry thread & the nav thread
@@ -170,7 +191,7 @@ public class BetaDemo {
     OC.start();
     OC.setOn(false);
   }
-  
+
   /**
    * Localizes the robot, and starts the correction when
    * done
@@ -184,8 +205,13 @@ public class BetaDemo {
     OC.setOn(true);
   }
 
-  
-  
+  private static void lightLocalizeAtSearchLL() throws OdometerExceptions {
+    OC.setOn(false);
+    (new LightLocalizer(GameSettings.searchZone.LLx - 1, GameSettings.searchZone.LLy - 1)).run();
+  }
+
+
+
   /**
    * Calculates the center of the sensor from the position of the
    * robot, denoted as an array
@@ -207,7 +233,7 @@ public class BetaDemo {
     }
     return result;
   }
-  
+
   /**
    * Calculates the center of the robot from the position of the
    * line sensor, denoted as an array
@@ -229,15 +255,23 @@ public class BetaDemo {
     }
     return result;
   }
-  
-  
-  
+
+  public static void beepNTimes(int n) {
+    for (int i = 0; i < n; i++) {
+      Sound.beep();
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) {}
+    }
+  }
+
+
   /*
    * ***********************
    * TESTING METHODS
    * ***********************
    */
-  
+
   /**
    * Drives in a square
    * FOR TESTING
@@ -255,7 +289,7 @@ public class BetaDemo {
     NAV.waitUntilDone();
     OC.setOn(true);
   }
-  
+
   /**
    * Spins the robot around 360 * x, where
    * x is a number of times
@@ -269,7 +303,7 @@ public class BetaDemo {
       t = (t + 120) % 360;
     }
   }
-  
+
   /**
    * Sets the odometer to 1,1,0
    * @throws OdometerExceptions 
