@@ -145,11 +145,14 @@ public class FinalDemo {
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();
+    CLAW.close();
     resetOdo();
     OC.start();
-    OC.setOn(true);
-    triangleDrive();
-    //System.exit(0);
+    localize();
+    NAV.turnTo(90);
+    NAV.travelTo(GRID_WIDTH*2, GRID_WIDTH * 2);
+    NAV.waitUntilDone();
+    System.exit(0);
   }
   
   
