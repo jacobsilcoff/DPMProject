@@ -23,7 +23,7 @@ public class LightLocalizer {
   /**
    * The speed of the motors during localization
    */
-  private static final int MOTOR_SPEED = 170;
+  private static final int MOTOR_SPEED = 220;
 
   /**
    * The time between polling the sensor, in ms
@@ -39,6 +39,11 @@ public class LightLocalizer {
    * considered significant
    */
   private static final float LIGHT_THRESHOLD = 0.05f;
+  
+  /**
+   * Making this smaller leads to CW rotation
+   */
+  private static final double CORRECTION = 9;
 
   private Odometer odo;
   private AveragedBuffer<Float> samples;
@@ -59,7 +64,7 @@ public class LightLocalizer {
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
-    
+
     samples = new AveragedBuffer<Float>(100);
     this.x = x;
     this.y = y;
@@ -79,7 +84,7 @@ public class LightLocalizer {
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
-    
+
     samples = new AveragedBuffer<Float>(100);
     this.x = x;
     this.y = y;
@@ -98,24 +103,21 @@ public class LightLocalizer {
        */
       BetaDemo.NAV.turnTo(0);
       moveToLine(true);
-      odo.setY(OdometryCorrection.LINE_SPACING * (y+1) + BetaDemo.LINE_OFFSET_Y);
-      moveBackwards(BetaDemo.LINE_OFFSET_Y + 13);
+      odo.setY(BetaDemo.GRID_WIDTH * (y+1) + BetaDemo.LINE_OFFSET_Y);
+      moveBackwards(BetaDemo.LINE_OFFSET_Y + 12);
       BetaDemo.NAV.turnTo(90);
       moveToLine(true);
-      odo.setX(OdometryCorrection.LINE_SPACING * (x+1) + BetaDemo.LINE_OFFSET_Y);
-      //This is here to speed up the nominal localization for beta demo
-      BetaDemo.NAV.travelTo(OdometryCorrection.LINE_SPACING * (x+1),
-                            OdometryCorrection.LINE_SPACING * (y+1));
-      Sound.beep();
+      odo.setX(BetaDemo.GRID_WIDTH * (x+1) + BetaDemo.LINE_OFFSET_Y);
     }
 
     /*
      * Moves to safe rotation position,
      * about which all 4 lines will be intersected
      */
-    BetaDemo.NAV.travelTo(OdometryCorrection.LINE_SPACING * (x+1) - 6, 
-        OdometryCorrection.LINE_SPACING * (y+1) - 6);
+    BetaDemo.NAV.travelTo(BetaDemo.GRID_WIDTH * (x+1) - 6, 
+        BetaDemo.GRID_WIDTH * (y+1) - 6);
     BetaDemo.NAV.waitUntilDone();
+    Sound.beepSequenceUp();
     /*
      * Turns to 60 deg to ensure the light sensor is in the
      * starting block, to more easily know the order in which
@@ -139,15 +141,14 @@ public class LightLocalizer {
     tY = tY > 180 ? 360 - tY : tY; 
     double tX = Math.abs(tXN - tXP);
     tX = tX > 180 ? 360 - tX : tX;
-    odo.setX(OdometryCorrection.LINE_SPACING * (x+1) 
+    odo.setX(BetaDemo.GRID_WIDTH * (x+1) 
         - d * Math.cos(Math.toRadians(tY/2)));
-    odo.setY(OdometryCorrection.LINE_SPACING * (y+1)
+    odo.setY(BetaDemo.GRID_WIDTH * (y+1)
         - d * Math.cos(Math.toRadians(tX/2)));
-    double sensorTheta = Math.toDegrees(Math.acos(BetaDemo.LINE_OFFSET_X / BetaDemo.LINE_OFFSET_Y));
     double odo270 = (tY/2 + tYP + 360) % 360; //what the odometer reads when the robot is at 270
     double odo180 = (tX/2 + tXP + 360) % 360; //what the odometer reads when the robot is at 180
     double avgError = ((odo180 - 180) + (odo270 - 270)) / 2;
-    odo.setTheta(odo.getXYT()[2] - avgError + 26.14);
+    odo.setTheta(odo.getXYT()[2] - avgError + CORRECTION);
     BetaDemo.NAV.waitUntilDone();
   }
 

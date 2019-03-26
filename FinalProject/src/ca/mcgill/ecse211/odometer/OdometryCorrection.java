@@ -31,9 +31,7 @@ public class OdometryCorrection extends Thread {
   private static final long CORRECTION_PERIOD = 7;
 
   private Odometer odometer;
-  private float[] sample;
-  private AveragedBuffer<Float> samples;
-  private double[] lastPos;
+  
   private boolean on;
 
   /**
@@ -44,8 +42,6 @@ public class OdometryCorrection extends Thread {
    */
   public OdometryCorrection() throws OdometerExceptions {
     this.odometer = Odometer.getOdometer();
-    sample = new float[BetaDemo.LINE_SENSOR.sampleSize()];
-    samples = new AveragedBuffer<Float>(100);
     on = true;
   }
 
@@ -60,8 +56,10 @@ public class OdometryCorrection extends Thread {
   public void run() {
     int lineCount = 0;
     long correctionStart, correctionEnd;
-
-
+    double[] lastPos = null;
+    float[] sample = new float[BetaDemo.LINE_SENSOR.sampleSize()];
+    AveragedBuffer<Float> samples = new AveragedBuffer<Float>(100);
+    
     while (true) {
       correctionStart = System.currentTimeMillis();
       BetaDemo.LINE_SENSOR.fetchSample(sample, 0);
@@ -71,16 +69,14 @@ public class OdometryCorrection extends Thread {
        * To avoid a single line triggering this many times, verify that either we haven't seen a
        * line yet at all (lastPos == null) or we're sufficiently far from the last line.
        */
-      if (on && sample[0] < samples.getAvg() - LIGHT_THRESHOLD
-          && (lastPos == null || dist(pos, lastPos) > DIST_THRESHOLD)) {
+      if (on && (sample[0] < samples.getAvg() - LIGHT_THRESHOLD
+          && (lastPos == null || dist(pos, lastPos) > DIST_THRESHOLD))) {
         // Indicate detection of a line
-        Sound.beep();
+        Sound.beepSequenceUp();
+        // update last pos of line detected
+        lastPos = pos;
         lineCount++;
 
-        /*
-         * Concept is to figure out which x/y is closest to desired target, and round that one. We
-         * ignore the first line because it is the sensor moving about starting point
-         */
         
         double[] sensor = BetaDemo.toSensor(pos);
         if (lineCount != 1) {
@@ -95,12 +91,7 @@ public class OdometryCorrection extends Thread {
             sensor[1] = roundedY;
             odometer.setY(BetaDemo.toRobot(sensor)[1]);
           }
-
-          // update last pos of line detected
-          lastPos = odometer.getXYT();
         }
-
-
       }
 
       // Add the sample to the rolling average
@@ -112,7 +103,6 @@ public class OdometryCorrection extends Thread {
         try {
           Thread.sleep(CORRECTION_PERIOD - (correctionEnd - correctionStart));
         } catch (InterruptedException e) {
-          // there is nothing to be done here
         }
       }
 
@@ -124,8 +114,8 @@ public class OdometryCorrection extends Thread {
    * 
    * @param value True turns the correction on, false is off
    */
-  public void setOn(boolean value) {
-    on = value;
+  public void setOn(boolean t) {
+    on = t;
   }
   
   public boolean getOn() {

@@ -362,8 +362,8 @@ public class CanFinder implements Runnable {
 
   public void ejectCan() {
     BetaDemo.CLAW.open();
-    moveForward(10);
+    moveForward(15);
     BetaDemo.CLAW.close();
-    moveBackward(10);
+    moveBackward(15);
   }
 }

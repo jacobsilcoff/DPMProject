@@ -31,7 +31,7 @@ public class UltrasonicLocalizer {
   /**
    * The motor speed (deg/s) used by the robot when turning
    */
-  private static final int ROTATE_SPEED = 120;//was 100
+  private static final int ROTATE_SPEED = 150;//was 100
 
 
   private Odometer odo;

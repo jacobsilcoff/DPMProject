@@ -60,6 +60,7 @@ public class Navigation extends Thread {
   private double destT;
   private OdometryCorrection correction;
   private boolean on;
+  private boolean correctionOn;
 
   /**
    * Default constructor for navigation (called in Lab3.java)
@@ -72,6 +73,7 @@ public class Navigation extends Thread {
     isNavigating = false;
     destX = destY = destT = 0;
     this.correction = correction;
+    correctionOn = correction.getOn();
     on = true;
   }
 
@@ -96,7 +98,7 @@ public class Navigation extends Thread {
      */
    public void end() {
      if (correction != null) {
-       correction.setOn(true);
+       correction.setOn(correctionOn);
      }
      on = false;
    }
@@ -133,6 +135,7 @@ public class Navigation extends Thread {
    */
   public void turnTo(double theta, int speed) {
     if (correction != null) {
+      correctionOn = correction.getOn();
       correction.setOn(false); 
     }
     double presTheta = odo.getXYT()[2]; // get current heading
@@ -192,6 +195,7 @@ public class Navigation extends Thread {
             state = State.TURNING;
           }
           if (correction != null) {
+            correctionOn = correction.getOn();
             correction.setOn(false);
           }
           break;
@@ -212,7 +216,7 @@ public class Navigation extends Thread {
             state = State.TURNING;
           } else if (!checkIfDone()) {
             if (correction!=null) {
-              correction.setOn(true);
+              correction.setOn(correctionOn);
             }
             updateTravel();
           } else { // Arrived
@@ -251,9 +255,9 @@ public class Navigation extends Thread {
     // slows down upon nearing destination
     if (dist > DIST_THRESH) {
       double speed = FORWARD_SPEED;
-      if (dist < SLOW_DIST) {
-        speed = dist / SLOW_DIST * (FORWARD_SPEED - MIN_SPEED) + MIN_SPEED;
-      }
+      //if (dist < SLOW_DIST) {
+        //speed = dist / SLOW_DIST * (FORWARD_SPEED - MIN_SPEED) + MIN_SPEED;
+      //}
       setSpeeds((float) speed, (float) speed);
     } else {
       setSpeeds(0, 0);

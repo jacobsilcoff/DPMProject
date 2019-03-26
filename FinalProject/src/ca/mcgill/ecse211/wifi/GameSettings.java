@@ -14,8 +14,8 @@ import lejos.hardware.lcd.LCD;
 public abstract class GameSettings {
   
   /** Set these as appropriate for your team and current situation **/
-  private static final String SERVER_IP = "192.168.2.23";
-  private static final int TEAM_NUMBER = 1;
+  private static final String SERVER_IP = "192.168.2.8";
+  private static final int TEAM_NUMBER = 6;
 
   // Enable/disable printing of debug info from the WiFi class
   private static final boolean ENABLE_DEBUG_WIFI_PRINT = false;
@@ -27,7 +27,7 @@ public abstract class GameSettings {
   public static Rect island = null;
   public static Rect searchZone = null;
   public static Rect tunnel = null;
-  public static CanColor targetColor = null;
+  public static CanColor targetColor = CanColor.BLUE;
   
   /**
    * Communicates with the server to get access to game information
@@ -47,7 +47,7 @@ public abstract class GameSettings {
 
       long rTeam = ((Long) data.get("RedTeam")).intValue();
       long greenTeam = ((Long) data.get("GreenTeam")).intValue();
-      targetColor = CanColor.fromNumber((int) greenTeam);
+      //targetColor = CanColor.fromNumber((int) greenTeam);
       if (rTeam == TEAM_NUMBER) {
         redTeam = true;
       } else if (greenTeam != TEAM_NUMBER) {

@@ -73,12 +73,12 @@ public class BetaDemo {
    * The offset between the robot turning center and the line sensor in
    * the Y direction, in cm. Note: magnitude only.
    */
-  public static final double LINE_OFFSET_Y = 7.01;
+  public static final double LINE_OFFSET_Y = 7.50;
   /**
    * The offset between the robot turning center and the line sensor in
    * the X direction, in cm. Note: magnitude only.
    */
-  public static final double LINE_OFFSET_X = TRACK/2;
+  public static final double LINE_OFFSET_X = 5.5;
 
   /**
    * The can classifier used by the program
@@ -144,14 +144,33 @@ public class BetaDemo {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
+    init();
+    resetOdo();
+    OC.start();
+    triangleDrive();
+  }
+  
+  
+  /** 
+   * Runs code associated w/ beta demo
+   * @throws OdometerExceptions 
+   */
+  private static void betaDemo() throws OdometerExceptions {
     init();  
     CLAW.close();
-    localize(); //TODO: add beeping at right time
+    localize(); //Beeping is handled IN LOCALIZATION
+    OC.start();
+    NAV.travelTo(GRID_WIDTH, GRID_WIDTH);
+    NAV.waitUntilDone();
+    NAV.turnTo(0);
+    Sound.beepSequence();
     CanFinder cf = new CanFinder();
     cf.goToSearchArea();
     beepNTimes(5);
     //We now look for the search area until time is up:
-    while (true) {
+    int i = 0;
+    while (i < 5) {
+      i++;
       cf.search();
       if (cf.hasNextCan()) {
         cf.grabNextCan();
@@ -176,6 +195,8 @@ public class BetaDemo {
         GameSettings.searchZone.URy * GRID_WIDTH);
     NAV.waitUntilDone();
     beepNTimes(5);
+
+
     System.exit(0);
   }
 
@@ -188,8 +209,8 @@ public class BetaDemo {
     (new Thread(Odometer.getOdometer())).start();
     GameSettings.init();
     NAV.start();
-    OC.start();
-    OC.setOn(false);
+    LEFT_MOTOR.setAcceleration(1000);
+    RIGHT_MOTOR.setAcceleration(1000);
   }
 
   /**
@@ -198,15 +219,11 @@ public class BetaDemo {
    * @throws OdometerExceptions
    */
   private static void localize() throws OdometerExceptions {
-    OC.setOn(false);
     (new UltrasonicLocalizer()).run();
-    OC.setOn(false);
     (new LightLocalizer(0,0)).run();
-    OC.setOn(true);
   }
 
   private static void lightLocalizeAtSearchLL() throws OdometerExceptions {
-    OC.setOn(false);
     (new LightLocalizer(GameSettings.searchZone.LLx - 1, GameSettings.searchZone.LLy - 1)).run();
   }
 
@@ -277,17 +294,24 @@ public class BetaDemo {
    * FOR TESTING
    * @param ocOn Whether or not to use correction
    */
-  private static void squareDrive(boolean ocOn) {
-    OC.setOn(ocOn);
-    NAV.travelTo(1*GRID_WIDTH, 3*GRID_WIDTH);
+  private static void squareDrive() {
+    NAV.travelTo(1*GRID_WIDTH, 5*GRID_WIDTH);
     NAV.waitUntilDone();
-    NAV.travelTo(3*GRID_WIDTH,3*GRID_WIDTH);
+    NAV.travelTo(5*GRID_WIDTH,5*GRID_WIDTH);
     NAV.waitUntilDone();
-    NAV.travelTo(3*GRID_WIDTH, 1*GRID_WIDTH);
+    NAV.travelTo(5*GRID_WIDTH, 1*GRID_WIDTH);
     NAV.waitUntilDone();
     NAV.travelTo(1*GRID_WIDTH, 1*GRID_WIDTH);
     NAV.waitUntilDone();
-    OC.setOn(true);
+  }
+  
+  private static void triangleDrive() {
+    NAV.travelTo(1*GRID_WIDTH, 5*GRID_WIDTH);
+    NAV.waitUntilDone();
+    NAV.travelTo(5*GRID_WIDTH,5*GRID_WIDTH);
+    NAV.waitUntilDone();
+    NAV.travelTo(1*GRID_WIDTH, 1*GRID_WIDTH);
+    NAV.waitUntilDone();
   }
 
   /**
