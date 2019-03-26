@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.canhandling;
 
-import ca.mcgill.ecse211.demo.BetaDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
 import lejos.hardware.lcd.LCD;
 
 /**
@@ -34,8 +34,8 @@ public class ColorClassifier {
     double[] totalReadings = new double[3];
     int numReadings = 0;
     for (int i = 0; i < 10; i++) {
-      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
-      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
+      float[] sample = new float[FinalDemo.COLOR_SENSOR.sampleSize()];
+      FinalDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int j = 0; j < sample.length; j++) {
           totalReadings[j] += sample[j];
@@ -64,16 +64,16 @@ public class ColorClassifier {
    * @return The color of the can. CanColor.UNKONWN if no can is detected
    */
   public CanColor classify() {
-    BetaDemo.CAN_MOTOR.resetTachoCount();
-    BetaDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
-    BetaDemo.CAN_MOTOR.backward();
+    FinalDemo.CAN_MOTOR.resetTachoCount();
+    FinalDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
+    FinalDemo.CAN_MOTOR.backward();
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
 
-    while (Math.abs(BetaDemo.CAN_MOTOR.getTachoCount()) < 360*3) {
-      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
-      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
+    while (Math.abs(FinalDemo.CAN_MOTOR.getTachoCount()) < 360*3) {
+      float[] sample = new float[FinalDemo.COLOR_SENSOR.sampleSize()];
+      FinalDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
@@ -82,8 +82,8 @@ public class ColorClassifier {
       }
       sleep();
     }
-    BetaDemo.CAN_MOTOR.setSpeed(0);
-    BetaDemo.CAN_MOTOR.stop();
+    FinalDemo.CAN_MOTOR.setSpeed(0);
+    FinalDemo.CAN_MOTOR.stop();
 
     float[] avgReading = new float[totalReadings.length];
     for (int i = 0; i < avgReading.length; i++) {
@@ -103,7 +103,7 @@ public class ColorClassifier {
         (int) (avgReading[1] * 1000), (int) (avgReading[2] * 1000)});
     LCD.drawString(colorLabel.toString(), 0, 4);
 
-    BetaDemo.CAN_MOTOR.flt();
+    FinalDemo.CAN_MOTOR.flt();
     
     return colorLabel;
   }
@@ -115,16 +115,16 @@ public class ColorClassifier {
    * about a can
    */
   public void getData() {
-    BetaDemo.CAN_MOTOR.resetTachoCount();
-    BetaDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
-    BetaDemo.CAN_MOTOR.backward();
+    FinalDemo.CAN_MOTOR.resetTachoCount();
+    FinalDemo.CAN_MOTOR.setSpeed(SCAN_SPD);
+    FinalDemo.CAN_MOTOR.backward();
 
     double[] totalReadings = new double[3];
     int numReadings = 0;
 
-    while (Math.abs(BetaDemo.CAN_MOTOR.getTachoCount()) < 360*3) {
-      float[] sample = new float[BetaDemo.COLOR_SENSOR.sampleSize()];
-      BetaDemo.COLOR_SENSOR.fetchSample(sample, 0);
+    while (Math.abs(FinalDemo.CAN_MOTOR.getTachoCount()) < 360*3) {
+      float[] sample = new float[FinalDemo.COLOR_SENSOR.sampleSize()];
+      FinalDemo.COLOR_SENSOR.fetchSample(sample, 0);
       if (!isWhite(sample)) {
         for (int i = 0; i < sample.length; i++) {
           totalReadings[i] += sample[i];
@@ -134,8 +134,8 @@ public class ColorClassifier {
       sleep();
     }
 
-    BetaDemo.CAN_MOTOR.setSpeed(0);
-    BetaDemo.CAN_MOTOR.stop();
+    FinalDemo.CAN_MOTOR.setSpeed(0);
+    FinalDemo.CAN_MOTOR.stop();
     
     float[] avgReading = new float[totalReadings.length];
     for (int i = 0; i < avgReading.length; i++) {

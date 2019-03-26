@@ -1,7 +1,7 @@
 package ca.mcgill.ecse211.odometer;
 
 import ca.mcgill.ecse211.demo.AveragedBuffer;
-import ca.mcgill.ecse211.demo.BetaDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
 import lejos.hardware.Sound;
 
 /**
@@ -16,7 +16,7 @@ public class OdometryCorrection extends Thread {
    * This represents the minimum difference from the mean for a light sensor reading to be
    * considered significant
    */
-  private static final float LIGHT_THRESHOLD = 0.065f;
+  private static final float LIGHT_THRESHOLD = 0.22f;//was .08
   /**
    * This represents the distance between lines on the grid, in cm
    */
@@ -24,11 +24,15 @@ public class OdometryCorrection extends Thread {
   /**
    * This represents the minimum distance for the robot to travel before reading another line
    */
-  private static final float DIST_THRESHOLD = 3;
+  private static final float DIST_THRESHOLD = 5;
   /**
    * The time period between polling of the sensor, in ms
    */
   private static final long CORRECTION_PERIOD = 7;
+  /**
+   * The maximum amount that the OC will round
+   */
+  private static final float ROUND_LIMIT = 10;
 
   private Odometer odometer;
   
@@ -42,7 +46,7 @@ public class OdometryCorrection extends Thread {
    */
   public OdometryCorrection() throws OdometerExceptions {
     this.odometer = Odometer.getOdometer();
-    on = true;
+    on = false;
   }
 
   /**
@@ -57,12 +61,12 @@ public class OdometryCorrection extends Thread {
     int lineCount = 0;
     long correctionStart, correctionEnd;
     double[] lastPos = null;
-    float[] sample = new float[BetaDemo.LINE_SENSOR.sampleSize()];
+    float[] sample = new float[FinalDemo.LINE_SENSOR.sampleSize()];
     AveragedBuffer<Float> samples = new AveragedBuffer<Float>(100);
     
     while (true) {
       correctionStart = System.currentTimeMillis();
-      BetaDemo.LINE_SENSOR.fetchSample(sample, 0);
+      FinalDemo.LINE_SENSOR.fetchSample(sample, 0);
       double[] pos = odometer.getXYT(); // current odo-position
 
       /*
@@ -71,25 +75,35 @@ public class OdometryCorrection extends Thread {
        */
       if (on && (sample[0] < samples.getAvg() - LIGHT_THRESHOLD
           && (lastPos == null || dist(pos, lastPos) > DIST_THRESHOLD))) {
-        // Indicate detection of a line
-        Sound.beepSequenceUp();
         // update last pos of line detected
         lastPos = pos;
         lineCount++;
 
         
-        double[] sensor = BetaDemo.toSensor(pos);
+        double[] sensor = FinalDemo.toSensor(pos);
         if (lineCount != 1) {
           double roundedX = Math.round(sensor[0] / LINE_SPACING) * LINE_SPACING;
           double roundedY = Math.round(sensor[1] / LINE_SPACING) * LINE_SPACING;
-          if (Math.abs(sensor[0] - roundedX)< Math.abs(sensor[1] - roundedY)) {
+          if (Math.abs(sensor[0] - roundedX) < Math.abs(sensor[1] - roundedY)) {
             // here we round the x position
-            sensor[0] = roundedX;
-            odometer.setX(BetaDemo.toRobot(sensor)[0]);
+            if (Math.abs(sensor[0] - roundedX) < ROUND_LIMIT) {
+              sensor[0] = roundedX;
+              odometer.setX(FinalDemo.toRobot(sensor)[0]);
+              Sound.beepSequenceUp();
+            } else {
+              //indicates severe error
+              Sound.buzz();
+            }
           } else {
             // here we round the y position
-            sensor[1] = roundedY;
-            odometer.setY(BetaDemo.toRobot(sensor)[1]);
+            if (Math.abs(sensor[1] - roundedY) < ROUND_LIMIT) {
+              sensor[1] = roundedY;
+              odometer.setY(FinalDemo.toRobot(sensor)[1]);
+              Sound.beepSequenceUp();
+            } else {
+              //indicates severe error
+              Sound.buzz();
+            }
           }
         }
       }

@@ -22,7 +22,7 @@ import lejos.robotics.MirrorMotor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.SampleProvider;
 
-public class BetaDemo {
+public class FinalDemo {
   /**
    * The robot's left motor
    */
@@ -118,7 +118,7 @@ public class BetaDemo {
   public static final Navigation NAV = getNav();
   private static Navigation getNav() {
     try {
-      return new Navigation(OC);
+      return new Navigation();
     } catch (OdometerExceptions e) {
       return null;
     }
@@ -147,7 +147,9 @@ public class BetaDemo {
     init();
     resetOdo();
     OC.start();
+    OC.setOn(true);
     triangleDrive();
+    //System.exit(0);
   }
   
   
@@ -209,8 +211,8 @@ public class BetaDemo {
     (new Thread(Odometer.getOdometer())).start();
     GameSettings.init();
     NAV.start();
-    LEFT_MOTOR.setAcceleration(1000);
-    RIGHT_MOTOR.setAcceleration(1000);
+    LEFT_MOTOR.setAcceleration(1200);
+    RIGHT_MOTOR.setAcceleration(1200);
   }
 
   /**
@@ -241,11 +243,11 @@ public class BetaDemo {
     if (robot.length == 3) {
       double t = robot[2];
       result[0] = robot[0] 
-          - BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
-          - BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+          - FinalDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          - FinalDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
       result[1] = robot[1] 
-          + BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
-          - BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+          + FinalDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          - FinalDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
       result[2] = t;
     }
     return result;
@@ -263,11 +265,11 @@ public class BetaDemo {
     if (sensor.length == 3) {
       double t = sensor[2];
       result[0] = sensor[0] 
-          + BetaDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
-          + BetaDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
+          + FinalDemo.LINE_OFFSET_X * Math.cos(Math.toRadians(t))
+          + FinalDemo.LINE_OFFSET_Y * Math.sin(Math.toRadians(t));
       result[1] = sensor[1] 
-          - BetaDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
-          + BetaDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
+          - FinalDemo.LINE_OFFSET_X * Math.sin(Math.toRadians(t))
+          + FinalDemo.LINE_OFFSET_Y * Math.cos(Math.toRadians(t));
       result[2] = t;
     }
     return result;

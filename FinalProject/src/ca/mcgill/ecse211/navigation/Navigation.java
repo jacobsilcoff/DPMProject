@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.navigation;
 
-import ca.mcgill.ecse211.demo.BetaDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
@@ -14,11 +14,11 @@ public class Navigation extends Thread {
   /**
    * The motor speed of the robot when moving forward
    */
-  private static final int FORWARD_SPEED = 250;
+  private static final int FORWARD_SPEED = 270;
   /**
    * The motor speed used by the robot when turning
    */
-  private static final int ROTATE_SPEED = 100;
+  private static final int ROTATE_SPEED = 150;
   /**
    * The maximum distance between two points where they are considered to be roughly equal.
    */
@@ -42,38 +42,26 @@ public class Navigation extends Thread {
    * The distance after which the robot will no longer attempt to update its heading
    */
   private static final int CORRECTION_DIST = 4;
-
   /**
-   * The distance were the robot starts to slow down
+   * Whether or not the OC is on
    */
-  private static final int SLOW_DIST = 5;
-  /**
-   * The slowest the robot will spin its motors
-   */
-  private static final int MIN_SPEED = 50;
-
+  private static final boolean OC_ON = true;
 
   private boolean isNavigating;
   private Odometer odo;
   private double destX;
   private double destY;
   private double destT;
-  private OdometryCorrection correction;
   private boolean on;
-  private boolean correctionOn;
 
   /**
    * Default constructor for navigation (called in Lab3.java)
-   * 
-   * @param correction The odometer correction that is used for the robot
    * @throws OdometerExceptions
    */
-  public Navigation(OdometryCorrection correction) throws OdometerExceptions {
+  public Navigation() throws OdometerExceptions {
     odo = Odometer.getOdometer();
     isNavigating = false;
     destX = destY = destT = 0;
-    this.correction = correction;
-    correctionOn = correction.getOn();
     on = true;
   }
 
@@ -89,17 +77,13 @@ public class Navigation extends Thread {
     destY = y; // convert Y tile pt
     updateT();
     isNavigating = true;
-    BetaDemo.LCD.drawString("Dest:" + (int) destX + "," + (int) destY + "," + (int) destT, 0, 4);
-
+    FinalDemo.LCD.drawString("Dest:" + (int) destX + "," + (int) destY + "," + (int) destT, 0, 4);
   }
 
     /**
      * Kills the thread
      */
    public void end() {
-     if (correction != null) {
-       correction.setOn(correctionOn);
-     }
      on = false;
    }
   /**
@@ -134,27 +118,23 @@ public class Navigation extends Thread {
    * @param speed The turning speed
    */
   public void turnTo(double theta, int speed) {
-    if (correction != null) {
-      correctionOn = correction.getOn();
-      correction.setOn(false); 
-    }
     double presTheta = odo.getXYT()[2]; // get current heading
     double ang = (theta - presTheta + 360) % 360; // gets absolute angle required to turn
-    BetaDemo.LEFT_MOTOR.setSpeed(speed);
-    BetaDemo.RIGHT_MOTOR.setSpeed(speed);
+    FinalDemo.LEFT_MOTOR.setSpeed(speed);
+    FinalDemo.RIGHT_MOTOR.setSpeed(speed);
 
     // turn using MINIMUM angle
     if (ang < 180) {
-      BetaDemo.LCD.drawString("Ang: " + ang + "deg  ", 0, 5);
+      FinalDemo.LCD.drawString("Ang: " + ang + "deg  ", 0, 5);
       // increase angle
-      BetaDemo.LEFT_MOTOR.rotate(convertAngle(ang), true);
-      BetaDemo.RIGHT_MOTOR.rotate(-convertAngle(ang), false);
+      FinalDemo.LEFT_MOTOR.rotate(convertAngle(ang), true);
+      FinalDemo.RIGHT_MOTOR.rotate(-convertAngle(ang), false);
     } else {
       ang = 360 - ang;
-      BetaDemo.LCD.drawString("Ang: " + ang + "deg   ", 0, 5); // display angle of rotation
+      FinalDemo.LCD.drawString("Ang: " + ang + "deg   ", 0, 5); // display angle of rotation
       // Need to check against odometer
-      BetaDemo.LEFT_MOTOR.rotate(-convertAngle(ang), true);
-      BetaDemo.RIGHT_MOTOR.rotate(convertAngle(ang), false);
+      FinalDemo.LEFT_MOTOR.rotate(-convertAngle(ang), true);
+      FinalDemo.RIGHT_MOTOR.rotate(convertAngle(ang), false);
     }
     updateT();// update new angle after turn;
   }
@@ -190,17 +170,14 @@ public class Navigation extends Thread {
       double[] lastPos = {0, 0};
       switch (state) {
         case INIT:
-          BetaDemo.LCD.drawString("State: INIT", 0, 6);
+          FinalDemo.LCD.drawString("State: INIT", 0, 6);
           if (isNavigating) {
             state = State.TURNING;
           }
-          if (correction != null) {
-            correctionOn = correction.getOn();
-            correction.setOn(false);
-          }
           break;
         case TURNING:
-          BetaDemo.LCD.drawString("State: TURN", 0, 6);
+          FinalDemo.OC.setOn(false);
+          FinalDemo.LCD.drawString("State: TURN", 0, 6);
           turnTo(destT);
           if (facing(destT)) {
             state = State.TRAVELING;
@@ -208,16 +185,14 @@ public class Navigation extends Thread {
           }
           break;
         case TRAVELING:
-          BetaDemo.LCD.drawString("State: TRVL", 0, 6);
+          FinalDemo.OC.setOn(OC_ON);
+          FinalDemo.LCD.drawString("State: TRVL", 0, 6);
           updateT();
           if (getDist() > CORRECTION_DIST && dist(lastPos, odo.getXYT()) > CORRECTION_DIST
               && !facing(destT)) {
             // re-check heading and finish turning
             state = State.TURNING;
           } else if (!checkIfDone()) {
-            if (correction!=null) {
-              correction.setOn(correctionOn);
-            }
             updateTravel();
           } else { // Arrived
             setSpeeds(0, 0); // stop
@@ -262,8 +237,8 @@ public class Navigation extends Thread {
     } else {
       setSpeeds(0, 0);
     }
-    BetaDemo.LEFT_MOTOR.forward();
-    BetaDemo.RIGHT_MOTOR.forward();
+    FinalDemo.LEFT_MOTOR.forward();
+    FinalDemo.RIGHT_MOTOR.forward();
   }
 
   /**
@@ -338,22 +313,22 @@ public class Navigation extends Thread {
    * @param r The desired speed of the right motor
    */
   public void setSpeeds(float l, float r) {
-    BetaDemo.LEFT_MOTOR.setSpeed((int) Math.abs(l));
-    BetaDemo.RIGHT_MOTOR.setSpeed((int) Math.abs(r));
+    FinalDemo.LEFT_MOTOR.setSpeed((int) Math.abs(l));
+    FinalDemo.RIGHT_MOTOR.setSpeed((int) Math.abs(r));
     if (l > 0) {
-      BetaDemo.LEFT_MOTOR.forward();
+      FinalDemo.LEFT_MOTOR.forward();
     } else if (l < 0) {
-      BetaDemo.LEFT_MOTOR.backward();
+      FinalDemo.LEFT_MOTOR.backward();
     } else {
-      BetaDemo.LEFT_MOTOR.stop();
+      //FinalDemo.LEFT_MOTOR.stop();
     }
     
     if (r > 0) {
-      BetaDemo.RIGHT_MOTOR.forward();
+      FinalDemo.RIGHT_MOTOR.forward();
     } else if (r < 0) {
-      BetaDemo.RIGHT_MOTOR.backward();
+      FinalDemo.RIGHT_MOTOR.backward();
     } else {
-      BetaDemo.RIGHT_MOTOR.stop();
+     // FinalDemo.RIGHT_MOTOR.stop();
     }
   }
 
@@ -375,7 +350,7 @@ public class Navigation extends Thread {
    * @return The number of degrees of wheel rotation needed for the given distance
    */
   private static int convertDistance(double distance) {
-    return (int) ((180.0 * distance) / (Math.PI * BetaDemo.WHEEL_RAD));
+    return (int) ((180.0 * distance) / (Math.PI * FinalDemo.WHEEL_RAD));
   }
 
 
@@ -387,7 +362,7 @@ public class Navigation extends Thread {
    * @return The number of degrees of wheel rotation needed for the given angle
    */
   private static int convertAngle(double angle) {
-    return convertDistance(Math.PI * BetaDemo.TRACK * angle / 360.0);
+    return convertDistance(Math.PI * FinalDemo.TRACK * angle / 360.0);
   }
 
   /**

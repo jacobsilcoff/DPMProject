@@ -26,7 +26,7 @@ public class CanFinder implements Runnable {
   private CanColor target;
   private Point nextCan;
   private State state;
-  public static final float GRID_WIDTH = BetaDemo.GRID_WIDTH;
+  public static final float GRID_WIDTH = FinalDemo.GRID_WIDTH;
   public static final int SCAN_SPEED = 50;
   public static final int CAN_STOP_DIST = 15;
   public static final int TURN_SPEED = 100;
@@ -94,8 +94,8 @@ public class CanFinder implements Runnable {
    * Uses the sideways facing ultrasonic sensor
    */
   public void search() {
-    BetaDemo.NAV.turnTo(90);
-    BetaDemo.NAV.setSpeeds(-SCAN_SPEED, SCAN_SPEED);
+    FinalDemo.NAV.turnTo(90);
+    FinalDemo.NAV.setSpeeds(-SCAN_SPEED, SCAN_SPEED);
     double minDist = Double.MAX_VALUE;
     double[] minPt = new double[2];
     double minT = -1;
@@ -147,7 +147,7 @@ public class CanFinder implements Runnable {
    */
   private double[] canStoppingPoint() {
     double[] pt = {nextCan.x, nextCan.y};
-    double t = BetaDemo.NAV.angleTo(nextCan.x, nextCan.y);
+    double t = FinalDemo.NAV.angleTo(nextCan.x, nextCan.y);
     pt[0] -=  CAN_STOP_DIST * Math.sin(Math.toRadians(t));
     pt[1] -= CAN_STOP_DIST * Math.cos(Math.toRadians(t));
     return pt;
@@ -158,7 +158,7 @@ public class CanFinder implements Runnable {
    * the search area
    */
   public void goToSearchArea() {
-    BetaDemo.CLAW.close();
+    FinalDemo.CLAW.close();
     if (GameSettings.initialized /*&& !GameSettings.searchZone.contains(odo.getXYT())*/) {
       if (!GameSettings.island.contains(odo.getXYT())) {
         Sound.buzz();
@@ -187,18 +187,18 @@ public class CanFinder implements Runnable {
           entrance = W;
           exit = E;
         }
-        BetaDemo.NAV.travelTo(entrance[0], entrance[1]);
-        BetaDemo.NAV.waitUntilDone();
-        boolean ocOn = BetaDemo.OC.getOn();
-        BetaDemo.OC.setOn(false);
-        BetaDemo.NAV.travelTo(exit[0], exit[1]);
-        BetaDemo.NAV.waitUntilDone();
-        BetaDemo.OC.setOn(ocOn);
+        FinalDemo.NAV.travelTo(entrance[0], entrance[1]);
+        FinalDemo.NAV.waitUntilDone();
+        boolean ocOn = FinalDemo.OC.getOn();
+        FinalDemo.OC.setOn(false);
+        FinalDemo.NAV.travelTo(exit[0], exit[1]);
+        FinalDemo.NAV.waitUntilDone();
+        FinalDemo.OC.setOn(ocOn);
       }
       //Get to search area from island
-      BetaDemo.NAV.travelTo(GameSettings.searchZone.LLx * GRID_WIDTH, 
+      FinalDemo.NAV.travelTo(GameSettings.searchZone.LLx * GRID_WIDTH, 
                             GameSettings.searchZone.LLy * GRID_WIDTH);
-      BetaDemo.NAV.waitUntilDone();
+      FinalDemo.NAV.waitUntilDone();
     }
   }
   
@@ -233,16 +233,16 @@ public class CanFinder implements Runnable {
   public boolean grabNextCan() {
     if (nextCan != null) {
       double[] stop = canStoppingPoint();
-      BetaDemo.NAV.travelTo(stop[0], stop[1]);
-      BetaDemo.NAV.waitUntilDone();
-      BetaDemo.CLAW.open();
-      BetaDemo.NAV.turnTo(BetaDemo.NAV.angleTo(nextCan.x, nextCan.y) + 180);
+      FinalDemo.NAV.travelTo(stop[0], stop[1]);
+      FinalDemo.NAV.waitUntilDone();
+      FinalDemo.CLAW.open();
+      FinalDemo.NAV.turnTo(FinalDemo.NAV.angleTo(nextCan.x, nextCan.y) + 180);
       moveBackward(10);
-      BetaDemo.CLAW.close();
+      FinalDemo.CLAW.close();
     } 
     //We no longer know what the next can is, because we just picked up the last one
     nextCan = null;
-    return BetaDemo.CLAW.hasCan();
+    return FinalDemo.CLAW.hasCan();
   }
   
   private static double minAngle(double x, double y) {
@@ -298,8 +298,8 @@ public class CanFinder implements Runnable {
    * @return The US reading in cm
    */
   private float readUS() {
-    float[] usData = new float[BetaDemo.US_FRONT.sampleSize()];
-    BetaDemo.US_FRONT.fetchSample(usData, 0);
+    float[] usData = new float[FinalDemo.US_FRONT.sampleSize()];
+    FinalDemo.US_FRONT.fetchSample(usData, 0);
     if (usData[0] == 255) {
       return -1;
     }
@@ -311,19 +311,19 @@ public class CanFinder implements Runnable {
    * @param dist
    */
   private void moveBackward(double dist) {
-    BetaDemo.NAV.setSpeeds(TURN_SPEED,TURN_SPEED);
-    double[] start = BetaDemo.NAV.getOdo().getXYT();
+    FinalDemo.NAV.setSpeeds(TURN_SPEED,TURN_SPEED);
+    double[] start = FinalDemo.NAV.getOdo().getXYT();
 
-    BetaDemo.LEFT_MOTOR.backward();
-    BetaDemo.RIGHT_MOTOR.backward();
+    FinalDemo.LEFT_MOTOR.backward();
+    FinalDemo.RIGHT_MOTOR.backward();
 
-    while (Navigation.dist(BetaDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
+    while (Navigation.dist(FinalDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
       try {
         Thread.sleep(30);
       } catch (InterruptedException e) {
       }
     }
-    BetaDemo.NAV.setSpeeds(0, 0);
+    FinalDemo.NAV.setSpeeds(0, 0);
   }
   
   /**
@@ -332,19 +332,19 @@ public class CanFinder implements Runnable {
    * @param dist
    */
   private void moveForward(double dist) {
-    BetaDemo.NAV.setSpeeds(TURN_SPEED,TURN_SPEED);
-    double[] start = BetaDemo.NAV.getOdo().getXYT();
+    FinalDemo.NAV.setSpeeds(TURN_SPEED,TURN_SPEED);
+    double[] start = FinalDemo.NAV.getOdo().getXYT();
 
-    BetaDemo.LEFT_MOTOR.forward();
-    BetaDemo.RIGHT_MOTOR.forward();
+    FinalDemo.LEFT_MOTOR.forward();
+    FinalDemo.RIGHT_MOTOR.forward();
 
-    while (Navigation.dist(BetaDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
+    while (Navigation.dist(FinalDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
       try {
         Thread.sleep(30);
       } catch (InterruptedException e) {
       }
     }
-    BetaDemo.NAV.setSpeeds(0, 0);
+    FinalDemo.NAV.setSpeeds(0, 0);
   }
 
   /**
@@ -361,9 +361,9 @@ public class CanFinder implements Runnable {
   }
 
   public void ejectCan() {
-    BetaDemo.CLAW.open();
+    FinalDemo.CLAW.open();
     moveForward(15);
-    BetaDemo.CLAW.close();
+    FinalDemo.CLAW.close();
     moveBackward(15);
   }
 }

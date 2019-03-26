@@ -10,7 +10,7 @@
 
 package ca.mcgill.ecse211.odometer;
 
-import ca.mcgill.ecse211.demo.BetaDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
 
 public class Odometer extends OdometerData implements Runnable {
 
@@ -43,20 +43,20 @@ public class Odometer extends OdometerData implements Runnable {
 
 
     // reset tacho count in motor
-    BetaDemo.LEFT_MOTOR.resetTachoCount();
-    BetaDemo.RIGHT_MOTOR.resetTachoCount();
+    FinalDemo.LEFT_MOTOR.resetTachoCount();
+    FinalDemo.RIGHT_MOTOR.resetTachoCount();
 
     // Reset the values of x, y and z to defaults
     odoData.setXYT(0, 0, 0);
 
     // reset tacho count in motor
-    BetaDemo.LEFT_MOTOR.resetTachoCount();
-    BetaDemo.RIGHT_MOTOR.resetTachoCount();
+    FinalDemo.LEFT_MOTOR.resetTachoCount();
+    FinalDemo.RIGHT_MOTOR.resetTachoCount();
 
     this.leftMotorTachoCount = 0;
     this.rightMotorTachoCount = 0;
 
-    this.DIST_MULT = (Math.PI * BetaDemo.WHEEL_RAD / 180);
+    this.DIST_MULT = (Math.PI * FinalDemo.WHEEL_RAD / 180);
 
   }
 
@@ -84,8 +84,8 @@ public class Odometer extends OdometerData implements Runnable {
       updateStart = System.currentTimeMillis();
 
       // Measure differences then update
-      int leftDiff = BetaDemo.LEFT_MOTOR.getTachoCount() - leftMotorTachoCount;
-      int rightDiff = BetaDemo.RIGHT_MOTOR.getTachoCount() - rightMotorTachoCount;
+      int leftDiff = FinalDemo.LEFT_MOTOR.getTachoCount() - leftMotorTachoCount;
+      int rightDiff = FinalDemo.RIGHT_MOTOR.getTachoCount() - rightMotorTachoCount;
 
       leftMotorTachoCount += leftDiff;
       rightMotorTachoCount += rightDiff;
@@ -99,7 +99,7 @@ public class Odometer extends OdometerData implements Runnable {
       double dx, dy, dt; // displacement components in the x, y, and theta direction (heading
 
 
-      dt = Math.toDegrees((leftDist - rightDist) / BetaDemo.TRACK);
+      dt = Math.toDegrees((leftDist - rightDist) / FinalDemo.TRACK);
 
       dx = disp * Math.sin(Math.toRadians(odo.getXYT()[2] + dt));
       dy = disp * Math.cos(Math.toRadians(odo.getXYT()[2] + dt));

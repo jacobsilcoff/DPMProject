@@ -1,8 +1,8 @@
 package ca.mcgill.ecse211.localization;
 import lejos.hardware.Sound;
 import ca.mcgill.ecse211.demo.AveragedBuffer;
-import ca.mcgill.ecse211.demo.BetaDemo;
-import ca.mcgill.ecse211.demo.BetaDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
@@ -63,8 +63,8 @@ public class UltrasonicLocalizer {
    */
   public double getEdge(boolean cw) {
     int dir = cw? 1 : -1;
-    BetaDemo.NAV.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED); //set clockwise or counterclockwise turn
-    BetaDemo.LCD.drawString("STAGE 1", 0, 4);
+    FinalDemo.NAV.setSpeeds(dir * ROTATE_SPEED, - dir * ROTATE_SPEED); //set clockwise or counterclockwise turn
+    FinalDemo.LCD.drawString("STAGE 1", 0, 4);
     boolean seesWall;
     double reading = 0;
     do {
@@ -83,17 +83,17 @@ public class UltrasonicLocalizer {
     //In principle, a wall should not be seen. Play happy beep to show clear:
     //Sound.beepSequenceUp();
 
-    BetaDemo.LCD.drawString("STAGE 2", 0, 4);
+    FinalDemo.LCD.drawString("STAGE 2", 0, 4);
     while ((reading > DETECTION_DISTANCE) || reading == -1) {
       sleep();
       reading = readUS(); //final readings
     }
-    BetaDemo.NAV.setSpeeds(0, 0);// stop
+    FinalDemo.NAV.setSpeeds(0, 0);// stop
 
-    BetaDemo.LCD.drawString("Edge detected", 0, 4);
+    FinalDemo.LCD.drawString("Edge detected", 0, 4);
     Sound.beep(); //audio notification
 
-    BetaDemo.NAV.setSpeeds(0, 0); //stop robot
+    FinalDemo.NAV.setSpeeds(0, 0); //stop robot
     return odo.getXYT()[2];
   }
 
@@ -142,12 +142,12 @@ public class UltrasonicLocalizer {
     odo.setXYT(0, 0, realAngle); 
 
     // turn to localized North
-    BetaDemo.NAV.turnTo(0);
+    FinalDemo.NAV.turnTo(0);
     if (readUS() < DETECTION_DISTANCE) {
       odo.setTheta(180);
     }
-    BetaDemo.NAV.turnTo(0);
-    BetaDemo.NAV.waitUntilDone();
+    FinalDemo.NAV.turnTo(0);
+    FinalDemo.NAV.waitUntilDone();
   }
 
   /**
@@ -167,9 +167,9 @@ public class UltrasonicLocalizer {
    * @return The US reading in cm
    */
   private float readUS() {
-    float[] usData = new float[BetaDemo.US_FRONT.sampleSize()];
-    BetaDemo.US_FRONT.fetchSample(usData, 0);
-    BetaDemo.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 7);
+    float[] usData = new float[FinalDemo.US_FRONT.sampleSize()];
+    FinalDemo.US_FRONT.fetchSample(usData, 0);
+    FinalDemo.LCD.drawString("US:" + (usData[0] * 100.0) + ".........", 0, 7);
     samples.add((usData[0] * 100f));
     if (usData[0] == 255) {
       return -1;

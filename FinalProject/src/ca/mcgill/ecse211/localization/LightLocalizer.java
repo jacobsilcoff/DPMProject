@@ -2,8 +2,8 @@ package ca.mcgill.ecse211.localization;
 
 import lejos.hardware.Sound;
 import ca.mcgill.ecse211.demo.AveragedBuffer;
-import ca.mcgill.ecse211.demo.BetaDemo;
-import ca.mcgill.ecse211.demo.BetaDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
@@ -101,29 +101,29 @@ public class LightLocalizer {
        * where the odometer's position values
        * are unreliable
        */
-      BetaDemo.NAV.turnTo(0);
+      FinalDemo.NAV.turnTo(0);
       moveToLine(true);
-      odo.setY(BetaDemo.GRID_WIDTH * (y+1) + BetaDemo.LINE_OFFSET_Y);
-      moveBackwards(BetaDemo.LINE_OFFSET_Y + 12);
-      BetaDemo.NAV.turnTo(90);
+      odo.setY(FinalDemo.GRID_WIDTH * (y+1) + FinalDemo.LINE_OFFSET_Y);
+      moveBackwards(FinalDemo.LINE_OFFSET_Y + 12);
+      FinalDemo.NAV.turnTo(90);
       moveToLine(true);
-      odo.setX(BetaDemo.GRID_WIDTH * (x+1) + BetaDemo.LINE_OFFSET_Y);
+      odo.setX(FinalDemo.GRID_WIDTH * (x+1) + FinalDemo.LINE_OFFSET_Y);
     }
 
     /*
      * Moves to safe rotation position,
      * about which all 4 lines will be intersected
      */
-    BetaDemo.NAV.travelTo(BetaDemo.GRID_WIDTH * (x+1) - 6, 
-        BetaDemo.GRID_WIDTH * (y+1) - 6);
-    BetaDemo.NAV.waitUntilDone();
+    FinalDemo.NAV.travelTo(FinalDemo.GRID_WIDTH * (x+1) - 6, 
+        FinalDemo.GRID_WIDTH * (y+1) - 6);
+    FinalDemo.NAV.waitUntilDone();
     Sound.beepSequenceUp();
     /*
      * Turns to 60 deg to ensure the light sensor is in the
      * starting block, to more easily know the order in which
      * lines will be crossed
      */
-    BetaDemo.NAV.turnTo(30); 
+    FinalDemo.NAV.turnTo(30); 
 
     //Find the 4 intersections
     rotateToLine(false);
@@ -136,20 +136,20 @@ public class LightLocalizer {
     double tXN = odo.getXYT()[2];
 
     //calculates & updates values
-    double d = Math.sqrt(Math.pow(BetaDemo.LINE_OFFSET_X,2) + Math.pow(BetaDemo.LINE_OFFSET_Y, 2));
+    double d = Math.sqrt(Math.pow(FinalDemo.LINE_OFFSET_X,2) + Math.pow(FinalDemo.LINE_OFFSET_Y, 2));
     double tY = Math.abs(tYN - tYP);
     tY = tY > 180 ? 360 - tY : tY; 
     double tX = Math.abs(tXN - tXP);
     tX = tX > 180 ? 360 - tX : tX;
-    odo.setX(BetaDemo.GRID_WIDTH * (x+1) 
+    odo.setX(FinalDemo.GRID_WIDTH * (x+1) 
         - d * Math.cos(Math.toRadians(tY/2)));
-    odo.setY(BetaDemo.GRID_WIDTH * (y+1)
+    odo.setY(FinalDemo.GRID_WIDTH * (y+1)
         - d * Math.cos(Math.toRadians(tX/2)));
     double odo270 = (tY/2 + tYP + 360) % 360; //what the odometer reads when the robot is at 270
     double odo180 = (tX/2 + tXP + 360) % 360; //what the odometer reads when the robot is at 180
     double avgError = ((odo180 - 180) + (odo270 - 270)) / 2;
     odo.setTheta(odo.getXYT()[2] - avgError + CORRECTION);
-    BetaDemo.NAV.waitUntilDone();
+    FinalDemo.NAV.waitUntilDone();
   }
 
   /**
@@ -159,10 +159,10 @@ public class LightLocalizer {
    */
   public void moveToLine(boolean forwards) {
     int dir = forwards ? 1 : -1;
-    BetaDemo.NAV.setSpeeds(dir * MOTOR_SPEED, dir * MOTOR_SPEED);
+    FinalDemo.NAV.setSpeeds(dir * MOTOR_SPEED, dir * MOTOR_SPEED);
     waitUntilLine();
     Sound.beep(); //found a line
-    BetaDemo.NAV.setSpeeds(0, 0);
+    FinalDemo.NAV.setSpeeds(0, 0);
   }
 
   /**
@@ -173,22 +173,22 @@ public class LightLocalizer {
    */
   public void rotateToLine(boolean cw) {
     int dir = cw ? 1 : -1;
-    BetaDemo.NAV.setSpeeds(dir * MOTOR_SPEED * 0.5f, -dir * MOTOR_SPEED * 0.5f);
+    FinalDemo.NAV.setSpeeds(dir * MOTOR_SPEED * 0.5f, -dir * MOTOR_SPEED * 0.5f);
     waitUntilLine();
     Sound.beep(); //found a line
-    BetaDemo.NAV.setSpeeds(0, 0);
+    FinalDemo.NAV.setSpeeds(0, 0);
   }
 
   /**
    * Blocks until a line is detetected by the robot
    */
   private void waitUntilLine() {
-    float[] sample = new float[BetaDemo.LINE_SENSOR.sampleSize()];
+    float[] sample = new float[FinalDemo.LINE_SENSOR.sampleSize()];
     do {
-      BetaDemo.LINE_SENSOR.fetchSample(sample, 0);
+      FinalDemo.LINE_SENSOR.fetchSample(sample, 0);
       samples.add(sample[0]);
-      BetaDemo.LCD.clear();
-      BetaDemo.LCD.drawString(sample[0] + ", " + samples.getAvg() + "      ",0,4);
+      FinalDemo.LCD.clear();
+      FinalDemo.LCD.drawString(sample[0] + ", " + samples.getAvg() + "      ",0,4);
       sleep();
     } while (sample[0] > samples.getAvg() - LIGHT_THRESHOLD);
     samples.clear();
@@ -212,19 +212,19 @@ public class LightLocalizer {
    * @param dist
    */
   private void moveBackwards(double dist) {
-    BetaDemo.NAV.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
-    double[] start = BetaDemo.NAV.getOdo().getXYT();
+    FinalDemo.NAV.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
+    double[] start = FinalDemo.NAV.getOdo().getXYT();
 
-    BetaDemo.LEFT_MOTOR.backward();
-    BetaDemo.RIGHT_MOTOR.backward();
+    FinalDemo.LEFT_MOTOR.backward();
+    FinalDemo.RIGHT_MOTOR.backward();
 
-    while (Navigation.dist(BetaDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
+    while (Navigation.dist(FinalDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
       try {
         Thread.sleep(30);
       } catch (InterruptedException e) {
       }
     }
-    BetaDemo.NAV.setSpeeds(0, 0);
+    FinalDemo.NAV.setSpeeds(0, 0);
   }
 
 }

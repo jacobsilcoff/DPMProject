@@ -1,6 +1,6 @@
 package ca.mcgill.ecse211.canhandling;
 
-import ca.mcgill.ecse211.demo.BetaDemo;
+import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
 import lejos.hardware.lcd.LCD;
 
@@ -25,16 +25,16 @@ public class Claw {
   }
 
   private void calibrate() {
-    BetaDemo.CLAW_MOTOR.setSpeed(150);
-    BetaDemo.CLAW_MOTOR.backward();
+    FinalDemo.CLAW_MOTOR.setSpeed(150);
+    FinalDemo.CLAW_MOTOR.backward();
     try {
       Thread.sleep(2000);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
-    BetaDemo.CLAW_MOTOR.stop();
-    BetaDemo.CLAW_MOTOR.flt();
-    BetaDemo.CLAW_MOTOR.resetTachoCount();
+    FinalDemo.CLAW_MOTOR.stop();
+    FinalDemo.CLAW_MOTOR.flt();
+    FinalDemo.CLAW_MOTOR.resetTachoCount();
     calibrated = true;
   }
 
@@ -42,9 +42,9 @@ public class Claw {
    * Closes the claw
    */
   public void close() {
-    BetaDemo.CLAW_MOTOR.setSpeed(150);
-    BetaDemo.CLAW_MOTOR.rotateTo(CLOSED_ANGLE, false);
-    BetaDemo.CLAW_MOTOR.stop();
+    FinalDemo.CLAW_MOTOR.setSpeed(150);
+    FinalDemo.CLAW_MOTOR.rotateTo(CLOSED_ANGLE, false);
+    FinalDemo.CLAW_MOTOR.stop();
     open = false;
 
   }
@@ -53,8 +53,8 @@ public class Claw {
    * Opens the claw
    */
   public void open() {
-    BetaDemo.CLAW_MOTOR.setSpeed(150);
-    BetaDemo.CLAW_MOTOR.rotateTo(3);
+    FinalDemo.CLAW_MOTOR.setSpeed(150);
+    FinalDemo.CLAW_MOTOR.rotateTo(3);
     open = true;
   }
 
