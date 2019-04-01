@@ -140,17 +140,9 @@ public class FinalDemo {
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();
-    while (true) {
-      CLAW.open();
-      Button.waitForAnyPress();
-      CLAW.close();
-      if (CLAW.isHeavy()) {
-        Sound.twoBeeps();
-      } else {
-        Sound.beepSequenceUp();
-      }
-      if (Button.waitForAnyPress() == Button.ID_ESCAPE) break;
-    }
+    CLAW.close();
+    localize();
+    NAV.turnTo(0);
     System.exit(0);
   }
 
@@ -212,7 +204,7 @@ public class FinalDemo {
   private static void init() throws OdometerExceptions {
     (new Thread(Odometer.getOdometer())).start();
     //GameSettings.init();
-    //NAV.start();
+    NAV.start();
     LEFT_MOTOR.setAcceleration(1200);
     RIGHT_MOTOR.setAcceleration(1200);
   }

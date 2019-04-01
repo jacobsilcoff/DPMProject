@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.testing;
 
+import ca.mcgill.ecse211.demo.FinalDemo;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
@@ -52,6 +53,24 @@ public class WeightTest {
         }
       }
     }).start();
+  }
+  
+  /**
+   * Tests the weight function
+   * Note: init must be called in main class first!
+   */
+  public static void weightTestFinal() {
+    while (true) {
+      FinalDemo.CLAW.open();
+      Button.waitForAnyPress();
+      FinalDemo.CLAW.close();
+      if (FinalDemo.CLAW.isHeavy()) {
+        Sound.twoBeeps();
+      } else {
+        Sound.beepSequenceUp();
+      }
+      if (Button.waitForAnyPress() == Button.ID_ESCAPE) break;
+    }
   }
   
   public static void clawTest() {
