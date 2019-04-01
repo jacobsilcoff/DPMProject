@@ -43,7 +43,7 @@ public class LightLocalizer {
   /**
    * Making this smaller leads to CW rotation
    */
-  private static final double CORRECTION = -17.5;
+  private static final double CORRECTION = -20;
 
   private Odometer odo;
   private AveragedBuffer<Float> samples;
