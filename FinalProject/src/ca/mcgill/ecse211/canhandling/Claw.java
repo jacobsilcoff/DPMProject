@@ -2,39 +2,51 @@ package ca.mcgill.ecse211.canhandling;
 
 import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
+import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.LCD;
+import lejos.hardware.motor.EV3LargeRegulatedMotor;
+import lejos.hardware.motor.UnregulatedMotor;
 
 public class Claw {
+  
+  /**
+   * The claw motor
+   */
+  private static final UnregulatedMotor CLAW_MOTOR =
+      new UnregulatedMotor(LocalEV3.get().getPort("D"));
 
   /**
    * The can classifier used by the Claw
    */
   public static final ColorClassifier CLASSIFIER = new ColorClassifier();
-  public static final int CLOSED_ANGLE = 180;
-  private boolean open;
+  public static final int CLOSED_ANGLE = 170;
+  public static final int CLAW_POWER = 25;
+  public static final int WEIGHT_TIME = 3000;
   private static boolean calibrated = false;
 
+  /*
+   * Weighing variables:
+   */
+  public static final int MOTOR_SPEED = 100;
+  public static final int BACK_DISTANCE = 3;
+  public static final int THRESH_POWER = 15;
+  public static final int LIGHT_ANGLE = 165;
+  
   /**
    * Creates a claw
    */
   public Claw() {
-    open = false;
     if (!calibrated) {
       calibrate();
     }
   }
 
   private void calibrate() {
-    FinalDemo.CLAW_MOTOR.setSpeed(150);
-    FinalDemo.CLAW_MOTOR.backward();
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException ie) {
-      ie.printStackTrace();
-    }
-    FinalDemo.CLAW_MOTOR.stop();
-    FinalDemo.CLAW_MOTOR.flt();
-    FinalDemo.CLAW_MOTOR.resetTachoCount();
+    CLAW_MOTOR.setPower(CLAW_POWER);
+    CLAW_MOTOR.backward();
+    sleep(2000);
+    CLAW_MOTOR.setPower(0);
+    CLAW_MOTOR.resetTachoCount();
     calibrated = true;
   }
 
@@ -42,20 +54,24 @@ public class Claw {
    * Closes the claw
    */
   public void close() {
-    FinalDemo.CLAW_MOTOR.setSpeed(150);
-    FinalDemo.CLAW_MOTOR.rotateTo(CLOSED_ANGLE, false);
-    FinalDemo.CLAW_MOTOR.stop();
-    open = false;
-
+    CLAW_MOTOR.setPower(CLAW_POWER);
+    CLAW_MOTOR.forward();
+    while (CLAW_MOTOR.getTachoCount() < CLOSED_ANGLE) {
+      sleep(30);
+    }
   }
 
   /**
    * Opens the claw
    */
   public void open() {
-    FinalDemo.CLAW_MOTOR.setSpeed(150);
-    FinalDemo.CLAW_MOTOR.rotateTo(3);
-    open = true;
+    CLAW_MOTOR.setPower(CLAW_POWER);
+    CLAW_MOTOR.backward();
+    while (CLAW_MOTOR.getTachoCount() > 3) {
+      sleep(30);
+    }
+    CLAW_MOTOR.setPower(0);
+    CLAW_MOTOR.stop();
   }
 
   /**
@@ -76,20 +92,42 @@ public class Claw {
    * @param nav The navigation used to move the robot for this routine
    * @return true for heavy, else false
    */
-  public boolean isHeavy(Navigation nav) {
+  public boolean isHeavy() {
     open();
-    /*
-     * TODO: Move robot forward a bit, check for button press
-     */
-    //Move backwards 3cm and turn 180 degrees
-    nav.travelTo(nav.getOdo().getXYT()[0],nav.getOdo().getXYT()[1]-3);
-    nav.turnTo(180);
+    moveForward(BACK_DISTANCE);
+    CLAW_MOTOR.setPower(THRESH_POWER);
+    CLAW_MOTOR.forward();
     try {
-      Thread.sleep(500);
+      Thread.sleep(WEIGHT_TIME);
     } catch (InterruptedException ie) {
       ie.printStackTrace();
     }
-    close();
-    return false;
+    return CLAW_MOTOR.getTachoCount() < LIGHT_ANGLE;
+  }
+  
+  /**
+   * Moves the robot forwards (straight) a certain distance, using the odometer.
+   * 
+   * @param dist
+   */
+  private void moveForward(double dist) {
+    FinalDemo.NAV.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
+    double[] start = FinalDemo.NAV.getOdo().getXYT();
+
+    FinalDemo.LEFT_MOTOR.forward();
+    FinalDemo.RIGHT_MOTOR.forward();
+
+    while (Navigation.dist(FinalDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
+      sleep(30);
+    }
+    FinalDemo.NAV.setSpeeds(0, 0);
+  }
+  
+  public void sleep(int amt) {
+    try {
+      Thread.sleep(amt);
+    } catch (InterruptedException e) {
+      
+    }
   }
 }

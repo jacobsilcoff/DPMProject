@@ -33,11 +33,6 @@ public class FinalDemo {
    */
   public static final RegulatedMotor RIGHT_MOTOR =
       MirrorMotor.invertMotor(new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B")));
-  /**
-   * The claw motor
-   */
-  public static final EV3LargeRegulatedMotor CLAW_MOTOR =
-      new EV3LargeRegulatedMotor(LocalEV3.get().getPort("D"));
 
   /**
    * The motor used to spin cans
@@ -145,17 +140,21 @@ public class FinalDemo {
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     init();
-    CLAW.close();
-    resetOdo();
-    OC.start();
-    localize();
-    NAV.turnTo(90);
-    NAV.travelTo(GRID_WIDTH*2, GRID_WIDTH * 2);
-    NAV.waitUntilDone();
+    while (true) {
+      CLAW.open();
+      Button.waitForAnyPress();
+      CLAW.close();
+      if (CLAW.isHeavy()) {
+        Sound.twoBeeps();
+      } else {
+        Sound.beepSequenceUp();
+      }
+      if (Button.waitForAnyPress() == Button.ID_ESCAPE) break;
+    }
     System.exit(0);
   }
-  
-  
+
+
   /** 
    * Runs code associated w/ beta demo
    * @throws OdometerExceptions 
@@ -212,8 +211,8 @@ public class FinalDemo {
    */
   private static void init() throws OdometerExceptions {
     (new Thread(Odometer.getOdometer())).start();
-    GameSettings.init();
-    NAV.start();
+    //GameSettings.init();
+    //NAV.start();
     LEFT_MOTOR.setAcceleration(1200);
     RIGHT_MOTOR.setAcceleration(1200);
   }
@@ -309,7 +308,7 @@ public class FinalDemo {
     NAV.travelTo(1*GRID_WIDTH, 1*GRID_WIDTH);
     NAV.waitUntilDone();
   }
-  
+
   private static void triangleDrive() {
     NAV.travelTo(1*GRID_WIDTH, 5*GRID_WIDTH);
     NAV.waitUntilDone();
