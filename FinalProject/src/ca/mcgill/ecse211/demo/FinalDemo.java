@@ -1,6 +1,5 @@
 package ca.mcgill.ecse211.demo;
 
-import ca.mcgill.ecse211.canhandling.CanColor;
 import ca.mcgill.ecse211.canhandling.Claw;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
@@ -9,13 +8,11 @@ import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import ca.mcgill.ecse211.wifi.GameSettings;
-import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.sensor.EV3ColorSensor;
-import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.MirrorMotor;
@@ -49,10 +46,6 @@ public class FinalDemo {
    */
   public static final SampleProvider LINE_SENSOR;
   /**
-   * The robot's touch sensor to detect heavy cans
-   */
-  public static final SampleProvider TOUCH_SENSOR;
-  /**
    * The robot's front-facing ultrasonic sensor
    */
   public static final SampleProvider US_FRONT;
@@ -79,6 +72,11 @@ public class FinalDemo {
    * The can classifier used by the program
    */
   public static final Claw CLAW = new Claw();
+  
+  /**
+   * The acceleration value for the locomotive motors
+   */
+  public static final int ACCELERATION = 1500;
 
   static {
     @SuppressWarnings("resource")
@@ -92,10 +90,6 @@ public class FinalDemo {
     @SuppressWarnings("resource")
     SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S2"));
     US_FRONT = usSensor.getMode("Distance");
-
-    @SuppressWarnings("resource")
-    SensorModes touchSensorMode = new EV3TouchSensor(LocalEV3.get().getPort("S4"));
-    TOUCH_SENSOR = touchSensorMode.getMode("Touch");
   }
   /**
    * The LCD used to output during the robot's journey
@@ -132,23 +126,41 @@ public class FinalDemo {
   public static final float GRID_WIDTH = 30.48f;
 
   /**
-   * Localizes the robot using US and light,
-   * then moves to a specified search area and searches for cans
+   * The main method 
    * @param args not used
    * @throws OdometerExceptions 
    * @throws InterruptedException
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
+    finalDemo();
+  }
+  
+  /**
+   * Runs the code associated with the final demo
+   */
+  private static void finalDemo() throws OdometerExceptions, InterruptedException{
     init();
     CLAW.close();
+    OC.setOn(false);
     localize();
-    NAV.turnTo(0);
+    Thread.sleep(1000);
+    OC.setOn(true);
+    CanFinder cf = new CanFinder();
+    cf.goToSearchArea();
+    beepNTimes(3);
+    cf.search();
+    OC.setOn(false);
+    cf.grabNextCan();
+    CLAW.classifyAndBeep();
+    OC.setOn(true);
+    cf.dropOffCan();
     System.exit(0);
   }
 
 
   /** 
-   * Runs code associated w/ beta demo
+   * Runs code associated w/ beta demo.
+   * This is kept here in case rerunning the beta demo is desired
    * @throws OdometerExceptions 
    */
   private static void betaDemo() throws OdometerExceptions {
@@ -199,26 +211,58 @@ public class FinalDemo {
   /**
    * Initializes the robot by getting game settings,
    * starting the odometry thread & the nav thread
+   * Also sets the acceleration of the motors
    * @throws OdometerExceptions
    */
   private static void init() throws OdometerExceptions {
     (new Thread(Odometer.getOdometer())).start();
-    //GameSettings.init();
+    GameSettings.init();
     NAV.start();
-    LEFT_MOTOR.setAcceleration(1200);
-    RIGHT_MOTOR.setAcceleration(1200);
+    OC.start();
+    LEFT_MOTOR.setAcceleration(ACCELERATION);
+    RIGHT_MOTOR.setAcceleration(ACCELERATION);
   }
 
   /**
-   * Localizes the robot, and starts the correction when
-   * done
+   * Localizes the robot using ultrasonic and light localization
+   * Automatically updates the position to convey the starting corner
+   * of the robot iff the game settings have been initialized
    * @throws OdometerExceptions
    */
   private static void localize() throws OdometerExceptions {
     (new UltrasonicLocalizer()).run();
     (new LightLocalizer(0,0)).run();
+    beepNTimes(3);
+    NAV.waitUntilDone();
+    NAV.travelTo(GRID_WIDTH, GRID_WIDTH);
+    NAV.waitUntilDone();
+    NAV.turnTo(0);
+    if (GameSettings.initialized) {
+      switch (GameSettings.corner) {
+        case 1:
+          Odometer.getOdometer().setX(14*GRID_WIDTH);
+          Odometer.getOdometer().setTheta(270);
+          break;
+        case 2:
+          Odometer.getOdometer().setX(14*GRID_WIDTH);
+          Odometer.getOdometer().setY(8*GRID_WIDTH);
+          Odometer.getOdometer().setTheta(180);
+          break;
+        case 3:
+          Odometer.getOdometer().setY(8*GRID_WIDTH);
+          Odometer.getOdometer().setTheta(90);
+          break;
+        default:
+          break;
+      }
+    }
   }
 
+  /**
+   * If the robot is known to be at the LL of the search area,
+   * applies light localization
+   * @throws OdometerExceptions
+   */
   private static void lightLocalizeAtSearchLL() throws OdometerExceptions {
     (new LightLocalizer(GameSettings.searchZone.LLx - 1, GameSettings.searchZone.LLy - 1)).run();
   }
@@ -269,6 +313,10 @@ public class FinalDemo {
     return result;
   }
 
+  /**
+   * Beeps n times
+   * @param n the number of times to beep ( :O )
+   */
   public static void beepNTimes(int n) {
     for (int i = 0; i < n; i++) {
       Sound.beep();
@@ -300,7 +348,11 @@ public class FinalDemo {
     NAV.travelTo(1*GRID_WIDTH, 1*GRID_WIDTH);
     NAV.waitUntilDone();
   }
-
+  
+  /**
+   * Drives in a triangle
+   * FOR TESTING
+   */
   private static void triangleDrive() {
     NAV.travelTo(1*GRID_WIDTH, 5*GRID_WIDTH);
     NAV.waitUntilDone();
@@ -326,6 +378,7 @@ public class FinalDemo {
 
   /**
    * Sets the odometer to 1,1,0
+   * This is used to save time on localization
    * @throws OdometerExceptions 
    */
   private static void resetOdo() throws OdometerExceptions {

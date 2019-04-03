@@ -2,9 +2,8 @@ package ca.mcgill.ecse211.canhandling;
 
 import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.lcd.LCD;
-import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.UnregulatedMotor;
 
 public class Claw {
@@ -50,6 +49,36 @@ public class Claw {
     calibrated = true;
   }
 
+  /**
+   * Assuming a can is being currently held,
+   * classifies the can and beeps accordingly
+   */
+  public void classifyAndBeep() {
+    CanColor c = getColor();
+    int time = isHeavy() ? 1000 : 500;
+    close();
+    int numBeeps;
+    switch (c) {
+      case RED:
+        numBeeps = 4;
+        break;
+      case YELLOW:
+        numBeeps = 3;
+        break;
+      case GREEN:
+        numBeeps = 2;
+        break;
+      case BLUE:
+        numBeeps = 1;
+        break;
+      default: 
+        numBeeps = 0;
+    }
+    for (int i = 0; i < numBeeps; i++) {
+        Sound.playTone(440, time);
+        sleep(100);
+    }
+  }
   /**
    * Closes the claw
    */

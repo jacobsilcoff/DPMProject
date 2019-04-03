@@ -1,8 +1,12 @@
 package ca.mcgill.ecse211.wifi;
 
+import java.awt.geom.Point2D;
+import java.awt.geom.Point2D.Double;
 import java.util.Map;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
 import ca.mcgill.ecse211.canhandling.CanColor;
+import ca.mcgill.ecse211.demo.FinalDemo;
+import ca.mcgill.ecse211.odometer.Odometer;
 import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.lcd.LCD;
@@ -14,7 +18,7 @@ import lejos.hardware.lcd.LCD;
 public abstract class GameSettings {
   
   /** Set these as appropriate for your team and current situation **/
-  private static final String SERVER_IP = "192.168.2.8";
+  private static final String SERVER_IP = "192.168.2.38";
   private static final int TEAM_NUMBER = 6;
 
   // Enable/disable printing of debug info from the WiFi class
@@ -69,5 +73,24 @@ public abstract class GameSettings {
       initialized = false;
     }
     initialized = true;
+  }
+  
+  public static Point2D getStartingCornerPoint() {
+    if (GameSettings.initialized) {
+      switch (GameSettings.corner) {
+        case 1:
+          return new Point2D.Double(14*FinalDemo.GRID_WIDTH,
+              FinalDemo.GRID_WIDTH);
+        case 2:
+          return new Point2D.Double(14*FinalDemo.GRID_WIDTH,
+              8*FinalDemo.GRID_WIDTH);
+        case 3:
+          return new Point2D.Double(FinalDemo.GRID_WIDTH,
+              8*FinalDemo.GRID_WIDTH);
+        default:
+          return new Point2D.Double(FinalDemo.GRID_WIDTH, FinalDemo.GRID_WIDTH);
+      }
+    } 
+    return new Point2D.Double(FinalDemo.GRID_WIDTH, FinalDemo.GRID_WIDTH);
   }
 }

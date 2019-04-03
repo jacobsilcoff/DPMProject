@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.demo;
 
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -156,10 +157,11 @@ public class CanFinder implements Runnable {
   /**
    * Transports the robot from the starting zone to 
    * the search area
+   * Must be in the starting area to work 
    */
   public void goToSearchArea() {
     FinalDemo.CLAW.close();
-    if (GameSettings.initialized /*&& !GameSettings.searchZone.contains(odo.getXYT())*/) {
+    if (GameSettings.initialized) {
       if (!GameSettings.island.contains(odo.getXYT())) {
         Sound.buzz();
         //Get to island through tunnel 
@@ -218,11 +220,45 @@ public class CanFinder implements Runnable {
    * the starting area
    */
   public void goToStart() {
-    if (GameSettings.startZone.contains(odo.getXYT()[0], odo.getXYT()[1])) {
-      //Already in start area...
-      return;
+    FinalDemo.CLAW.close();
+    if (GameSettings.initialized) {
+      if (!GameSettings.startZone.contains(odo.getXYT())) {
+        Sound.buzz();
+        //Get to island through tunnel 
+        Rect tunnel = GameSettings.tunnel;
+        Rect start = GameSettings.startZone;
+        Rect island = GameSettings.island;
+        double[] llBlock = {(tunnel.LLx + .5) * GRID_WIDTH, 
+                            (tunnel.LLy + .5) * GRID_WIDTH};
+        double[] urBlock = {(tunnel.URx - .5) * GRID_WIDTH, 
+                            (tunnel.URy - .5) * GRID_WIDTH};
+        double[] N = translate(urBlock, 0, GRID_WIDTH);
+        double[] S = translate(llBlock, 0, -GRID_WIDTH);
+        double[] E = translate(urBlock, GRID_WIDTH, 0);
+        double[] W = translate(llBlock, -GRID_WIDTH, 0);
+        //strictly one of N, S, E, W is contained in start
+        double[] exit = N, entrance = S;
+        if (start.contains(N) && island.contains(S)) {
+          exit = N; entrance = S;
+        } else if (start.contains(S) && island.contains(N)) {
+          exit = S; entrance = N;
+        } else if (start.contains(E) && island.contains(W)) {
+          exit = E; 
+          entrance = W;
+        } else if (start.contains(W) && island.contains(E)){
+          exit = W;
+          entrance = E;
+        }
+        FinalDemo.NAV.travelTo(entrance[0], entrance[1]);
+        FinalDemo.NAV.waitUntilDone();
+        boolean ocOn = FinalDemo.OC.getOn();
+        FinalDemo.OC.setOn(false);
+        FinalDemo.NAV.travelTo(exit[0], exit[1]);
+        FinalDemo.NAV.waitUntilDone();
+        FinalDemo.OC.setOn(ocOn);
+      }
+      FinalDemo.NAV.waitUntilDone();
     }
-    //TODO: Implement
   }
   
   /** 
@@ -263,7 +299,12 @@ public class CanFinder implements Runnable {
    * Drops off a can in the start zone
    */
   public void dropOffCan() {
-    //TODO: Implement
+    goToStart();
+    Point2D startCorner = GameSettings.getStartingCornerPoint();
+    FinalDemo.NAV.travelTo(startCorner.getX(), startCorner.getY());
+    FinalDemo.NAV.waitUntilDone();
+    FinalDemo.NAV.turnTo(odo.getXYT()[2] + 180);
+    ejectCan();
   }
 
   
