@@ -96,9 +96,10 @@ public class LightLocalizer {
     if (!midTravel) {
       FinalDemo.NAV.turnTo(35);
       moveToLine(true);
-      moveBackwards(8);
+      moveBackwards(5);
     }
     FinalDemo.NAV.turnTo(35);
+    moveBackwards(3);
     //Find the 4 intersections
     rotateToLine(false);
     double tYN = odo.getXYT()[2];

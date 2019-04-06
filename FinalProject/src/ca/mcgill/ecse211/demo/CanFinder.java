@@ -231,6 +231,7 @@ public class CanFinder implements Runnable {
       if (!GameSettings.island.contains(odo.getXYT())) {
         //Get to island through tunnel 
         preTunnelLocalize();
+        FinalDemo.NAV.turnTo(0);
         FinalDemo.NAV.travelTo(entrance[0], entrance[1]);
         FinalDemo.NAV.waitUntilDone();
         boolean ocOn = FinalDemo.OC.getOn();
