@@ -5,12 +5,10 @@ import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.LCD;
-import lejos.hardware.motor.BaseRegulatedMotor;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.motor.UnregulatedMotor;
 import lejos.hardware.sensor.EV3TouchSensor;
 import lejos.hardware.sensor.SensorModes;
-import lejos.robotics.MirrorMotor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.SampleProvider;
 
@@ -35,26 +33,7 @@ public class WeightTest {
     clawTest();
   }
   
-  //This was a failure!
-  public static void buttonTest() {
-    (new Thread() {
-      public void run() {
-        float[] sample = new float[TOUCH_SENSOR.sampleSize()];
-        while (true) {
-          TOUCH_SENSOR.fetchSample(sample, 0);
-          if (sample[0] == 1){
-            Sound.beep();
-          }
-          try {
-            sleep(15);
-          } catch(InterruptedException e) {
-            e.printStackTrace();
-          }
-        }
-      }
-    }).start();
-  }
-  
+
   /**
    * Tests the weight function
    * Note: init must be called in main class first!

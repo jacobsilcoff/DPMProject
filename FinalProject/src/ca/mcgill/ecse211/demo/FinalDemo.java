@@ -3,6 +3,7 @@ package ca.mcgill.ecse211.demo;
 import ca.mcgill.ecse211.canhandling.Claw;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
+import ca.mcgill.ecse211.localization.WallLocalizer;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
@@ -21,6 +22,10 @@ import lejos.robotics.SampleProvider;
 
 public class FinalDemo {
   /**
+   * Sets whether or not debug sounds should be played
+   */
+  public static final boolean DEBUG_ON = true;
+  /**
    * The robot's left motor
    */
   public static final RegulatedMotor LEFT_MOTOR = 
@@ -30,13 +35,11 @@ public class FinalDemo {
    */
   public static final RegulatedMotor RIGHT_MOTOR =
       MirrorMotor.invertMotor(new EV3LargeRegulatedMotor(LocalEV3.get().getPort("B")));
-
   /**
    * The motor used to spin cans
    */
   public static final EV3LargeRegulatedMotor CAN_MOTOR =
       new EV3LargeRegulatedMotor(LocalEV3.get().getPort("A"));
-
   /**
    * The robot's color-detecting light sensor
    */
@@ -52,32 +55,29 @@ public class FinalDemo {
   /**
    * Represents the radius of each wheel, in cm
    */
-  public static final double WHEEL_RAD = 2.18;
+  public static final double WHEEL_RAD = 2.05; //was 2.18
   /**
    * Represents the distance between the wheels, in cm
    */
-  public static final double TRACK = 10.33;
+  public static final double TRACK = 9.55;
   /**
    * The offset between the robot turning center and the line sensor in
    * the Y direction, in cm. Note: magnitude only.
    */
-  public static final double LINE_OFFSET_Y = 7.50;
+  public static final double LINE_OFFSET_Y = 7;
   /**
    * The offset between the robot turning center and the line sensor in
    * the X direction, in cm. Note: magnitude only.
    */
   public static final double LINE_OFFSET_X = 5.5;
-
   /**
    * The can classifier used by the program
    */
   public static final Claw CLAW = new Claw();
-  
   /**
    * The acceleration value for the locomotive motors
    */
   public static final int ACCELERATION = 1500;
-
   static {
     @SuppressWarnings("resource")
     SensorModes colorSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S3"));
@@ -95,12 +95,10 @@ public class FinalDemo {
    * The LCD used to output during the robot's journey
    */
   public static final TextLCD LCD = LocalEV3.get().getTextLCD();
-
   /**
    * The Odometry correction system for the robot
    */
   public static final OdometryCorrection OC = getOC();
-
   /**
    * The navigation thread used by the robot
    */
@@ -119,7 +117,6 @@ public class FinalDemo {
       return null;
     }
   }
-
   /**
    * Distance between lines in cm
    */
@@ -133,6 +130,7 @@ public class FinalDemo {
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
     finalDemo();
+    System.exit(0);
   }
   
   /**
@@ -142,8 +140,8 @@ public class FinalDemo {
     init();
     CLAW.close();
     OC.setOn(false);
-    localize();
-    Thread.sleep(1000);
+    localizeWall();
+    NAV.turnTo(0);
     OC.setOn(true);
     CanFinder cf = new CanFinder();
     cf.goToSearchArea();
@@ -154,57 +152,6 @@ public class FinalDemo {
     CLAW.classifyAndBeep();
     OC.setOn(true);
     cf.dropOffCan();
-    System.exit(0);
-  }
-
-
-  /** 
-   * Runs code associated w/ beta demo.
-   * This is kept here in case rerunning the beta demo is desired
-   * @throws OdometerExceptions 
-   */
-  private static void betaDemo() throws OdometerExceptions {
-    init();  
-    CLAW.close();
-    localize(); //Beeping is handled IN LOCALIZATION
-    OC.start();
-    NAV.travelTo(GRID_WIDTH, GRID_WIDTH);
-    NAV.waitUntilDone();
-    NAV.turnTo(0);
-    Sound.beepSequence();
-    CanFinder cf = new CanFinder();
-    cf.goToSearchArea();
-    beepNTimes(5);
-    //We now look for the search area until time is up:
-    int i = 0;
-    while (i < 5) {
-      i++;
-      cf.search();
-      if (cf.hasNextCan()) {
-        cf.grabNextCan();
-      } else {
-        break;
-      }
-
-      if (CLAW.getColor().equals(GameSettings.targetColor)) {
-        beepNTimes(10);
-        break;
-      }
-
-      //Found a can of the wrong color:
-      cf.goToSearchArea();
-      NAV.turnTo(0);
-      cf.ejectCan();
-
-      //OPTIONAL : Light Localize --
-      //lightLocalizeAtSearchLL();
-    }
-    NAV.travelTo(GameSettings.searchZone.URx * GRID_WIDTH, 
-        GameSettings.searchZone.URy * GRID_WIDTH);
-    NAV.waitUntilDone();
-    beepNTimes(5);
-
-
     System.exit(0);
   }
 
@@ -229,42 +176,56 @@ public class FinalDemo {
    * of the robot iff the game settings have been initialized
    * @throws OdometerExceptions
    */
-  private static void localize() throws OdometerExceptions {
+  private static void localizeLight() throws OdometerExceptions {
     (new UltrasonicLocalizer()).run();
     (new LightLocalizer(0,0)).run();
     beepNTimes(3);
     NAV.waitUntilDone();
+    updateCorner();
+  }
+
+  /**
+   * Localizes the robot using ultrasonic and wall localization
+   * Automatically updates the position to convey the starting corner
+   * of the robot iff the game settings have been initialized
+   * @throws OdometerExceptions
+   */
+  private static void localizeWall() throws OdometerExceptions {
+    (new UltrasonicLocalizer()).run();
+    WallLocalizer.run();
     NAV.travelTo(GRID_WIDTH, GRID_WIDTH);
     NAV.waitUntilDone();
-    NAV.turnTo(0);
+    beepNTimes(3);
+    NAV.waitUntilDone();
+    updateCorner();
+  }
+  
+  private static void updateCorner() throws OdometerExceptions {
+    Odometer o = Odometer.getOdometer();
+    double x =  o.getXYT()[0];
+    double y = o.getXYT()[1];
+    double t = o.getXYT()[2];
     if (GameSettings.initialized) {
       switch (GameSettings.corner) {
         case 1:
-          Odometer.getOdometer().setX(14*GRID_WIDTH);
-          Odometer.getOdometer().setTheta(270);
+          o.setX(15*GRID_WIDTH-y);
+          o.setY(x);
+          o.setTheta(t + 270);
           break;
         case 2:
-          Odometer.getOdometer().setX(14*GRID_WIDTH);
-          Odometer.getOdometer().setY(8*GRID_WIDTH);
-          Odometer.getOdometer().setTheta(180);
+          o.setX(15*GRID_WIDTH-x);
+          o.setY(9*GRID_WIDTH-y);
+          o.setTheta(t + 180);
           break;
         case 3:
-          Odometer.getOdometer().setY(8*GRID_WIDTH);
-          Odometer.getOdometer().setTheta(90);
+          o.setX(y);
+          o.setY(9*GRID_WIDTH-x);
+          o.setTheta(t + 90);
           break;
         default:
           break;
       }
     }
-  }
-
-  /**
-   * If the robot is known to be at the LL of the search area,
-   * applies light localization
-   * @throws OdometerExceptions
-   */
-  private static void lightLocalizeAtSearchLL() throws OdometerExceptions {
-    (new LightLocalizer(GameSettings.searchZone.LLx - 1, GameSettings.searchZone.LLy - 1)).run();
   }
 
 
@@ -375,7 +336,7 @@ public class FinalDemo {
       t = (t + 120) % 360;
     }
   }
-
+  
   /**
    * Sets the odometer to 1,1,0
    * This is used to save time on localization

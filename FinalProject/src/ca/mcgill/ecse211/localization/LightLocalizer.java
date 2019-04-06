@@ -3,11 +3,9 @@ package ca.mcgill.ecse211.localization;
 import lejos.hardware.Sound;
 import ca.mcgill.ecse211.demo.AveragedBuffer;
 import ca.mcgill.ecse211.demo.FinalDemo;
-import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import ca.mcgill.ecse211.odometer.OdometryCorrection;
 
 /**
  * This class represents a routine used by the robot
@@ -49,7 +47,7 @@ public class LightLocalizer {
   private AveragedBuffer<Float> samples;
   private int x;
   private int y;
-  private boolean firstTime;
+  private boolean midTravel;
 
 
   /**
@@ -68,17 +66,17 @@ public class LightLocalizer {
     samples = new AveragedBuffer<Float>(100);
     this.x = x;
     this.y = y;
-    firstTime = true;
+    midTravel = true;
   }
   /**
    * Creates a light localizer instance with a navigation thread
    * @param x The x coordinate of the robot's block, from bottom left hand corner
    * @param y The y coordinate of the robot's block, from the bottom left hand corner
-   * @param firstTime Whether or not this is the first time localizing the robot.
+   * @param midTravel Whether or not this is the first time localizing the robot.
    * This is used to determine whether or not the odometer's x and y are reliable
    * @throws OdometerExceptions if there are problems creating the odometer
    */
-  public LightLocalizer(int x, int y, boolean firstTime) throws OdometerExceptions {
+  public LightLocalizer(int x, int y, boolean midTravel) throws OdometerExceptions {
     try {
       odo = Odometer.getOdometer();
     } catch (OdometerExceptions e) {
@@ -88,16 +86,19 @@ public class LightLocalizer {
     samples = new AveragedBuffer<Float>(100);
     this.x = x;
     this.y = y;
-    this.firstTime = firstTime;
+    this.midTravel = true;
   }
 
   /**
    * Starts the localization.
    */
   public void run() {
-    FinalDemo.NAV.turnTo(45);
-    moveToLine(true);
-    moveBackwards(5);
+    if (!midTravel) {
+      FinalDemo.NAV.turnTo(35);
+      moveToLine(true);
+      moveBackwards(8);
+    }
+    FinalDemo.NAV.turnTo(35);
     //Find the 4 intersections
     rotateToLine(false);
     double tYN = odo.getXYT()[2];
@@ -136,7 +137,9 @@ public class LightLocalizer {
     int dir = forwards ? 1 : -1;
     FinalDemo.NAV.setSpeeds(dir * MOTOR_SPEED, dir * MOTOR_SPEED);
     waitUntilLine();
-    Sound.beep(); //found a line
+    if (FinalDemo.DEBUG_ON) {
+      Sound.beep(); //found a line
+    }
     FinalDemo.NAV.setSpeeds(0, 0);
   }
 
@@ -150,7 +153,9 @@ public class LightLocalizer {
     int dir = cw ? 1 : -1;
     FinalDemo.NAV.setSpeeds(dir * MOTOR_SPEED * 0.5f, -dir * MOTOR_SPEED * 0.5f);
     waitUntilLine();
-    Sound.beep(); //found a line
+    if (FinalDemo.DEBUG_ON) {
+      Sound.beep(); //found a line
+    }
     FinalDemo.NAV.setSpeeds(0, 0);
   }
 
@@ -167,7 +172,9 @@ public class LightLocalizer {
       sleep();
     } while (sample[0] > samples.getAvg() - LIGHT_THRESHOLD);
     samples.clear();
-    Sound.beep();
+    if (FinalDemo.DEBUG_ON) {
+      Sound.beep();
+    }
   }
 
   /**
@@ -186,7 +193,7 @@ public class LightLocalizer {
    * 
    * @param dist
    */
-  private void moveBackwards(double dist) {
+  public static void moveBackwards(double dist) {
     FinalDemo.NAV.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
     double[] start = FinalDemo.NAV.getOdo().getXYT();
 

@@ -85,9 +85,15 @@ public class Claw {
   public void close() {
     CLAW_MOTOR.setPower(CLAW_POWER);
     CLAW_MOTOR.forward();
-    while (CLAW_MOTOR.getTachoCount() < CLOSED_ANGLE) {
+    int i = 0;
+    while (CLAW_MOTOR.getTachoCount() < (CLOSED_ANGLE + LIGHT_ANGLE)/2.0) {
       sleep(30);
+      i++;
+      if (i*30 > 2000) {
+        CLAW_MOTOR.setPower(35);
+      }
     }
+    CLAW_MOTOR.setPower(CLAW_POWER);
   }
 
   /**

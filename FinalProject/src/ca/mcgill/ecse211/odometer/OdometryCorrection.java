@@ -35,7 +35,7 @@ public class OdometryCorrection extends Thread {
   private static final float ROUND_LIMIT = 10;
 
   private Odometer odometer;
-  
+
   private boolean on;
 
   /**
@@ -63,7 +63,7 @@ public class OdometryCorrection extends Thread {
     double[] lastPos = null;
     float[] sample = new float[FinalDemo.LINE_SENSOR.sampleSize()];
     AveragedBuffer<Float> samples = new AveragedBuffer<Float>(100);
-    
+
     while (true) {
       correctionStart = System.currentTimeMillis();
       FinalDemo.LINE_SENSOR.fetchSample(sample, 0);
@@ -79,7 +79,7 @@ public class OdometryCorrection extends Thread {
         lastPos = pos;
         lineCount++;
 
-        
+
         double[] sensor = FinalDemo.toSensor(pos);
         if (lineCount != 1) {
           double roundedX = Math.round(sensor[0] / LINE_SPACING) * LINE_SPACING;
@@ -89,20 +89,28 @@ public class OdometryCorrection extends Thread {
             if (Math.abs(sensor[0] - roundedX) < ROUND_LIMIT) {
               sensor[0] = roundedX;
               odometer.setX(FinalDemo.toRobot(sensor)[0]);
-              Sound.beepSequenceUp();
+              if (FinalDemo.DEBUG_ON) {
+                Sound.beepSequenceUp();
+              }
             } else {
               //indicates severe error
-              Sound.buzz();
+              if (FinalDemo.DEBUG_ON) {
+                Sound.buzz();
+              }
             }
           } else {
             // here we round the y position
             if (Math.abs(sensor[1] - roundedY) < ROUND_LIMIT) {
               sensor[1] = roundedY;
               odometer.setY(FinalDemo.toRobot(sensor)[1]);
-              Sound.beepSequenceUp();
+              if (FinalDemo.DEBUG_ON) {
+                Sound.beepSequenceUp();
+              }
             } else {
               //indicates severe error
-              Sound.buzz();
+              if (FinalDemo.DEBUG_ON) {
+                Sound.buzz();
+              }
             }
           }
         }
@@ -131,7 +139,7 @@ public class OdometryCorrection extends Thread {
   public void setOn(boolean t) {
     on = t;
   }
-  
+
   public boolean getOn() {
     return on;
   }

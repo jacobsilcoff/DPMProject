@@ -2,11 +2,8 @@ package ca.mcgill.ecse211.localization;
 import lejos.hardware.Sound;
 import ca.mcgill.ecse211.demo.AveragedBuffer;
 import ca.mcgill.ecse211.demo.FinalDemo;
-import ca.mcgill.ecse211.demo.FinalDemo;
-import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import ca.mcgill.ecse211.odometer.OdometryCorrection;
 
 /**
  * This class represents a routine used by the robot
@@ -91,8 +88,9 @@ public class UltrasonicLocalizer {
     FinalDemo.NAV.setSpeeds(0, 0);// stop
 
     FinalDemo.LCD.drawString("Edge detected", 0, 4);
-    Sound.beep(); //audio notification
-
+    if (FinalDemo.DEBUG_ON) {
+      Sound.beep(); //audio notification
+    }
     FinalDemo.NAV.setSpeeds(0, 0); //stop robot
     return odo.getXYT()[2];
   }
@@ -141,12 +139,13 @@ public class UltrasonicLocalizer {
     double realAngle = (odo.getXYT()[2] - localizeNorth(theta1, theta2) + 360) % 360;
     odo.setXYT(0, 0, realAngle); 
 
+    /*
     // turn to localized North
     FinalDemo.NAV.turnTo(0);
     if (readUS() < DETECTION_DISTANCE) {
       odo.setTheta(180);
     }
-    FinalDemo.NAV.turnTo(0);
+    */
     FinalDemo.NAV.waitUntilDone();
   }
 

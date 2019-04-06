@@ -18,7 +18,7 @@ import lejos.hardware.lcd.LCD;
 public abstract class GameSettings {
   
   /** Set these as appropriate for your team and current situation **/
-  private static final String SERVER_IP = "192.168.2.38";
+  private static final String SERVER_IP = "192.168.2.41";
   private static final int TEAM_NUMBER = 6;
 
   // Enable/disable printing of debug info from the WiFi class
