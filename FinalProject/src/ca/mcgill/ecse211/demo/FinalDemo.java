@@ -14,6 +14,7 @@ import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
 import lejos.hardware.motor.EV3LargeRegulatedMotor;
 import lejos.hardware.sensor.EV3ColorSensor;
+import lejos.hardware.sensor.EV3GyroSensor;
 import lejos.hardware.sensor.EV3UltrasonicSensor;
 import lejos.hardware.sensor.SensorModes;
 import lejos.robotics.MirrorMotor;
@@ -59,7 +60,7 @@ public class FinalDemo {
   /**
    * Represents the distance between the wheels, in cm
    */
-  public static final double TRACK = 9.55;
+  public static final double TRACK = 10.3;
   /**
    * The offset between the robot turning center and the line sensor in
    * the Y direction, in cm. Note: magnitude only.
@@ -78,6 +79,15 @@ public class FinalDemo {
    * The acceleration value for the locomotive motors
    */
   public static final int ACCELERATION = 1500;
+  /**
+   * The port for the gyroscope
+   */
+  public static final EV3GyroSensor GYRO =  new EV3GyroSensor(LocalEV3.get().getPort("S4"));
+  /**
+   * The robots gyroscope sample provider
+   */
+  public static final SampleProvider GYRO_DATA = GYRO.getAngleMode();
+
   static {
     @SuppressWarnings("resource")
     SensorModes colorSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S3"));
@@ -87,7 +97,7 @@ public class FinalDemo {
     SensorModes lineSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S1"));
     LINE_SENSOR = lineSensorMode.getMode("Red");
 
-    @SuppressWarnings("resource")
+    
     SensorModes usSensor = new EV3UltrasonicSensor(LocalEV3.get().getPort("S2"));
     US_FRONT = usSensor.getMode("Distance");
   }
@@ -129,7 +139,11 @@ public class FinalDemo {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-    finalDemo();
+    //finalDemo();
+    init();
+    resetOdo();
+    //rotateX(3);
+    triangleDrive();
     System.exit(0);
   }
   
@@ -163,7 +177,7 @@ public class FinalDemo {
    */
   private static void init() throws OdometerExceptions {
     (new Thread(Odometer.getOdometer())).start();
-    GameSettings.init();
+    //GameSettings.init();
     NAV.start();
     OC.start();
     LEFT_MOTOR.setAcceleration(ACCELERATION);
@@ -178,7 +192,7 @@ public class FinalDemo {
    */
   private static void localizeLight() throws OdometerExceptions {
     (new UltrasonicLocalizer()).run();
-    (new LightLocalizer(0,0)).run();
+    (new LightLocalizer(0,0, false)).run();
     beepNTimes(3);
     NAV.waitUntilDone();
     updateCorner();

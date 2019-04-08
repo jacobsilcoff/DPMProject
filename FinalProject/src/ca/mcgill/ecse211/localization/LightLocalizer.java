@@ -41,7 +41,7 @@ public class LightLocalizer {
   /**
    * Making this smaller leads to CW rotation
    */
-  private static final double CORRECTION = -20;
+  private static final double CORRECTION = -17.6;
 
   private Odometer odo;
   private AveragedBuffer<Float> samples;
@@ -86,7 +86,7 @@ public class LightLocalizer {
     samples = new AveragedBuffer<Float>(100);
     this.x = x;
     this.y = y;
-    this.midTravel = true;
+    this.midTravel = midTravel;
   }
 
   /**
@@ -96,10 +96,9 @@ public class LightLocalizer {
     if (!midTravel) {
       FinalDemo.NAV.turnTo(35);
       moveToLine(true);
-      moveBackwards(5);
+      moveBackwards(8);
     }
     FinalDemo.NAV.turnTo(35);
-    moveBackwards(3);
     //Find the 4 intersections
     rotateToLine(false);
     double tYN = odo.getXYT()[2];

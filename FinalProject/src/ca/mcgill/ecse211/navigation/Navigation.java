@@ -4,6 +4,9 @@ import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
+import lejos.hardware.ev3.LocalEV3;
+import lejos.hardware.sensor.EV3GyroSensor;
+import lejos.robotics.SampleProvider;
 
 
 /**
@@ -46,6 +49,7 @@ public class Navigation extends Thread {
    * Whether or not the OC is on
    */
   private static final boolean OC_ON = true;
+
 
   private boolean isNavigating;
   private Odometer odo;
@@ -180,6 +184,7 @@ public class Navigation extends Thread {
           FinalDemo.LCD.drawString("State: TURN", 0, 6);
           turnTo(destT);
           if (facing(destT)) {
+            FinalDemo.GYRO.reset();
             state = State.TRAVELING;
             lastPos = odo.getXYT();
           }
@@ -378,6 +383,16 @@ public class Navigation extends Thread {
     }
     return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)); // minimum distance
                                                                            // formula
+  }
+  
+  /**
+   * Gets the value of the gyroscope
+   * @return
+   */
+  private static float readGyro() {
+    float[] sample = new float[FinalDemo.GYRO_DATA.sampleSize()];
+    FinalDemo.GYRO_DATA.fetchSample(sample, 0);
+    return sample[0];
   }
 
 }
