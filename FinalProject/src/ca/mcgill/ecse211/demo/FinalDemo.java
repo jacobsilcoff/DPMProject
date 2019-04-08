@@ -139,13 +139,7 @@ public class FinalDemo {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-    //finalDemo();
-    init();
-    resetOdo();
-    //rotateX(3);
-    //NAV.travelTo(GRID_WIDTH, 7*GRID_WIDTH);
-    triangleDrive();
-    NAV.waitUntilDone();
+    finalDemo();
     System.exit(0);
   }
   
@@ -179,7 +173,7 @@ public class FinalDemo {
    */
   private static void init() throws OdometerExceptions {
     (new Thread(Odometer.getOdometer())).start();
-    //GameSettings.init();
+    GameSettings.init();
     NAV.start();
     OC.start();
     LEFT_MOTOR.setAcceleration(ACCELERATION);

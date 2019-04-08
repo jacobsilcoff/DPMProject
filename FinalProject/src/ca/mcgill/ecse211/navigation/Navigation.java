@@ -49,6 +49,10 @@ public class Navigation extends Thread {
    * Whether or not the OC is on
    */
   private static final boolean OC_ON = true;
+  /**
+   * Minimum distance to use the gyroscope
+   */
+  private static final double MIN_GYRO_DIST = FinalDemo.GRID_WIDTH * Math.sqrt(2);
 
 
   private boolean isNavigating;
@@ -187,7 +191,8 @@ public class Navigation extends Thread {
           if (facing(destT)) {
             state = State.TRAVELING;
             lastPos = odo.getXYT();
-            if (!FinalDemo.OC.getGyroOn()) {
+            if (!FinalDemo.OC.getGyroOn() 
+                && dist(lastPos, new double[] {destX,destY}) > MIN_GYRO_DIST) {
               FinalDemo.OC.startGyro();
             }
           }

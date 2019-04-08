@@ -27,8 +27,6 @@ public class CanFinder implements Runnable {
   private Odometer odo;
   private Point nextCan;
   private State state;
-  private final double[] entrance;
-  private final double[] exit;
   public static final float GRID_WIDTH = FinalDemo.GRID_WIDTH;
   public static final int SCAN_SPEED = 50;
   public static final int CAN_STOP_DIST = 15;
@@ -47,9 +45,6 @@ public class CanFinder implements Runnable {
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
-    double[][] t = tunnelEntranceAndExit();
-    entrance = t[0];
-    exit = t[1];
   }
   
   private enum State {
@@ -99,12 +94,13 @@ public class CanFinder implements Runnable {
    * Uses the sideways facing ultrasonic sensor
    */
   public void search() {
-    FinalDemo.NAV.turnTo(90);
-    FinalDemo.NAV.setSpeeds(-SCAN_SPEED, SCAN_SPEED);
+    FinalDemo.NAV.turnTo(GameSettings.searchAngles[0]);
+    FinalDemo.NAV.setSpeeds(SCAN_SPEED, -SCAN_SPEED);
     double minDist = Double.MAX_VALUE;
     double[] minPt = new double[2];
     double minT = -1;
-    while (odo.getXYT()[2] > 0.5 && odo.getXYT()[2] < 180) {
+    while (odo.getXYT()[2] < GameSettings.searchAngles[1] 
+        && odo.getXYT()[2] + 2 >= GameSettings.searchAngles[0]) {
       float dist = readUS();
       double t = (odo.getXYT()[2] - Math.toDegrees(CAN_RAD/dist) + 360) % 360;
       double[] pt = pointFromDist(dist, t);
@@ -158,67 +154,8 @@ public class CanFinder implements Runnable {
     return pt;
   }
   
-  /**
-   * Returns an array of the form 
-   * {{x1,y1},{x2,y2}}
-   * where (x1,y1) is the start side of the tunnel
-   * and x2,y2 is the island side of the tunnel
-   * @return the entrance & exit to the tunnel
-   */
-  private static double[][] tunnelEntranceAndExit() {
-    Rect tunnel = GameSettings.tunnel;
-    Rect start = GameSettings.startZone;
-    Rect island = GameSettings.island;
-    double[] llBlock = {(tunnel.LLx + .5) * GRID_WIDTH, 
-                        (tunnel.LLy + .5) * GRID_WIDTH};
-    double[] urBlock = {(tunnel.URx - .5) * GRID_WIDTH, 
-                        (tunnel.URy - .5) * GRID_WIDTH};
-    double[] N = translate(urBlock, 0, GRID_WIDTH);
-    double[] S = translate(llBlock, 0, -GRID_WIDTH);
-    double[] E = translate(urBlock, GRID_WIDTH, 0);
-    double[] W = translate(llBlock, -GRID_WIDTH, 0);
-    //strictly one of N, S, E, W is contained in start
-    double[] entrance = N, exit = S;
-    if (start.contains(N) && island.contains(S)) {
-      entrance = N; exit = S;
-    } else if (start.contains(S) && island.contains(N)) {
-      entrance = S; exit = N;
-    } else if (start.contains(E) && island.contains(W)) {
-      entrance = E; 
-      exit = W;
-    } else if (start.contains(W) && island.contains(E)){
-      entrance = W;
-      exit = E;
-    }
-    return new double[][] {entrance,exit};
-  }
   
-  /**
-   * Finds a safe point for light localization
-   * outside the tunnel.
-   * @return A point of the form {x1,y1}
-   */
-  public double[] safeLightLocalizationPoint() {
-    Rect start = GameSettings.startZone;
-    double g = FinalDemo.GRID_WIDTH;
-    double[] bestPoint = {g,g};
-    double bestDist = Navigation.dist(bestPoint, entrance);
-    for (int x = 1; x < start.URx; x++) {
-      for (int y = 1; y < start.URy; y++) {
-        if (start.contains((x-.5)*g, (y-.5)*g) &&
-            start.contains((x+.5)*g, (y-.5)*g) &&
-            start.contains((x-.5)*g, (y+.5)*g) &&
-            start.contains((x+.5)*g, (y+.5)*g)) {
-          double dist = Navigation.dist(entrance, new double[] {x*g,y*g});
-          if (dist < bestDist) {
-            bestDist = dist;
-            bestPoint = new double[] {x*g,y*g};
-          }
-        }
-      }
-    }
-    return bestPoint;
-  }
+  
   
   /**
    * Transports the robot from the starting zone to 
@@ -232,17 +169,17 @@ public class CanFinder implements Runnable {
         //Get to island through tunnel 
         preTunnelLocalize();
         FinalDemo.NAV.turnTo(0);
-        FinalDemo.NAV.travelTo(entrance[0], entrance[1]);
+        FinalDemo.NAV.travelTo(GameSettings.tunnelEntrance[0], GameSettings.tunnelEntrance[1]);
         FinalDemo.NAV.waitUntilDone();
         boolean ocOn = FinalDemo.OC.getOn();
         FinalDemo.OC.setOn(false);
-        FinalDemo.NAV.travelTo(exit[0], exit[1]);
+        FinalDemo.NAV.travelTo(GameSettings.tunnelExit[0], GameSettings.tunnelExit[1]);
         FinalDemo.NAV.waitUntilDone();
         FinalDemo.OC.setOn(ocOn);
       }
       //Get to search area from island
-      FinalDemo.NAV.travelTo(GameSettings.searchZone.LLx * GRID_WIDTH, 
-                            GameSettings.searchZone.LLy * GRID_WIDTH);
+      FinalDemo.NAV.travelTo(GameSettings.startSearch[0] * GRID_WIDTH, 
+                            GameSettings.startSearch[1] * GRID_WIDTH);
       FinalDemo.NAV.waitUntilDone();
     }
   }
@@ -251,7 +188,7 @@ public class CanFinder implements Runnable {
    * Localizes the robot before traveling through the tunnel
    */
   private void preTunnelLocalize() {
-    double[] locPoint = safeLightLocalizationPoint();
+    double[] locPoint = GameSettings.safeLoc;
     FinalDemo.NAV.travelTo(locPoint[0],locPoint[1]);
     FinalDemo.NAV.waitUntilDone();
     try {
@@ -265,17 +202,6 @@ public class CanFinder implements Runnable {
   }
   
   /**
-   * Modifies a point by adding x and y
-   * @param pt the original point
-   * @param x the translation x amt
-   * @param y the translation yamt
-   * @return the translated point
-   */
-  private static double[] translate(double[] pt, double x, double y) {
-    return new double[] {pt[0] + x, pt[1] + y};
-  }
-  
-  /**
    * Transports the robot from the search zone to
    * the starting area
    */
@@ -285,11 +211,11 @@ public class CanFinder implements Runnable {
       if (!GameSettings.startZone.contains(odo.getXYT())) {
         Sound.buzz();
         //Get to island through tunnel 
-        FinalDemo.NAV.travelTo(exit[0], exit[1]);
+        FinalDemo.NAV.travelTo(GameSettings.tunnelExit[0], GameSettings.tunnelExit[1]);
         FinalDemo.NAV.waitUntilDone();
         boolean ocOn = FinalDemo.OC.getOn();
         FinalDemo.OC.setOn(false);
-        FinalDemo.NAV.travelTo(entrance[0], entrance[1]);
+        FinalDemo.NAV.travelTo(GameSettings.tunnelEntrance[0], GameSettings.tunnelEntrance[1]);
         FinalDemo.NAV.waitUntilDone();
         FinalDemo.OC.setOn(ocOn);
       }

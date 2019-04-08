@@ -1,14 +1,11 @@
 package ca.mcgill.ecse211.wifi;
 
 import java.awt.geom.Point2D;
-import java.awt.geom.Point2D.Double;
 import java.util.Map;
 import ca.mcgill.ecse211.WiFiClient.WifiConnection;
 import ca.mcgill.ecse211.canhandling.CanColor;
 import ca.mcgill.ecse211.demo.FinalDemo;
-import ca.mcgill.ecse211.odometer.Odometer;
-import lejos.hardware.Button;
-import lejos.hardware.Sound;
+import ca.mcgill.ecse211.navigation.Navigation;
 import lejos.hardware.lcd.LCD;
 
 /**
@@ -32,6 +29,11 @@ public abstract class GameSettings {
   public static Rect searchZone = null;
   public static Rect tunnel = null;
   public static CanColor targetColor = CanColor.BLUE;
+  public static double[] tunnelEntrance;
+  public static double[] tunnelExit;
+  public static double[] safeLoc;
+  public static double[] startSearch;
+  public static double[] searchAngles;
   
   /**
    * Communicates with the server to get access to game information
@@ -68,11 +70,18 @@ public abstract class GameSettings {
       island = new Rect("Island", data);
       tunnel = new Rect("TN" + colorAbrv , data);
       searchZone = new Rect("SZ" + colorAbrv, data);
+
+      double[][] entranceAndExit = tunnelEntranceAndExit();
+      tunnelEntrance = entranceAndExit[0];
+      tunnelExit = entranceAndExit[1];
+      safeLoc = safeLightLocalizationPoint();
+      setSearchParams();
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
       initialized = false;
     }
     initialized = true;
+    
   }
   
   public static Point2D getStartingCornerPoint() {
@@ -92,5 +101,104 @@ public abstract class GameSettings {
       }
     } 
     return new Point2D.Double(FinalDemo.GRID_WIDTH, FinalDemo.GRID_WIDTH);
+  }
+  
+  /**
+   * Finds a safe point for light localization
+   * outside the tunnel.
+   * @return A point of the form {x1,y1}
+   */
+  private static double[] safeLightLocalizationPoint() {
+    double g = FinalDemo.GRID_WIDTH;
+    double[] bestPoint = {g,g};
+    double bestDist = Navigation.dist(bestPoint, tunnelEntrance);
+    for (int x = 1; x < startZone.URx; x++) {
+      for (int y = 1; y < startZone.URy; y++) {
+        if (startZone.contains((x-.5)*g, (y-.5)*g) &&
+            startZone.contains((x+.5)*g, (y-.5)*g) &&
+            startZone.contains((x-.5)*g, (y+.5)*g) &&
+            startZone.contains((x+.5)*g, (y+.5)*g)) {
+          double dist = Navigation.dist(tunnelEntrance, new double[] {x*g,y*g});
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestPoint = new double[] {x*g,y*g};
+          }
+        }
+      }
+    }
+    return bestPoint;
+  }
+  
+  /**
+   * Returns an array of the form 
+   * {{x1,y1},{x2,y2}}
+   * where (x1,y1) is the start side of the tunnel
+   * and x2,y2 is the island side of the tunnel
+   * @return the entrance & exit to the tunnel
+   */
+  private static double[][] tunnelEntranceAndExit() {
+    Rect tunnel = GameSettings.tunnel;
+    Rect startZone = GameSettings.startZone;
+    Rect island = GameSettings.island;
+    double[] llBlock = {(tunnel.LLx + .5) * FinalDemo.GRID_WIDTH, 
+                        (tunnel.LLy + .5) * FinalDemo.GRID_WIDTH};
+    double[] urBlock = {(tunnel.URx - .5) * FinalDemo.GRID_WIDTH, 
+                        (tunnel.URy - .5) * FinalDemo.GRID_WIDTH};
+    double[] N = translate(urBlock, 0, FinalDemo.GRID_WIDTH);
+    double[] S = translate(llBlock, 0, -FinalDemo.GRID_WIDTH);
+    double[] E = translate(urBlock,FinalDemo.GRID_WIDTH, 0);
+    double[] W = translate(llBlock, -FinalDemo.GRID_WIDTH, 0);
+    //strictly one of N, S, E, W is contained in start
+    double[] entrance = N, exit = S;
+    if (startZone.contains(N) && island.contains(S)) {
+      entrance = N; exit = S;
+    } else if (startZone.contains(S) && island.contains(N)) {
+      entrance = S; exit = N;
+    } else if (startZone.contains(E) && island.contains(W)) {
+      entrance = E; 
+      exit = W;
+    } else if (startZone.contains(W) && island.contains(E)){
+      entrance = W;
+      exit = E;
+    }
+    return new double[][] {entrance,exit};
+  }
+  
+  /**
+   * Modifies a point by adding x and y
+   * @param pt the original point
+   * @param x the translation x amt
+   * @param y the translation yamt
+   * @return the translated point
+   */
+  private static double[] translate(double[] pt, double x, double y) {
+    return new double[] {pt[0] + x, pt[1] + y};
+  }
+  
+  /**
+   * Sets up the data needed to safely search w/o hitting cans
+   */
+  private static void setSearchParams() {
+    double[][] opts = {{searchZone.LLx, searchZone.LLy},
+                       {searchZone.URx, searchZone.LLy},
+                       {searchZone.URx, searchZone.URy},
+                       {searchZone.LLx, searchZone.URy}};
+    double[][] angles = {{0, 90},
+                         {270, 360},
+                         {180, 270},
+                         {90, 180}};
+    startSearch = opts[0];
+    int bestInd = 0;
+    double bestDist = Double.MAX_VALUE;
+    for (int i = 0; i < 4; i++) {
+      double d = Point2D.distance(opts[i][0], opts[i][1], tunnelExit[0], tunnelExit[1]);
+      if ((d < bestDist) && opts[i][0] > 0 && opts[i][0] < 15
+          && opts[i][1] > 0 && opts[i][1] < 9) {
+        bestInd = i;
+        bestDist = d;
+      }
+    }
+    startSearch = opts[bestInd];
+    searchAngles = angles[bestInd];
   }
 }
