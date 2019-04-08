@@ -143,7 +143,9 @@ public class FinalDemo {
     init();
     resetOdo();
     //rotateX(3);
+    //NAV.travelTo(GRID_WIDTH, 7*GRID_WIDTH);
     triangleDrive();
+    NAV.waitUntilDone();
     System.exit(0);
   }
   

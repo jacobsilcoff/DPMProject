@@ -77,10 +77,11 @@ public class Navigation extends Thread {
    * @param y The desired y in cm
    */
   public void travelTo(double x, double y) {
-    destX = x ; 
+    destX = x ;
     destY = y; // convert Y tile pt
     updateT();
     isNavigating = true;
+    FinalDemo.OC.stopGyro();
     FinalDemo.LCD.drawString("Dest:" + (int) destX + "," + (int) destY + "," + (int) destT, 0, 4);
   }
 
@@ -184,9 +185,11 @@ public class Navigation extends Thread {
           FinalDemo.LCD.drawString("State: TURN", 0, 6);
           turnTo(destT);
           if (facing(destT)) {
-            FinalDemo.GYRO.reset();
             state = State.TRAVELING;
             lastPos = odo.getXYT();
+            if (!FinalDemo.OC.getGyroOn()) {
+              FinalDemo.OC.startGyro();
+            }
           }
           break;
         case TRAVELING:
@@ -203,6 +206,7 @@ public class Navigation extends Thread {
             setSpeeds(0, 0); // stop
             isNavigating = false; // finished traveling
             state = State.INIT; // return to initialize case
+            FinalDemo.OC.stopGyro();
           }
           break;
       }
@@ -385,14 +389,6 @@ public class Navigation extends Thread {
                                                                            // formula
   }
   
-  /**
-   * Gets the value of the gyroscope
-   * @return
-   */
-  private static float readGyro() {
-    float[] sample = new float[FinalDemo.GYRO_DATA.sampleSize()];
-    FinalDemo.GYRO_DATA.fetchSample(sample, 0);
-    return sample[0];
-  }
+
 
 }

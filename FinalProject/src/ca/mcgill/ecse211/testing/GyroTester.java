@@ -1,6 +1,7 @@
 package ca.mcgill.ecse211.testing;
 
 import lejos.hardware.Button;
+import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.LCD;
 import lejos.hardware.sensor.EV3GyroSensor;
@@ -16,8 +17,8 @@ public class GyroTester {
    */
   public static final SampleProvider GYRO_DATA = GYRO.getAngleMode();
 
-  public static void main(String[] args) {
-    (new Thread() {
+  public static void main(String[] args) throws InterruptedException {
+    class TestThread extends Thread {
       public void run() {
         GYRO.reset();
         while (true) {
@@ -31,7 +32,18 @@ public class GyroTester {
           }
         }
       }
-    }).start();
+      
+      public void otherMethod() throws InterruptedException{
+        Sound.beep();
+        sleep(10000);
+      }
+    }
+    
+    TestThread t = new TestThread();
+    t.start();
+    
+    t.otherMethod();
+    Sound.beepSequenceUp();
     
     while (true) {
       int b = Button.waitForAnyPress();

@@ -36,7 +36,9 @@ public class OdometryCorrection extends Thread {
 
   private Odometer odometer;
 
-  private boolean on;
+  private boolean lightOn;
+  private boolean gyroOn;
+  private double startAngle;
 
   /**
    * This is the default class constructor. An existing instance of the odometer is used to ensure
@@ -46,7 +48,8 @@ public class OdometryCorrection extends Thread {
    */
   public OdometryCorrection() throws OdometerExceptions {
     this.odometer = Odometer.getOdometer();
-    on = false;
+    lightOn = false;
+    gyroOn = false;
   }
 
   /**
@@ -65,15 +68,31 @@ public class OdometryCorrection extends Thread {
     AveragedBuffer<Float> samples = new AveragedBuffer<Float>(100);
 
     while (true) {
-      correctionStart = System.currentTimeMillis();
-      FinalDemo.LINE_SENSOR.fetchSample(sample, 0);
       double[] pos = odometer.getXYT(); // current odo-position
+      correctionStart = System.currentTimeMillis();
+      /*
+       * -----------------
+       * GYRO CORRECTION:
+       * -----------------
+       */
+      if (gyroOn) {
+        //Only using gyro -- nothing else
+        double gT = readGyro();
+        odometer.setTheta(startAngle - gT);
+      }
+      
+      /*
+       * -----------------
+       * LIGHT CORRECTION:
+       * -----------------
+       */
+      FinalDemo.LINE_SENSOR.fetchSample(sample, 0);
 
       /*
        * To avoid a single line triggering this many times, verify that either we haven't seen a
        * line yet at all (lastPos == null) or we're sufficiently far from the last line.
        */
-      if (on && (sample[0] < samples.getAvg() - LIGHT_THRESHOLD
+      if (lightOn && (sample[0] < samples.getAvg() - LIGHT_THRESHOLD
           && (lastPos == null || dist(pos, lastPos) > DIST_THRESHOLD))) {
         // update last pos of line detected
         lastPos = pos;
@@ -137,13 +156,29 @@ public class OdometryCorrection extends Thread {
    * @param value True turns the correction on, false is off
    */
   public void setOn(boolean t) {
-    on = t;
+    lightOn = t;
   }
 
   public boolean getOn() {
-    return on;
+    return lightOn;
   }
 
+  public void startGyro() {
+    FinalDemo.GYRO.reset();
+    while (readGyro() != 0) {
+      try {
+        sleep(30);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
+      }
+    }
+    gyroOn = true;
+    startAngle = odometer.getXYT()[2];
+  }
+  
+  public void stopGyro() {
+    gyroOn = false;
+  }
 
   /**
    * Calculates distance between two positions
@@ -157,5 +192,24 @@ public class OdometryCorrection extends Thread {
       return -1;
     }
     return Math.sqrt(Math.pow(a[0] - b[0], 2) + Math.pow(a[1] - b[1], 2)); // fixed distance formula
+  }
+  
+  /**
+   * Gets the value of the gyroscope
+   * @return
+   */
+  private static float readGyro() {
+    float[] sample = new float[FinalDemo.GYRO_DATA.sampleSize()];
+    FinalDemo.GYRO_DATA.fetchSample(sample, 0);
+    return sample[0];
+  }
+  
+  /**
+   * Returns whether or not the 
+   * gyroscope has been calibrated
+   * @return
+   */
+  public boolean getGyroOn() {
+    return gyroOn;
   }
 }
