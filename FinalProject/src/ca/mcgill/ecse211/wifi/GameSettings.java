@@ -112,12 +112,16 @@ public abstract class GameSettings {
     double g = FinalDemo.GRID_WIDTH;
     double[] bestPoint = {g,g};
     double bestDist = Navigation.dist(bestPoint, tunnelEntrance);
-    for (int x = 1; x < startZone.URx; x++) {
-      for (int y = 1; y < startZone.URy; y++) {
+    for (int x = startZone.LLx; x < startZone.URx; x++) {
+      for (int y = startZone.LLy; y < startZone.URy; y++) {
         if (startZone.contains((x-.5)*g, (y-.5)*g) &&
             startZone.contains((x+.5)*g, (y-.5)*g) &&
             startZone.contains((x-.5)*g, (y+.5)*g) &&
-            startZone.contains((x+.5)*g, (y+.5)*g)) {
+            startZone.contains((x+.5)*g, (y+.5)*g) &&
+            !tunnel.contains((x-.5)*g, (y-.5)*g) &&
+            !tunnel.contains((x+.5)*g, (y-.5)*g) &&
+            !tunnel.contains((x-.5)*g, (y+.5)*g) &&
+            !tunnel.contains((x+.5)*g, (y+.5)*g)) {
           double dist = Navigation.dist(tunnelEntrance, new double[] {x*g,y*g});
           if (dist < bestDist) {
             bestDist = dist;

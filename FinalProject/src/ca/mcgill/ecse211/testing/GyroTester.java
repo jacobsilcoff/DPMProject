@@ -42,9 +42,6 @@ public class GyroTester {
     TestThread t = new TestThread();
     t.start();
     
-    t.otherMethod();
-    Sound.beepSequenceUp();
-    
     while (true) {
       int b = Button.waitForAnyPress();
       if (b == Button.ID_ESCAPE) {

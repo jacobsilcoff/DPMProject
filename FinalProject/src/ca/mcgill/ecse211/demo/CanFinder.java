@@ -62,7 +62,7 @@ public class CanFinder implements Runnable {
           state = State.NAV_TO_SEARCH;
           break;
         case NAV_TO_SEARCH:
-          goToSearchArea();
+          goToSearchArea(false);
           if (GameSettings.searchZone.contains(odo.getXYT()[0], odo.getXYT()[1])) {
             state = State.FIND_CAN;
           }
@@ -161,13 +161,16 @@ public class CanFinder implements Runnable {
    * Transports the robot from the starting zone to 
    * the search area
    * Must be in the starting area to work 
+   * @param localize whether or not to localize outside the tunnel
    */
-  public void goToSearchArea() {
+  public void goToSearchArea(boolean localize) {
     FinalDemo.CLAW.close();
     if (GameSettings.initialized) {
       if (!GameSettings.island.contains(odo.getXYT())) {
         //Get to island through tunnel 
-        preTunnelLocalize();
+        if (localize) {
+          preTunnelLocalize();
+        }
         FinalDemo.NAV.turnTo(0);
         FinalDemo.NAV.travelTo(GameSettings.tunnelEntrance[0], GameSettings.tunnelEntrance[1]);
         FinalDemo.NAV.waitUntilDone();
@@ -192,9 +195,9 @@ public class CanFinder implements Runnable {
     FinalDemo.NAV.travelTo(locPoint[0],locPoint[1]);
     FinalDemo.NAV.waitUntilDone();
     try {
-      (new LightLocalizer((int) Math.round(locPoint[0]/FinalDemo.GRID_WIDTH - 1),
-                         (int) Math.round(locPoint[1]/FinalDemo.GRID_WIDTH -1)))
+      (new LightLocalizer(locPoint[0],locPoint[1]))
       .run();
+      FinalDemo.NAV.turnTo(0);
     } catch (OdometerExceptions e) {
       e.printStackTrace();
     }
@@ -265,7 +268,19 @@ public class CanFinder implements Runnable {
     Point2D startCorner = GameSettings.getStartingCornerPoint();
     FinalDemo.NAV.travelTo(startCorner.getX(), startCorner.getY());
     FinalDemo.NAV.waitUntilDone();
-    FinalDemo.NAV.turnTo(odo.getXYT()[2] + 180);
+    switch (GameSettings.corner) {
+      case 0:
+        FinalDemo.NAV.turnTo(45);
+        break;
+      case 1:
+        FinalDemo.NAV.turnTo(270+45);
+        break;
+      case 2:
+        FinalDemo.NAV.turnTo(180+45);
+        break;
+      case 3:
+        FinalDemo.NAV.turnTo(90+45);
+    }
     ejectCan();
   }
 
@@ -367,6 +382,6 @@ public class CanFinder implements Runnable {
     FinalDemo.CLAW.open();
     moveForward(15);
     FinalDemo.CLAW.close();
-    moveBackward(15);
+    moveBackward(20);
   }
 }

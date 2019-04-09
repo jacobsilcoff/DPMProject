@@ -1,5 +1,6 @@
 package ca.mcgill.ecse211.demo;
 
+import java.awt.geom.Point2D;
 import ca.mcgill.ecse211.canhandling.Claw;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.localization.UltrasonicLocalizer;
@@ -9,6 +10,7 @@ import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import ca.mcgill.ecse211.wifi.GameSettings;
+import lejos.hardware.Button;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.lcd.TextLCD;
@@ -151,17 +153,25 @@ public class FinalDemo {
     CLAW.close();
     OC.setOn(false);
     localizeWall();
-    NAV.turnTo(0);
     OC.setOn(true);
     CanFinder cf = new CanFinder();
-    cf.goToSearchArea();
-    beepNTimes(3);
-    cf.search();
-    OC.setOn(false);
-    cf.grabNextCan();
-    CLAW.classifyAndBeep();
-    OC.setOn(true);
-    cf.dropOffCan();
+    int i = 0;
+    while (i < 5) {
+      cf.goToSearchArea(true);
+      beepNTimes(3);
+      cf.search();
+      OC.setOn(false);
+      cf.grabNextCan();
+      CLAW.classifyAndBeep();
+      OC.setOn(true);
+      cf.dropOffCan();
+      Point2D startCorner = GameSettings.getStartingCornerPoint();
+      NAV.travelTo(startCorner.getX(), startCorner.getY());
+      NAV.waitUntilDone();
+      (new LightLocalizer(startCorner.getX(),
+                          startCorner.getY())).run();
+      i++;
+    }
     System.exit(0);
   }
 
@@ -188,7 +198,7 @@ public class FinalDemo {
    */
   private static void localizeLight() throws OdometerExceptions {
     (new UltrasonicLocalizer()).run();
-    (new LightLocalizer(0,0, false)).run();
+    (new LightLocalizer(GRID_WIDTH,GRID_WIDTH, false)).run();
     beepNTimes(3);
     NAV.waitUntilDone();
     updateCorner();

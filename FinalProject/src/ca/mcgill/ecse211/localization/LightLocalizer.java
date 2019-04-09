@@ -41,22 +41,22 @@ public class LightLocalizer {
   /**
    * Making this smaller leads to CW rotation
    */
-  private static final double CORRECTION = -17.6;
+  private static final double CORRECTION = -14;//smaller for cw
 
   private Odometer odo;
   private AveragedBuffer<Float> samples;
-  private int x;
-  private int y;
+  private double x;
+  private double y;
   private boolean midTravel;
 
 
   /**
    * Creates a light localizer instance with a navigation thread
-   * @param x The x coordinate of the robot's block, from bottom left hand corner
-   * @param y The y coordinate of the robot's block, from the bottom left hand corner
+   * @param x The x coordinate of the cross around which localization occurs
+   * @param y The y coordinate of the cross around which localization occurs
    * @throws OdometerExceptions if there are problems creating the odometer
    */
-  public LightLocalizer(int x, int y) throws OdometerExceptions {
+  public LightLocalizer(double x, double y) throws OdometerExceptions {
     try {
       odo = Odometer.getOdometer();
     } catch (OdometerExceptions e) {
@@ -70,13 +70,13 @@ public class LightLocalizer {
   }
   /**
    * Creates a light localizer instance with a navigation thread
-   * @param x The x coordinate of the robot's block, from bottom left hand corner
-   * @param y The y coordinate of the robot's block, from the bottom left hand corner
+   * @param x The x coordinate of the cross around which localization occurs
+   * @param y The y coordinate of the cross around which localization occurs
    * @param midTravel Whether or not this is the first time localizing the robot.
    * This is used to determine whether or not the odometer's x and y are reliable
    * @throws OdometerExceptions if there are problems creating the odometer
    */
-  public LightLocalizer(int x, int y, boolean midTravel) throws OdometerExceptions {
+  public LightLocalizer(double x, double y, boolean midTravel) throws OdometerExceptions {
     try {
       odo = Odometer.getOdometer();
     } catch (OdometerExceptions e) {
@@ -112,16 +112,14 @@ public class LightLocalizer {
     //calculates & updates values
     double d = Math.sqrt(Math.pow(FinalDemo.LINE_OFFSET_X,2) + Math.pow(FinalDemo.LINE_OFFSET_Y, 2));
     double tS = Math.toDegrees(Math.atan(FinalDemo.LINE_OFFSET_X / FinalDemo.LINE_OFFSET_Y));
-    double tY = Math.abs(tYN - tYP);
-    tY = tY > 180 ? 360 - tY : tY; 
-    double tX = Math.abs(tXN - tXP);
-    tX = tX > 180 ? 360 - tX : tX;
-    odo.setX(FinalDemo.GRID_WIDTH * (x+1) 
-        - d * Math.cos(Math.toRadians(tY/2)));
-    odo.setY(FinalDemo.GRID_WIDTH * (y+1)
-        - d * Math.cos(Math.toRadians(tX/2)));
-    double odo270 = (tY/2.0 + tS + tYP + 360) % 360; //what the odometer reads when the robot is at 270
-    double odo180 = (tX/2.0 + tS + tXN + 360) % 360; //what the odometer reads when the robot is at 180
+    double tY = (tYN > tYP) ? (tYN - tYP) : (tYN + 360 - tYP);
+    double tX = (tXP > tXN) ? (tXP - tXN) : (tXP + 360 - tXN);
+    odo.setX(x - d * Math.cos(Math.toRadians(tY/2)));
+    odo.setY(y - d * Math.cos(Math.toRadians(tX/2)));
+    //FROM THE Y POINTS:
+    double odo180 = (tXP - tX/2.0 + tS + 360) % 360;
+    double odo270 =  (tYN - tY/2.0 + tS + 360) % 360;
+    //FROM THE X POINTS:
     double err180 = (180 - odo180 + 360) % 360;
     double err270 = (270 - odo270 + 360) % 360;
     double avgError = (err180 + err270) / 2;
