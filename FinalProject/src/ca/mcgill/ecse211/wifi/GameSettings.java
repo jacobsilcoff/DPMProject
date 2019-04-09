@@ -31,7 +31,8 @@ public abstract class GameSettings {
   public static CanColor targetColor = CanColor.BLUE;
   public static double[] tunnelEntrance;
   public static double[] tunnelExit;
-  public static double[] safeLoc;
+  public static double[] safeLocStart;
+  public static double[] safeLocIsland;
   public static double[] startSearch;
   public static double[] searchAngles;
   
@@ -74,7 +75,8 @@ public abstract class GameSettings {
       double[][] entranceAndExit = tunnelEntranceAndExit();
       tunnelEntrance = entranceAndExit[0];
       tunnelExit = entranceAndExit[1];
-      safeLoc = safeLightLocalizationPoint();
+      safeLocStart = safeLightLocalizationPointStart();
+      safeLocIsland = safeLightLocalizationPointIsland();
       setSearchParams();
     } catch (Exception e) {
       System.err.println("Error: " + e.getMessage());
@@ -108,7 +110,7 @@ public abstract class GameSettings {
    * outside the tunnel.
    * @return A point of the form {x1,y1}
    */
-  private static double[] safeLightLocalizationPoint() {
+  private static double[] safeLightLocalizationPointStart() {
     double g = FinalDemo.GRID_WIDTH;
     double[] bestPoint = {g,g};
     double bestDist = Navigation.dist(bestPoint, tunnelEntrance);
@@ -123,6 +125,36 @@ public abstract class GameSettings {
             !tunnel.contains((x-.5)*g, (y+.5)*g) &&
             !tunnel.contains((x+.5)*g, (y+.5)*g)) {
           double dist = Navigation.dist(tunnelEntrance, new double[] {x*g,y*g});
+          if (dist < bestDist) {
+            bestDist = dist;
+            bestPoint = new double[] {x*g,y*g};
+          }
+        }
+      }
+    }
+    return bestPoint;
+  }
+  
+  /**
+   * Finds a safe point for light localization
+   * before going back through the tunnel.
+   * @return A point of the form {x1,y1}
+   */
+  private static double[] safeLightLocalizationPointIsland() {
+    double g = FinalDemo.GRID_WIDTH;
+    double[] bestPoint = {g,g};
+    double bestDist = Navigation.dist(bestPoint, tunnelExit);
+    for (int x = island.LLx; x < island.URx; x++) {
+      for (int y = island.LLy; y < island.URy; y++) {
+        if (island.contains((x-.5)*g, (y-.5)*g) &&
+            island.contains((x+.5)*g, (y-.5)*g) &&
+            island.contains((x-.5)*g, (y+.5)*g) &&
+            island.contains((x+.5)*g, (y+.5)*g) &&
+            !tunnel.contains((x-.5)*g, (y-.5)*g) &&
+            !tunnel.contains((x+.5)*g, (y-.5)*g) &&
+            !tunnel.contains((x-.5)*g, (y+.5)*g) &&
+            !tunnel.contains((x+.5)*g, (y+.5)*g)) {
+          double dist = Navigation.dist(tunnelExit, new double[] {x*g,y*g});
           if (dist < bestDist) {
             bestDist = dist;
             bestPoint = new double[] {x*g,y*g};

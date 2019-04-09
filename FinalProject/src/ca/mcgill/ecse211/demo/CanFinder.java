@@ -191,7 +191,7 @@ public class CanFinder implements Runnable {
    * Localizes the robot before traveling through the tunnel
    */
   private void preTunnelLocalize() {
-    double[] locPoint = GameSettings.safeLoc;
+    double[] locPoint = GameSettings.safeLocStart;
     FinalDemo.NAV.travelTo(locPoint[0],locPoint[1]);
     FinalDemo.NAV.waitUntilDone();
     try {
@@ -264,6 +264,7 @@ public class CanFinder implements Runnable {
    * Drops off a can in the start zone
    */
   public void dropOffCan() {
+    
     goToStart();
     Point2D startCorner = GameSettings.getStartingCornerPoint();
     FinalDemo.NAV.travelTo(startCorner.getX(), startCorner.getY());

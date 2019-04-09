@@ -91,24 +91,48 @@ public class LightLocalizer {
 
   /**
    * Starts the localization.
+   * 
+   * @return whether or not the localization was successful
    */
-  public void run() {
+  public boolean run() {
     if (!midTravel) {
       FinalDemo.NAV.turnTo(35);
       moveToLine(true);
       moveBackwards(8);
     }
-    FinalDemo.NAV.turnTo(35);
+    FinalDemo.NAV.turnTo(25);
     //Find the 4 intersections
-    rotateToLine(false);
+    if (rotateToLine(false)) {
+      if (FinalDemo.DEBUG_ON) {
+        Sound.buzz();
+      }
+      return false;
+    }
     double tYN = odo.getXYT()[2];
-    rotateToLine(false);
+    
+    if (rotateToLine(false)) {
+      if (FinalDemo.DEBUG_ON) {
+        Sound.buzz();
+      }
+      return false;
+    }
     double tXP = odo.getXYT()[2];
-    rotateToLine(false);
+    if (rotateToLine(false)) {
+      if (FinalDemo.DEBUG_ON) {
+        Sound.buzz();
+      }
+      return false;
+    }
     double tYP = odo.getXYT()[2];
-    rotateToLine(false);
+    if (rotateToLine(false)) {
+      if (FinalDemo.DEBUG_ON) {
+        Sound.buzz();
+      }
+      return false;
+    }
     double tXN = odo.getXYT()[2];
-
+    
+    
     //calculates & updates values
     double d = Math.sqrt(Math.pow(FinalDemo.LINE_OFFSET_X,2) + Math.pow(FinalDemo.LINE_OFFSET_Y, 2));
     double tS = Math.toDegrees(Math.atan(FinalDemo.LINE_OFFSET_X / FinalDemo.LINE_OFFSET_Y));
@@ -124,6 +148,7 @@ public class LightLocalizer {
     double err270 = (270 - odo270 + 360) % 360;
     double avgError = (err180 + err270) / 2;
     odo.setTheta(odo.getXYT()[2] + avgError + CORRECTION);
+    return true;
   }
 
   /**
@@ -146,8 +171,10 @@ public class LightLocalizer {
    * until a line is detected
    * 
    * @param cw True to move cw, false for ccw
+   * @return True if the robot rotated more than 180deg
    */
-  public void rotateToLine(boolean cw) {
+  public boolean rotateToLine(boolean cw) {
+    double startT = odo.getXYT()[2];
     int dir = cw ? 1 : -1;
     FinalDemo.NAV.setSpeeds(dir * MOTOR_SPEED * 0.5f, -dir * MOTOR_SPEED * 0.5f);
     waitUntilLine();
@@ -155,6 +182,14 @@ public class LightLocalizer {
       Sound.beep(); //found a line
     }
     FinalDemo.NAV.setSpeeds(0, 0);
+    double endT = odo.getXYT()[2];
+    if (cw) {
+      double temp = startT;
+      startT = endT;
+      endT = temp;
+    }
+    double distTraveled = (startT - endT + 360)%360;
+    return distTraveled >= 180;
   }
 
   /**

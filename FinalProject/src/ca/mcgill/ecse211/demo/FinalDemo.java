@@ -141,7 +141,15 @@ public class FinalDemo {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-    finalDemo();
+    //finalDemo();
+    Button.waitForAnyEvent();
+    Thread.sleep(1000);
+    init();
+    localizeWall();
+    NAV.travelTo(GRID_WIDTH * 2, GRID_WIDTH*2);
+    NAV.waitUntilDone();
+    (new LightLocalizer(GRID_WIDTH*2, GRID_WIDTH*2)).run();
+    NAV.turnTo(0);
     System.exit(0);
   }
   
@@ -183,7 +191,7 @@ public class FinalDemo {
    */
   private static void init() throws OdometerExceptions {
     (new Thread(Odometer.getOdometer())).start();
-    GameSettings.init();
+    //GameSettings.init();
     NAV.start();
     OC.start();
     LEFT_MOTOR.setAcceleration(ACCELERATION);

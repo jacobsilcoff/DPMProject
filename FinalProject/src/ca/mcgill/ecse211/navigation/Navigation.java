@@ -21,7 +21,7 @@ public class Navigation extends Thread {
   /**
    * The motor speed used by the robot when turning
    */
-  private static final int ROTATE_SPEED = 150;
+  private static final int ROTATE_SPEED = 180; //was 150
   /**
    * The maximum distance between two points where they are considered to be roughly equal.
    */
@@ -202,7 +202,7 @@ public class Navigation extends Thread {
           FinalDemo.LCD.drawString("State: TRVL", 0, 6);
           updateT();
           if (getDist() > CORRECTION_DIST && dist(lastPos, odo.getXYT()) > CORRECTION_DIST
-              && !facing(destT)) {
+              && !facing(destT, 2)) {
             // re-check heading and finish turning
             state = State.TURNING;
           } else if (!checkIfDone()) {
@@ -309,6 +309,19 @@ public class Navigation extends Thread {
     double diff = Math.abs(odo.getXYT()[2] - (ang + 360) % 360);
     diff = (diff + 360) % 360;
     return (diff < T_THRESH) || ((360 - diff) < T_THRESH);
+  }
+  
+  /**
+   * Checks if the robot is facing a certain angle
+   * 
+   * @param ang The angle to check
+   * @param threshold the allowable error in heading
+   * @return True if the robot is facing the given angle, false otherwise
+   */
+  private boolean facing(double ang, double threshold) {
+    double diff = Math.abs(odo.getXYT()[2] - (ang + 360) % 360);
+    diff = (diff + 360) % 360;
+    return (diff < threshold) || ((360 - diff) < threshold);
   }
 
   /**
