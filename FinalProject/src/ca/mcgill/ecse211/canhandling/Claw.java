@@ -58,6 +58,7 @@ public class Claw {
     int time = isHeavy() ? 1000 : 500;
     close();
     int numBeeps;
+    Sound.setVolume(100);
     switch (c) {
       case RED:
         numBeeps = 4;
@@ -78,6 +79,7 @@ public class Claw {
         Sound.playTone(440, time);
         sleep(100);
     }
+    Sound.setVolume(0);
   }
   /**
    * Closes the claw
@@ -92,7 +94,7 @@ public class Claw {
       if (i*30 > 2000) {
         CLAW_MOTOR.setPower(45);
       }
-      else if (i*30 > 5000) {
+      if (i*30 > 5000) {
         open();
         CLAW_MOTOR.setPower(CLAW_POWER);
         CLAW_MOTOR.forward();
