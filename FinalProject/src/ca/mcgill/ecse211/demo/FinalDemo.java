@@ -89,7 +89,7 @@ public class FinalDemo {
    * The robots gyroscope sample provider
    */
   public static final SampleProvider GYRO_DATA = GYRO.getAngleMode();
-
+  
   static {
     @SuppressWarnings("resource")
     SensorModes colorSensorMode = new EV3ColorSensor(LocalEV3.get().getPort("S3"));
@@ -161,6 +161,9 @@ public class FinalDemo {
       cf.search();
       OC.setOn(false);
       while (!cf.grabNextCan()) {
+        if (DEBUG_ON) {
+          Sound.buzz();
+        }
         cf.goToSearchArea(false);
         cf.search();
       }
@@ -169,6 +172,7 @@ public class FinalDemo {
       cf.dropOffCan();
       Point2D startCorner = GameSettings.getStartingCornerPoint();
       NAV.travelTo(startCorner.getX(), startCorner.getY());
+      beepNTimes(5);
       NAV.waitUntilDone();
       (new LightLocalizer(startCorner.getX(),
                           startCorner.getY())).run();

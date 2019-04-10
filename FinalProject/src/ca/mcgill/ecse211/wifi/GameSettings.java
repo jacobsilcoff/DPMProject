@@ -13,14 +13,14 @@ import lejos.hardware.lcd.LCD;
  * @author jacob
  */
 public abstract class GameSettings {
-  
+
   /** Set these as appropriate for your team and current situation **/
   private static final String SERVER_IP = "192.168.2.14";
   private static final int TEAM_NUMBER = 6;
 
   // Enable/disable printing of debug info from the WiFi class
   private static final boolean ENABLE_DEBUG_WIFI_PRINT = false;
-  
+
   public static boolean initialized = false;
   public static boolean redTeam = false;
   public static int corner = -1;
@@ -35,7 +35,7 @@ public abstract class GameSettings {
   public static double[] safeLocIsland;
   public static double[] startSearch;
   public static double[] searchAngles;
-  
+
   /**
    * Communicates with the server to get access to game information
    * Initializes public static fields
@@ -60,7 +60,7 @@ public abstract class GameSettings {
       } else if (greenTeam != TEAM_NUMBER) {
         return;
       }
-      
+
       String color = (redTeam? "Red" : "Green");
       char colorAbrv = (redTeam? 'R' : 'G');
 
@@ -83,9 +83,9 @@ public abstract class GameSettings {
       initialized = false;
     }
     initialized = true;
-    
+
   }
-  
+
   public static Point2D getStartingCornerPoint() {
     if (GameSettings.initialized) {
       switch (GameSettings.corner) {
@@ -104,7 +104,7 @@ public abstract class GameSettings {
     } 
     return new Point2D.Double(FinalDemo.GRID_WIDTH, FinalDemo.GRID_WIDTH);
   }
-  
+
   /**
    * Finds a safe point for light localization
    * outside the tunnel.
@@ -134,7 +134,7 @@ public abstract class GameSettings {
     }
     return bestPoint;
   }
-  
+
   /**
    * Finds a safe point for light localization
    * before going back through the tunnel.
@@ -164,7 +164,7 @@ public abstract class GameSettings {
     }
     return bestPoint;
   }
-  
+
   /**
    * Returns an array of the form 
    * {{x1,y1},{x2,y2}}
@@ -177,9 +177,9 @@ public abstract class GameSettings {
     Rect startZone = GameSettings.startZone;
     Rect island = GameSettings.island;
     double[] llBlock = {(tunnel.LLx + .5) * FinalDemo.GRID_WIDTH, 
-                        (tunnel.LLy + .5) * FinalDemo.GRID_WIDTH};
+        (tunnel.LLy + .5) * FinalDemo.GRID_WIDTH};
     double[] urBlock = {(tunnel.URx - .5) * FinalDemo.GRID_WIDTH, 
-                        (tunnel.URy - .5) * FinalDemo.GRID_WIDTH};
+        (tunnel.URy - .5) * FinalDemo.GRID_WIDTH};
     double[] N = translate(urBlock, 0, FinalDemo.GRID_WIDTH);
     double[] S = translate(llBlock, 0, -FinalDemo.GRID_WIDTH);
     double[] E = translate(urBlock,FinalDemo.GRID_WIDTH, 0);
@@ -199,7 +199,7 @@ public abstract class GameSettings {
     }
     return new double[][] {entrance,exit};
   }
-  
+
   /**
    * Modifies a point by adding x and y
    * @param pt the original point
@@ -210,30 +210,54 @@ public abstract class GameSettings {
   private static double[] translate(double[] pt, double x, double y) {
     return new double[] {pt[0] + x, pt[1] + y};
   }
-  
+
   /**
    * Sets up the data needed to safely search w/o hitting cans
    */
   private static void setSearchParams() {
     double[][] opts = {{searchZone.LLx, searchZone.LLy},
-                       {searchZone.URx, searchZone.LLy},
-                       {searchZone.URx, searchZone.URy},
-                       {searchZone.LLx, searchZone.URy}};
+        {searchZone.URx, searchZone.LLy},
+        {searchZone.URx, searchZone.URy},
+        {searchZone.LLx, searchZone.URy}};
     double[][] angles = {{0, 90},
-                         {270, 360},
-                         {180, 270},
-                         {90, 180}};
+        {270, 360},
+        {180, 270},
+        {90, 180}};
     startSearch = opts[0];
     int bestInd = 0;
     double bestDist = Double.MAX_VALUE;
     double g = FinalDemo.GRID_WIDTH;
     for (int i = 0; i < 4; i++) {
-      double d = Point2D.distance(opts[i][0]*g, opts[i][1]*g, tunnelExit[0], tunnelExit[1]);
-      if ((d < bestDist) && opts[i][0] > 0 && opts[i][0] < 15
-          && opts[i][1] > 0 && opts[i][1] < 9) {
+      double x = opts[i][0];
+      double y = opts[i][1];
+      double d = Point2D.distance(x*g, y*g, tunnelExit[0], tunnelExit[1]);
+      if (island.contains((x-.5)*g, (y-.5)*g) &&
+          island.contains((x+.5)*g, (y-.5)*g) &&
+          island.contains((x-.5)*g, (y+.5)*g) &&
+          island.contains((x+.5)*g, (y+.5)*g) &&
+          !tunnel.contains((x-.5)*g, (y-.5)*g) &&
+          !tunnel.contains((x+.5)*g, (y-.5)*g) &&
+          !tunnel.contains((x-.5)*g, (y+.5)*g) &&
+          !tunnel.contains((x+.5)*g, (y+.5)*g) &&
+          (d < bestDist) && x > 0 && x < 15
+          && x > 0 && x < 9) {
         bestInd = i;
         bestDist = d;
       }
+    }
+    if (bestDist == Double.MAX_VALUE) {
+      opts = new double[][]{{searchZone.LLx + 1, searchZone.LLy + 1},
+        {searchZone.URx - 1, searchZone.LLy + 1},
+        {searchZone.URx - 1 , searchZone.URy - 1},
+        {searchZone.LLx + 1, searchZone.URy - 1}};
+        for (int i = 0; i < 4; i++) {
+          double d = Point2D.distance(opts[i][0]*g, opts[i][1]*g, 
+              tunnelExit[0], tunnelExit[1]);
+          if (d < bestDist) {
+            bestInd = i;
+            bestDist = d;
+          }
+        }
     }
     startSearch = opts[bestInd];
     searchAngles = angles[bestInd];
