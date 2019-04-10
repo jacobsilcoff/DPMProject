@@ -213,7 +213,17 @@ public class CanFinder implements Runnable {
     FinalDemo.CLAW.close();
     if (GameSettings.initialized) {
       if (!GameSettings.startZone.contains(odo.getXYT())) {
-        Sound.buzz();
+        if (localize) {
+          double[] pt = GameSettings.safeLocIsland;
+          FinalDemo.NAV.travelTo(pt[0], pt[1]);
+          FinalDemo.NAV.waitUntilDone();
+          try {
+            (new LightLocalizer(pt[0],pt[1])).run();
+          } catch (OdometerExceptions e) {
+            e.printStackTrace();
+          }
+        }
+        
         //Get to island through tunnel 
         FinalDemo.NAV.travelTo(GameSettings.tunnelExit[0], GameSettings.tunnelExit[1]);
         FinalDemo.NAV.waitUntilDone();

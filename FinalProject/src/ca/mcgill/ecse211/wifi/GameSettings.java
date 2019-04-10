@@ -226,8 +226,9 @@ public abstract class GameSettings {
     startSearch = opts[0];
     int bestInd = 0;
     double bestDist = Double.MAX_VALUE;
+    double g = FinalDemo.GRID_WIDTH;
     for (int i = 0; i < 4; i++) {
-      double d = Point2D.distance(opts[i][0], opts[i][1], tunnelExit[0], tunnelExit[1]);
+      double d = Point2D.distance(opts[i][0]*g, opts[i][1]*g, tunnelExit[0], tunnelExit[1]);
       if ((d < bestDist) && opts[i][0] > 0 && opts[i][0] < 15
           && opts[i][1] > 0 && opts[i][1] < 9) {
         bestInd = i;
