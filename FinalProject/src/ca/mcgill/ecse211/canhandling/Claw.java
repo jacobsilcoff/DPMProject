@@ -2,6 +2,8 @@ package ca.mcgill.ecse211.canhandling;
 
 import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.navigation.Navigation;
+import ca.mcgill.ecse211.odometer.Odometer;
+import ca.mcgill.ecse211.odometer.OdometerExceptions;
 import lejos.hardware.Sound;
 import lejos.hardware.ev3.LocalEV3;
 import lejos.hardware.motor.UnregulatedMotor;
@@ -94,6 +96,13 @@ public class Claw {
       }
       else if (i*30 > 5000) {
         open();
+        try {
+          double t = Odometer.getOdometer().getXYT()[2];
+          FinalDemo.NAV.turnTo((t - 120 + 360)%360);
+          FinalDemo.NAV.turnTo(t);
+        } catch (OdometerExceptions e) {
+          e.printStackTrace();
+        }
         CLAW_MOTOR.setPower(CLAW_POWER);
         CLAW_MOTOR.forward();
         i = 0;
