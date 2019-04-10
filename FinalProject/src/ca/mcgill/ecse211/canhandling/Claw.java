@@ -90,7 +90,13 @@ public class Claw {
       sleep(30);
       i++;
       if (i*30 > 2000) {
-        CLAW_MOTOR.setPower(35);
+        CLAW_MOTOR.setPower(45);
+      }
+      else if (i*30 > 5000) {
+        open();
+        CLAW_MOTOR.setPower(CLAW_POWER);
+        CLAW_MOTOR.forward();
+        i = 0;
       }
     }
     CLAW_MOTOR.setPower(CLAW_POWER);
