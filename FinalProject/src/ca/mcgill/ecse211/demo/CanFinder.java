@@ -76,7 +76,7 @@ public class CanFinder implements Runnable {
           state = State.NAV_TO_START;
           break;
         case NAV_TO_START:
-          goToStart();
+          goToStart(true);
           state = State.DROPOFF;
           break;
         case DROPOFF:
@@ -207,8 +207,9 @@ public class CanFinder implements Runnable {
   /**
    * Transports the robot from the search zone to
    * the starting area
+   * @throws OdometerExceptions 
    */
-  public void goToStart() {
+  public void goToStart(boolean localize) {
     FinalDemo.CLAW.close();
     if (GameSettings.initialized) {
       if (!GameSettings.startZone.contains(odo.getXYT())) {
@@ -221,6 +222,18 @@ public class CanFinder implements Runnable {
         FinalDemo.NAV.travelTo(GameSettings.tunnelEntrance[0], GameSettings.tunnelEntrance[1]);
         FinalDemo.NAV.waitUntilDone();
         FinalDemo.OC.setOn(ocOn);
+        
+        //Localize
+        if (localize) {
+          double[] pt = GameSettings.safeLocStart;
+          FinalDemo.NAV.travelTo(pt[0], pt[1]);
+          FinalDemo.NAV.waitUntilDone();
+          try {
+            (new LightLocalizer(pt[0], pt[1])).run();
+          } catch (OdometerExceptions e) {
+            e.printStackTrace();
+          }
+        }
       }
       FinalDemo.NAV.waitUntilDone();
     }
@@ -264,8 +277,7 @@ public class CanFinder implements Runnable {
    * Drops off a can in the start zone
    */
   public void dropOffCan() {
-    
-    goToStart();
+    goToStart(true);
     Point2D startCorner = GameSettings.getStartingCornerPoint();
     FinalDemo.NAV.travelTo(startCorner.getX(), startCorner.getY());
     FinalDemo.NAV.waitUntilDone();

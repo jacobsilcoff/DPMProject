@@ -141,15 +141,7 @@ public class FinalDemo {
    * @throws InterruptedException
    */
   public static void main(String[] args) throws OdometerExceptions, InterruptedException {
-    //finalDemo();
-    Button.waitForAnyEvent();
-    Thread.sleep(1000);
-    init();
-    localizeWall();
-    NAV.travelTo(GRID_WIDTH * 2, GRID_WIDTH*2);
-    NAV.waitUntilDone();
-    (new LightLocalizer(GRID_WIDTH*2, GRID_WIDTH*2)).run();
-    NAV.turnTo(0);
+    finalDemo();
     System.exit(0);
   }
   
@@ -163,8 +155,7 @@ public class FinalDemo {
     localizeWall();
     OC.setOn(true);
     CanFinder cf = new CanFinder();
-    int i = 0;
-    while (i < 5) {
+    while (true) {
       cf.goToSearchArea(true);
       beepNTimes(3);
       cf.search();
@@ -178,9 +169,7 @@ public class FinalDemo {
       NAV.waitUntilDone();
       (new LightLocalizer(startCorner.getX(),
                           startCorner.getY())).run();
-      i++;
     }
-    System.exit(0);
   }
 
   /**
@@ -191,7 +180,7 @@ public class FinalDemo {
    */
   private static void init() throws OdometerExceptions {
     (new Thread(Odometer.getOdometer())).start();
-    //GameSettings.init();
+    GameSettings.init();
     NAV.start();
     OC.start();
     LEFT_MOTOR.setAcceleration(ACCELERATION);
