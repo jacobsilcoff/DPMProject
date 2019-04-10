@@ -155,6 +155,7 @@ public class FinalDemo {
    * Runs the code associated with the final demo
    */
   private static void finalDemo() throws OdometerExceptions, InterruptedException{
+	Sound.setVolume(0);
     init();
     CLAW.close();
     OC.setOn(false);
@@ -311,12 +312,14 @@ public class FinalDemo {
    * @param n the number of times to beep ( :O )
    */
   public static void beepNTimes(int n) {
+	Sound.setVolume(100);
     for (int i = 0; i < n; i++) {
       Sound.beep();
       try {
         Thread.sleep(100);
       } catch (InterruptedException e) {}
     }
+    Sound.setVolume(0);
   }
 
 
