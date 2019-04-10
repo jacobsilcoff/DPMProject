@@ -9,41 +9,103 @@ import ca.mcgill.ecse211.navigation.Navigation;
 import lejos.hardware.lcd.LCD;
 
 /**
- * Gets and holds values from the server to set up a game
+ * Gets and holds values from the server to set up a game.
+ * 
+ * Also performs pre-processing on server data to find way-points 
+ * on the map that can be used for localization, search, and 
+ * tunnel crossing.
  * @author jacob
  */
 public abstract class GameSettings {
 
-  /** Set these as appropriate for your team and current situation **/
-  private static final String SERVER_IP = "192.168.2.3";
+  /**
+   * The IP address of the server
+   */
+  private static final String SERVER_IP = "192.168.2.4";
+  /**
+   * Our robot's team number (6)
+   */
   private static final int TEAM_NUMBER = 6;
-
-  // Enable/disable printing of debug info from the WiFi class
-  private static final boolean ENABLE_DEBUG_WIFI_PRINT = false;
-
+  
+  /**
+   * Stores whether or not data has been transmitted from the server
+   */
   public static boolean initialized = false;
+  /**
+   * Stores whether or not we are on the red team (or, 
+   * in the inverse case, the green team)
+   */
   public static boolean redTeam = false;
+  /**
+   * Stores the corner of the robot
+   */
   public static int corner = -1;
+  /**
+   * A rectangle representing our robot's start zone
+   */
   public static Rect startZone = null;
+  /**
+   * A rectangle representing the island
+   */
   public static Rect island = null;
+  /**
+   * A rectangle representing the search zone for 
+   * our robot.
+   */
   public static Rect searchZone = null;
+  /**
+   * A rectangle representing the tunnel for our robot
+   */
   public static Rect tunnel = null;
-  public static CanColor targetColor = CanColor.BLUE;
+  
+  /**
+   * Represents a point of form {x,y} in the 
+   * start zone that the robot can safely navigate to
+   * before moving straight to tunnelExit in order to
+   * cross the tunnel.
+   */
   public static double[] tunnelEntrance;
+  /**
+   * Represents a point of form {x,y} in the 
+   * island that the robot can safely navigate to
+   * before moving straight to tunnelEntrance in order to
+   * cross the tunnel.
+   */
   public static double[] tunnelExit;
+  /**
+   * This is a safe point of form {x,y} to localize on 
+   * the start zone using light localization. It is optimized 
+   * to be as close to the tunnel entrance as possible
+   */
   public static double[] safeLocStart;
+  /**
+   * This is a safe point of form {x,y} to localize on 
+   * the island using light localization. It is optimized 
+   * to be as close to the tunnel exit as possible
+   */
   public static double[] safeLocIsland;
+  /**
+   * This is a point of form {x,y} from which the robot can
+   * scan the search zone for cans.
+   */
   public static double[] startSearch;
+  /**
+   * This is the range of angles the robot must turn between
+   * to scan the search zone for cans in the form {start angle,
+   * stop angle}
+   */
   public static double[] searchAngles;
 
   /**
    * Communicates with the server to get access to game information
-   * Initializes public static fields
+   * Initializes public static fields, so that once this method has 
+   * been called, all information about the game map can be accessed
+   * using the static fields of this class.
    */
   public static void init() {
 
     // Initialize WifiConnection class
-    WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, ENABLE_DEBUG_WIFI_PRINT);
+    WifiConnection conn = new WifiConnection(SERVER_IP, TEAM_NUMBER, false);
 
     // Connect to server and get the data, catching any errors that might occur
     try {
@@ -85,7 +147,12 @@ public abstract class GameSettings {
     initialized = true;
 
   }
-
+  
+  /**
+   * Computes the starting corner point as a 
+   * Point2D object.
+   * @return a Point2D representing the real coordinate position of the start corner
+   */
   public static Point2D getStartingCornerPoint() {
     if (GameSettings.initialized) {
       switch (GameSettings.corner) {

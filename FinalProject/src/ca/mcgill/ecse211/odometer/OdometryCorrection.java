@@ -5,10 +5,10 @@ import ca.mcgill.ecse211.demo.FinalDemo;
 import lejos.hardware.Sound;
 
 /**
- * Represents a thread that uses a light sensor to update the values of a robots odometer to reduce
- * error.
+ * Represents a thread that uses a light sensor and gyro to update the values 
+ * of a robots odometer to reduce error.
  * 
- * @author Group 6
+ * @author Jacob Silcoff & Helen Lin
  */
 public class OdometryCorrection extends Thread {
 

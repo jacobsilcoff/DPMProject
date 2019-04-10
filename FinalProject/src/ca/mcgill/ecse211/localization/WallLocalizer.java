@@ -23,6 +23,12 @@ public class WallLocalizer {
    */
   public static final int MOTOR_SPEED =  250;
   
+  /**
+   * Runs wall localization. Assuming the robot is in the starting corner,
+   * and has a rough estimate of its heading from Ultrasonic Localization,
+   * rams into both walls to calibrate out x, y, and t
+   * @throws OdometerExceptions
+   */
   public static void run() throws OdometerExceptions {
     FinalDemo.NAV.turnTo(270);
     moveForward(FinalDemo.GRID_WIDTH - US_OFFSET);

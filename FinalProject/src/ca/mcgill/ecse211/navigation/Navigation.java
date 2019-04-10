@@ -3,15 +3,11 @@ package ca.mcgill.ecse211.navigation;
 import ca.mcgill.ecse211.demo.FinalDemo;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import ca.mcgill.ecse211.odometer.OdometryCorrection;
-import lejos.hardware.ev3.LocalEV3;
-import lejos.hardware.sensor.EV3GyroSensor;
-import lejos.robotics.SampleProvider;
 
 
 /**
  * A class used to navigate the robot according to waypoints and obstacles.
- * @author group 6
+ * @author Jacob Silcoff & Helen Lin
  */
 public class Navigation extends Thread {
   /**

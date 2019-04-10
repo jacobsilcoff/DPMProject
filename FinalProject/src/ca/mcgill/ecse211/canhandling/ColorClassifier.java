@@ -5,17 +5,19 @@ import lejos.hardware.lcd.LCD;
 
 /**
  * This is a routine that can be used to identify the color of a soda can
- * located in front of the robot, assuming that the can is centered under
- * the axis of rotation of the light sensor arm
- * 
+ * located in the claw of the robot
  * @author group 6
  */
 public class ColorClassifier {
-
-  public static final int MAX_TACHO = 210;
-  public static final int SLEEP_TIME = 20;
+  /**
+   * The speed to spin the can, in deg/sec of the
+   * can spinning motor
+   */
   public static final int SCAN_SPD = 180;
-  public static final int MOVE_SPD = 150;
+  /**
+   * Time to wait between samples
+   */
+  private static final int SLEEP_TIME = 20;
   private CanColor colorLabel;
 
 
@@ -183,7 +185,8 @@ public class ColorClassifier {
   }
 
   /**
-   * Sleeps the thread for one tick
+   * Sleeps the thread for one tick, as specified
+   * by SLEEP_TIME
    */
   private void sleep() {
     try {
@@ -192,20 +195,4 @@ public class ColorClassifier {
       ie.printStackTrace();
     }
   }
-
-  private static void printReading(byte[] c) {
-    LCD.drawString("rgb(" + c[0] + ", " + c[1] + ", " + c[2] + ")      ", 0, 6);
-  }
-
-  private static byte[] toByte(float[] color) {
-    byte[] b = new byte[color.length];
-    for (int i = 0; i < color.length; i++)
-      b[i] = toByte(color[i]);
-    return b;
-  }
-
-  private static byte toByte(float colorValue) {
-    return (byte) (colorValue * 1000);
-  }
-
 }

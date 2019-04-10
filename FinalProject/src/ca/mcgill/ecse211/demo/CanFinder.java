@@ -1,20 +1,11 @@
 package ca.mcgill.ecse211.demo;
 
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import ca.mcgill.ecse211.canhandling.CanColor;
-import ca.mcgill.ecse211.canhandling.Claw;
-import ca.mcgill.ecse211.canhandling.ColorClassifier;
 import ca.mcgill.ecse211.localization.LightLocalizer;
 import ca.mcgill.ecse211.navigation.Navigation;
 import ca.mcgill.ecse211.odometer.Odometer;
 import ca.mcgill.ecse211.odometer.OdometerExceptions;
-import ca.mcgill.ecse211.odometer.OdometryCorrection;
 import ca.mcgill.ecse211.wifi.GameSettings;
-import ca.mcgill.ecse211.wifi.Rect;
-import lejos.hardware.Sound;
 
 /**
  * Gives the robot the ability to search for cans
@@ -28,9 +19,21 @@ public class CanFinder implements Runnable {
   private Point nextCan;
   private State state;
   public static final float GRID_WIDTH = FinalDemo.GRID_WIDTH;
+  /**
+   * The speed to turn when scanning for cans
+   */
   public static final int SCAN_SPEED = 50;
+  /**
+   * The distance to move towards a can before stopping
+   */
   public static final int CAN_STOP_DIST = 15;
+  /**
+   * The speed to turn during can finding
+   */
   public static final int TURN_SPEED = 100;
+  /**
+   * The radius of a can
+   */
   public static final double CAN_RAD = 5;
 
   /**
@@ -46,6 +49,7 @@ public class CanFinder implements Runnable {
       e.printStackTrace();
     }
   }
+
   
   private enum State {
     INIT, NAV_TO_SEARCH, FIND_CAN, GRAB_CAN, NAV_TO_START, DROPOFF;
@@ -53,7 +57,8 @@ public class CanFinder implements Runnable {
   
   /**
    * Continuously takes cans from the search zone
-   * and returns them to the start area
+   * and returns them to the start area, using a state machine.
+   * Ended up not being used during the final demo.
    */
   public void run() {
     while (true) {
@@ -89,9 +94,8 @@ public class CanFinder implements Runnable {
   }
   
   /**
-   * Finds the next can to grab
-   * 
-   * Uses the sideways facing ultrasonic sensor
+   * Finds the next can to grab using the US sensor
+   * Must be called once the robot is in the search zone.
    */
   public void search() {
     FinalDemo.NAV.turnTo(GameSettings.searchAngles[0]);
@@ -121,18 +125,12 @@ public class CanFinder implements Runnable {
   }
   
   /**
-   * Gives the point located a given distance
-   * from the front of the robot
-   * @param d the distance from the robot
-   * @return 
+   * Given an angle and a distance, finds a point that angle and
+   * distance away from the robot of form {x,y}
+   * @param d The distance from the robot in cm
+   * @param t The angle away from the robot of the point in degrees
+   * @return The point specified by d, t, and the robot's position, as {x,y} in cm
    */
-  private double[] pointFromDist(double d) {
-    double[] pt = odo.getXYT();
-    pt[0] += d * Math.sin(Math.toRadians(pt[2]));
-    pt[1] += d * Math.cos(Math.toRadians(pt[2]));
-    return pt;
-  }
-  
   private double[] pointFromDist(double d, double t) {
     double[] pt = odo.getXYT();
     pt[0] += d * Math.sin(Math.toRadians(t));
@@ -141,10 +139,9 @@ public class CanFinder implements Runnable {
   }
   
   /**
-   * Gets the point to navigate to
-   * to be a comfortable distance away from 
-   * the can
-   * @return
+   * Gets the point to navigate to so as to be a comfortable 
+   * distance away from the can we are going to grab.
+   * @return The point to navigate to in form {x,y}
    */
   private double[] canStoppingPoint() {
     double[] pt = {nextCan.x, nextCan.y};
@@ -159,9 +156,8 @@ public class CanFinder implements Runnable {
   
   /**
    * Transports the robot from the starting zone to 
-   * the search area
-   * Must be in the starting area to work 
-   * @param localize whether or not to localize outside the tunnel
+   * the search area. Must be in the starting area to work 
+   * @param localize Whether or not to localize outside the tunnel
    */
   public void goToSearchArea(boolean localize) {
     FinalDemo.CLAW.close();
@@ -269,11 +265,6 @@ public class CanFinder implements Runnable {
     return FinalDemo.CLAW.hasCan();
   }
   
-  private static double minAngle(double x, double y) {
-    double a = ((x - y) + 360) % 360;
-    return (a < 180) ? a : 360 - a;
-  }
-  
   /**
    * Returns whether or not a next can to pickup
    * has been found
@@ -320,18 +311,6 @@ public class CanFinder implements Runnable {
       e.printStackTrace();
     }
   }
-  /**
-   * Sleeps for one tick, as specified
-   * by x
-   * @param x the time to sleep in ms
-   */
-  private void sleep(int x) {
-    try {
-      Thread.sleep(x);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-  }
   
   /**
    * Polls the ultrasonic sensor and returns the result
@@ -346,6 +325,7 @@ public class CanFinder implements Runnable {
     }
     return usData[0] * 100f;
   }
+  
   /**
    * Moves the robot backwards (straight) a certain distance, using the odometer.
    * 
@@ -400,7 +380,10 @@ public class CanFinder implements Runnable {
       this.y = y;
     }
   }
-
+  
+  /**
+   * Ejects the can from the robot
+   */
   public void ejectCan() {
     FinalDemo.CLAW.open();
     moveForward(15);

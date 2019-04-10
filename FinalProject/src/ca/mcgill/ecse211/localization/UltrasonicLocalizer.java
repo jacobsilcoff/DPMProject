@@ -77,8 +77,6 @@ public class UltrasonicLocalizer {
         sleep(); 
       }
     } while (seesWall);
-    //In principle, a wall should not be seen. Play happy beep to show clear:
-    //Sound.beepSequenceUp();
 
     FinalDemo.LCD.drawString("STAGE 2", 0, 4);
     while ((reading > DETECTION_DISTANCE) || reading == -1) {
@@ -138,14 +136,7 @@ public class UltrasonicLocalizer {
     // correct current theta
     double realAngle = (odo.getXYT()[2] - localizeNorth(theta1, theta2) + 360) % 360;
     odo.setXYT(0, 0, realAngle); 
-
-    /*
-    // turn to localized North
-    FinalDemo.NAV.turnTo(0);
-    if (readUS() < DETECTION_DISTANCE) {
-      odo.setTheta(180);
-    }
-    */
+    
     FinalDemo.NAV.waitUntilDone();
   }
 

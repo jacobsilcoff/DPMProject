@@ -23,6 +23,14 @@ import lejos.robotics.MirrorMotor;
 import lejos.robotics.RegulatedMotor;
 import lejos.robotics.SampleProvider;
 
+/**
+ * The final demo class stores the main method for 
+ * the robot, as well as a series of run modes,
+ * including run modes for the final demo, beta demo,
+ * and some testing cases.
+ * @author jacob
+ *
+ */
 public class FinalDemo {
   /**
    * Sets whether or not debug sounds should be played
@@ -65,9 +73,16 @@ public class FinalDemo {
   public static final double TRACK_WITHOUT_CAN = 10.35;
   /**
    * The model for the track when a can is held
+   * This changes because the torque from the can
+   * shifts where the robot pivots, requiring us to 
+   * update our model.
    */
   public static final double TRACK_WITH_CAN = 10.6;
-      
+  /**
+   * The model for the track. We say model because it
+   * represents the wheel separation on an idealized model
+   * of the robot.
+   */
   public static double TRACK = TRACK_WITHOUT_CAN;
   /**
    * The offset between the robot turning center and the line sensor in
@@ -141,7 +156,7 @@ public class FinalDemo {
   public static final float GRID_WIDTH = 30.48f;
 
   /**
-   * The main method 
+   * The main method. Runs the final demo mode.
    * @param args not used
    * @throws OdometerExceptions 
    * @throws InterruptedException
@@ -152,7 +167,7 @@ public class FinalDemo {
   }
   
   /**
-   * Runs the code associated with the final demo
+   * Runs the code associated with the final demo. 
    */
   private static void finalDemo() throws OdometerExceptions, InterruptedException{
 	Sound.setVolume(0);
@@ -207,7 +222,9 @@ public class FinalDemo {
   /**
    * Localizes the robot using ultrasonic and light localization
    * Automatically updates the position to convey the starting corner
-   * of the robot iff the game settings have been initialized
+   * of the robot iff the game settings have been initialized.
+   * 
+   * This is not used on demo day.
    * @throws OdometerExceptions
    */
   private static void localizeLight() throws OdometerExceptions {
@@ -234,6 +251,14 @@ public class FinalDemo {
     updateCorner();
   }
   
+  /**
+   * This method updates the odometer based on the
+   * corner the robot is in. We assume the robots odometry
+   * is set up as if it is in corner 0 (ie, x < GRID_WIDTH, y < GRID_WIDTH),
+   * and values for x, y and t are mdofied to reflect the real
+   * location of the robot.
+   * @throws OdometerExceptions
+   */
   private static void updateCorner() throws OdometerExceptions {
     Odometer o = Odometer.getOdometer();
     double x =  o.getXYT()[0];
@@ -269,7 +294,7 @@ public class FinalDemo {
    * robot, denoted as an array
    * @param robot An array of the form {x,y,t} representing the
    * position of the sensor
-   * @return
+   * @return The location of the sensor in the form {x,y,t}
    */
   public static double[] toSensor(double[] robot) {
     double[] result = new double[3];
@@ -331,9 +356,8 @@ public class FinalDemo {
    */
 
   /**
-   * Drives in a square
-   * FOR TESTING
-   * @param ocOn Whether or not to use correction
+   * Drives in a square pf side length 5
+   * For testing navigation & odometry
    */
   private static void squareDrive() {
     NAV.travelTo(1*GRID_WIDTH, 5*GRID_WIDTH);
@@ -347,8 +371,8 @@ public class FinalDemo {
   }
   
   /**
-   * Drives in a triangle
-   * FOR TESTING
+   * Drives in a triangle of side length 5
+   * For testing navigation & odometry
    */
   private static void triangleDrive() {
     NAV.travelTo(1*GRID_WIDTH, 5*GRID_WIDTH);
@@ -362,7 +386,7 @@ public class FinalDemo {
   /**
    * Spins the robot around 360 * x, where
    * x is a number of times
-   * FOR TESTING
+   * For testing track parameters
    * to test the parameters for the wheels
    */
   private static void rotateX(int x) {
@@ -375,7 +399,7 @@ public class FinalDemo {
   
   /**
    * Sets the odometer to 1,1,0
-   * This is used to save time on localization
+   * For testing features without considering efficacy of localization
    * @throws OdometerExceptions 
    */
   private static void resetOdo() throws OdometerExceptions {

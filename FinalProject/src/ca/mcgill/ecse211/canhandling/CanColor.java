@@ -1,12 +1,16 @@
 package ca.mcgill.ecse211.canhandling;
 
 /**
- * Represents the 4 different possible can colors. 
+ * Represents the 4 different possible can colors, and an
+ * 'UNKNOWN' color.
  * @author Group 6
  */
 public enum CanColor {
-  RED("Red", new int[] {75, 20, 19}), GREEN("Green", new int[] {38, 51, 33}), BLUE("Blue",
-      new int[] {39, 48, 67}), YELLOW("Yellow", new int[] {65, 42, 22}), UNKNOWN;
+  RED("Red", new int[] {75, 20, 19}),
+  GREEN("Green", new int[] {38, 51, 33}),
+  BLUE("Blue", new int[] {39, 48, 67}), 
+  YELLOW("Yellow", new int[] {65, 42, 22}),
+  UNKNOWN;
 
   private String name;
   private int[] avgRGB;
@@ -14,8 +18,8 @@ public enum CanColor {
   /**
    * Creates a CanColor
    * @param name The name of the color
-   * @param c An array of 3 integers representing the R, G, and B intensity. 
-   * this array will be normalized so magnitudes don't matter.
+   * @param c An array of 3 integers representing the R, G, and B intensity average. 
+   * This array will be normalized so magnitudes don't matter.
    */
   CanColor(String name, int[] c) {
     this.name = name;

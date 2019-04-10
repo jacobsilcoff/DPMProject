@@ -2,8 +2,9 @@ package ca.mcgill.ecse211.demo;
 
 
 /**
- * An AveragedBuffer stores a buffer of data with constant time lookup for the average value. This
- * can be used to implement a rolling average filter.
+ * An AveragedBuffer stores a buffer of data with constant time lookup 
+ * for the average value. This can be used to implement a rolling average 
+ * filter.
  * 
  * @author jacob
  */
@@ -30,7 +31,7 @@ public class AveragedBuffer<T extends Number> {
   }
 
   /**
-   * Creates a buffer that will store a specified number of samples,
+   * Creates a buffer that will store a specified number of samples
    * 
    * @param n The number of samples stored in the buffer
    */

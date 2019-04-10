@@ -25,8 +25,6 @@ public class Odometer extends OdometerData implements Runnable {
   // Multiply by degrees to get distance moved by a single wheel
   private final double DIST_MULT;
 
-  private double[] position;
-
 
   private static final long ODOMETER_PERIOD = 25; // odometer update period in ms, equiv to 40Hz
 
