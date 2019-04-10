@@ -157,9 +157,10 @@ public class FinalDemo {
   private static void finalDemo() throws OdometerExceptions, InterruptedException{
 	Sound.setVolume(0);
     init();
-    CLAW.close();
     OC.setOn(false);
     localizeWall();
+    CLAW.calibrate();
+    CLAW.close();
     OC.setOn(true);
     CanFinder cf = new CanFinder();
     while (true) {

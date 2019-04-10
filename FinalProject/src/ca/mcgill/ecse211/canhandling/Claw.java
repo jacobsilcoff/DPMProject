@@ -42,7 +42,7 @@ public class Claw {
     }
   }
 
-  private void calibrate() {
+  public void calibrate() {
     CLAW_MOTOR.setPower(CLAW_POWER);
     CLAW_MOTOR.backward();
     sleep(2000);
@@ -98,13 +98,7 @@ public class Claw {
       }
       if (i*30 > 5000) {
         open();
-        try {
-          double t = Odometer.getOdometer().getXYT()[2];
-          FinalDemo.NAV.turnTo((t - 120 + 360)%360);
-          FinalDemo.NAV.turnTo(t);
-        } catch (OdometerExceptions e) {
-          e.printStackTrace();
-        }
+        moveBackwards(5);
         CLAW_MOTOR.setPower(CLAW_POWER);
         CLAW_MOTOR.forward();
         i = 0;
@@ -112,7 +106,26 @@ public class Claw {
     }
     CLAW_MOTOR.setPower(CLAW_POWER);
   }
+  /**
+   * Moves the robot backwards (straight) a certain distance, using the odometer.
+   * 
+   * @param dist
+   */
+  private static void moveBackwards(double dist) {
+    FinalDemo.NAV.setSpeeds(MOTOR_SPEED,MOTOR_SPEED);
+    double[] start = FinalDemo.NAV.getOdo().getXYT();
 
+    FinalDemo.LEFT_MOTOR.backward();
+    FinalDemo.RIGHT_MOTOR.backward();
+
+    while (Navigation.dist(FinalDemo.NAV.getOdo().getXYT(), start) < Math.abs(dist)) {
+      try {
+        Thread.sleep(30);
+      } catch (InterruptedException e) {
+      }
+    }
+    FinalDemo.NAV.setSpeeds(0, 0);
+  }
   /**
    * Opens the claw
    */
