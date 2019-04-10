@@ -160,7 +160,10 @@ public class FinalDemo {
       beepNTimes(3);
       cf.search();
       OC.setOn(false);
-      cf.grabNextCan();
+      while (!cf.grabNextCan()) {
+        cf.goToSearchArea(false);
+        cf.search();
+      }
       CLAW.classifyAndBeep();
       OC.setOn(true);
       cf.dropOffCan();
