@@ -62,7 +62,13 @@ public class FinalDemo {
   /**
    * Represents the distance between the wheels, in cm
    */
-  public static final double TRACK = 10.3;
+  public static final double TRACK_WITHOUT_CAN = 10.35;
+  /**
+   * The model for the track when a can is held
+   */
+  public static final double TRACK_WITH_CAN = 10.6;
+      
+  public static double TRACK = TRACK_WITHOUT_CAN;
   /**
    * The offset between the robot turning center and the line sensor in
    * the Y direction, in cm. Note: magnitude only.
@@ -167,9 +173,11 @@ public class FinalDemo {
         cf.goToSearchArea(false);
         cf.search();
       }
+      TRACK = TRACK_WITH_CAN;
       CLAW.classifyAndBeep();
       OC.setOn(true);
       cf.dropOffCan();
+      TRACK = TRACK_WITHOUT_CAN;
       Point2D startCorner = GameSettings.getStartingCornerPoint();
       NAV.travelTo(startCorner.getX(), startCorner.getY());
       beepNTimes(5);
